@@ -1,0 +1,241 @@
+.analytics-container {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  background: #f7f8fa;
+}
+
+.analytics-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  padding: 20px;
+  text-align: center;
+}
+
+.card.full {
+  grid-column: 1/-1;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 10px;
+}
+
+.icon.indigo { color: #4F46E5; }
+.icon.green { color: #22C55E; }
+.icon.yellow { color: #F59E0B; }
+.icon.blue { color: #3B82F6; }
+.icon.red { color: #EF4444; }
+.icon.cyan { color: #06B6D4; }
+
+/* .label {
+  font-size: 14px;
+  color: #666;
+} */
+
+.value {
+  font-size: 22px;
+  font-weight: bold;
+  color: #222;
+}
+
+.big-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.title.small {
+  font-size: 16px;
+}
+
+.chart {
+  width: 100%;
+  height: 250px;
+}
+
+
+
+
+
+
+
+.chat-summary-container {
+  padding: 40px;
+  background-color: #f0f2f5;
+  min-height: 40vh;
+  font-family: Arial, sans-serif;
+  overflow: auto;
+}
+
+.chat-summary-title {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.chat-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.chat-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  border: 1px solid #ddd;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.chat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  cursor: pointer;
+}
+
+.lawyer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 45px;
+  height: 45px;
+  background-color: #4f46e5;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.lawyer-name {
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+}
+
+.lawyer-stats {
+  font-size: 13px;
+  color: #666;
+}
+
+.collapse-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
+}
+
+.user-list {
+  padding: 10px 15px 15px 15px;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.user-card:hover {
+  background-color: #e2e6ea;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 35px;
+  height: 35px;
+  background-color: #22c55e;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+.user-name {
+  font-weight: bold;
+  color: #333;
+}
+
+.user-stats {
+  font-size: 12px;
+  color: #555;
+}
+
+.chat-icon {
+  font-size: 18px;
+  color: #4f46e5;
+  font-weight: bold;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: #4f46e5;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  font-weight: bold;
+  color: #333;
+}

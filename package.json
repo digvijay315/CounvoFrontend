@@ -1,0 +1,86 @@
+{
+  "name": "admin",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.js",
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@fontsource/roboto": "^5.0.13",
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@mdi/js": "^7.4.47",
+    "@mdi/react": "^1.6.1",
+    "@mobiscroll/react-lite": "^4.10.9",
+    "@mui/icons-material": "^5.15.16",
+    "@mui/material": "^5.15.16",
+    "@mui/x-data-grid": "^5.17.24",
+    "@react-google-maps/api": "^2.20.6",
+    "@syncfusion/ej2-react-calendars": "^26.1.38",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.7.2",
+    "bootstrap": "^5.3.3",
+    "country-state-city": "^3.2.1",
+    "dayjs": "^1.11.11",
+    "emoji-picker-react": "^4.12.2",
+    "file-saver": "^2.0.5",
+    "jquery": "^3.7.1",
+    "lottie-react": "^2.4.1",
+    "lucide-react": "^0.523.0",
+    "number-to-words": "^1.2.4",
+    "quill": "^2.0.3",
+    "quill-image-resize-module-react": "^3.0.0",
+    "react": "^18.3.1",
+    "react-bootstrap": "^2.10.3",
+    "react-circular-progressbar": "^2.2.0",
+    "react-data-table-component": "^7.6.2",
+    "react-datetime": "^3.2.0",
+    "react-dom": "^18.3.1",
+    "react-dropzone": "^14.3.5",
+    "react-hot-toast": "^2.5.2",
+    "react-icons": "^5.5.0",
+    "react-map-gl": "^7.1.7",
+    "react-paginate": "^8.2.0",
+    "react-router-dom": "^6.24.0",
+    "react-scripts": "5.0.1",
+    "react-select": "^5.8.1",
+    "react-toastify": "^10.0.5",
+    "recharts": "^3.0.0",
+    "socket.io-client": "^4.8.1",
+    "styled-components": "^6.1.11",
+    "sweetalert": "^2.1.2",
+    "sweetalert2": "^11.15.10",
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.1"
+  }
+}

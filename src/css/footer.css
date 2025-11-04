@@ -1,0 +1,230 @@
+.olc-footer {
+  background: #001d37;
+  color: #fff;
+  padding: 48px 200px 0 200px;
+  width: 100%;
+}
+
+.olc-footer-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.olc-footer-ratings {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 24px;
+}
+
+.olc-footer-rating-item {
+  padding :20px;
+  border: 1px solid white;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.olc-footer-rating-score {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.olc-footer-rating-label {
+  font-size: 1rem;
+  color: #B0C7D9;
+}
+
+.olc-footer-stats {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.olc-footer-stat-item {
+    width: 300px;
+    border: 1px solid white;
+    border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.olc-footer-stat-value {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.olc-footer-stat-label {
+  font-size: 1rem;
+  color: #B0C7D9;
+}
+
+.olc-footer-logo-mobile {
+  display: none;
+}
+
+.olc-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+.olc-footer-links-group {
+  min-width: 220px;
+  flex: 1 1 0;
+  margin-bottom: 24px;
+}
+
+.olc-footer-links-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #B0C7D9;
+}
+
+.olc-footer-link {
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  text-decoration: none;
+  transition: color 0.18s;
+  cursor: pointer;
+}
+
+.olc-footer-link:hover {
+  color: #ffd000;
+  text-decoration: underline;
+}
+
+.olc-footer-disclaimer {
+  color: #b0c7d9;
+  font-size: 0.97rem;
+  margin: 24px 0 0 0;
+  padding: 0 8px;
+}
+
+.olc-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 32px 0 0 0;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.olc-footer-bottom img[alt="zolvit-logo"] {
+  margin-bottom: 12px;
+}
+
+.olc-footer-bottom > div {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.olc-footer-bottom > div > div {
+  display: flex;
+  gap: 12px;
+}
+
+.olc-footer-policies {
+  display: flex;
+  gap: 14px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.olc-footer-policies li {
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.18s;
+}
+
+.olc-footer-policies li:hover {
+  color: #ffd000;
+  text-decoration: underline;
+}
+
+.olc-footer-socials-mobile {
+  display: none;
+  margin: 18px 0 0 0;
+  text-align: center;
+}
+
+.olc-footer-socials-mobile > div {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+
+@media (max-width: 1024px) {
+  .olc-footer-container {
+    max-width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .olc-footer-stats {
+    gap: 16px;
+  }
+  .olc-footer-links {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 900px) {
+  .olc-footer-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .olc-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .olc-footer {
+    padding: 24px 0 0 0;
+  }
+  .olc-footer-container {
+    padding: 0 6px;
+  }
+  .olc-footer-ratings,
+  .olc-footer-stats {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .olc-footer-logo-mobile {
+    display: block;
+    margin: 0 auto 16px auto;
+    text-align: center;
+  }
+  .olc-footer-links {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .olc-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .olc-footer-policies {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  .olc-footer-socials-mobile {
+    display: block;
+    margin: 12px 0 0 0;
+  }
+}

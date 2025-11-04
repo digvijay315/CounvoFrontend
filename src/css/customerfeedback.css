@@ -1,0 +1,88 @@
+.c-feedback-form {
+  max-width: 400px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px 20px 24px;
+  box-shadow: 0 6px 32px rgba(60,130,255,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  font-family: 'Inter', Arial, sans-serif;
+}
+.c-feedback-title {
+  text-align: center;
+  color: #1d285b;
+  font-size: 23px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.c-feedback-label {
+  font-weight: 500;
+  color: #25325a;
+  font-size: 15.2px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.c-feedback-label select,
+.c-feedback-label textarea,
+.c-feedback-label input[type="text"] {
+  margin-top: 4px;
+  font-size: 15.6px;
+  padding: 7px 9px;
+  border: 1.2px solid #d8dbec;
+  border-radius: 8px;
+  background: #fafbfe;
+  color: #25325a;
+  transition: border-color .14s;
+  resize: vertical;
+}
+.c-feedback-label select:focus,
+.c-feedback-label textarea:focus {
+  border-color: #4680ff;
+  outline: none;
+}
+.c-feedback-stars {
+  display: flex; gap: 16px; margin-top: 6px;
+}
+.c-star {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 17px;
+}
+.c-star input[type="radio"] {
+  accent-color: #faad14;
+  width: 18px; height: 18px;
+}
+.c-feedback-btn {
+  margin-top: 10px;
+  background: linear-gradient(90deg, #3b82f6 60%, #6886fd 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16.5px;
+  padding: 10px 0;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 14px #78aaff14;
+  cursor: pointer;
+  transition: background .15s, filter .14s;
+}
+.c-feedback-btn:hover { filter: brightness(0.92);}
+.c-feedback-optional { font-weight: 400; font-size: 12px; color: #aaa;}
+
+@media (max-width:600px) {
+  .c-feedback-form {
+    max-width: 99vw;
+    padding: 15px 3vw 12px 3vw;
+    gap: 12px;
+  }
+  .c-feedback-title { font-size: 17px; }
+  .c-feedback-label { font-size: 14.3px; }
+  .c-star { font-size: 15px; }
+  .c-feedback-btn { font-size: 14px; }
+}
+
+/* For touch/very small screens */
+@media (max-width:400px) {
+  .c-feedback-form { border-radius: 7px; padding: 9px 2vw 5px 2vw;}
+}

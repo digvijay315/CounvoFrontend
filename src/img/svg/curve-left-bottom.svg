@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="603.094" height="586.75" viewBox="0 0 603.094 586.75">
+
+<defs>
+    <style>
+      .cls-1 {
+        fill: #e8e8e8;
+        fill-opacity: 0;
+        stroke: #fff;
+        stroke-linejoin: round;
+        stroke-width: 3px;
+        fill-rule: evenodd;
+        opacity: 0.1;
+      }
+    </style>
+  </defs>
+  <path id="curve" class="cls-1" d="M-356,2143c70.4-163.47,235.2-207.43,314-216,344.98-37.51,643.954,415.5,643.583,415.83-1,.88-165.419-267.87-386-256C-44.294,2100.81-174.043,2537.56-296,2507-372.584,2487.81-420.5,2292.77-356,2143Z" transform="translate(0 -1923.28)"/>
+</svg>

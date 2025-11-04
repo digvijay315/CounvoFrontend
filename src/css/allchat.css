@@ -1,0 +1,215 @@
+.allchat-listview {
+  margin-left: 20%;
+  width: 340px;
+  min-width: 230px;
+  max-width: 100vw;
+  border-right: 1.5px solid #ecedfc;
+  background: #fafdff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: width .18s;
+}
+.allchat-list-title {
+  padding: 23px 18px 10px 22px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #225;
+  background: #fafdff;
+  border-bottom: 1px solid #e0e9f9;
+}
+.allchat-list-items {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 32px;
+}
+.allchat-empty {
+  color: #888;
+  text-align: center;
+  margin-top: 40px;
+}
+.allchat-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin: 0 9px 5px 9px;
+  padding: 12px 10px 11px 10px;
+  background: #fff;
+  border: 1px solid transparent;
+  transition: box-shadow .11s, border .11s, background .14s;
+}
+.allchat-list-item:hover,
+.allchat-selected {
+  border: 1.5px solid #6689ee;
+  box-shadow: 0 2px 17px #e1eefd18;
+  background: #f2f7fe;
+}
+.profile-pic {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e3eaff;
+  background: #f3f3fd;
+}
+.allchat-item-content {
+  flex:1;
+  min-width: 0;
+}
+.allchat-names {
+  font-size: 15.1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+}
+.allchat-preview {
+  font-size: 13.5px;
+  color: #727c8e;
+  margin-bottom: 3px;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.allchat-msgcount {
+  background: #f6f9fd;
+  color: #104e96;
+  font-weight: 600;
+  font-size: 11px;
+  border-radius: 8px;
+  padding: 1px 10px 1px 9px;
+  float: right;
+}
+
+.allchat-detailsview {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fd;
+  min-height: 100vh;
+  position: relative;
+  transition: width .18s;
+}
+.allchat-welcome {
+  margin: auto;
+  color: #888;
+  font-size: 20px;
+  text-align: center;
+}
+.allchat-chatbox {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+.allchat-chatbox-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 22px 14px 12px 19px;
+  background: #fff;
+  border-bottom: 1.5px solid #e6eaf3;
+  min-height: 68px;
+}
+.allchat-messages-area {
+  flex: 1;
+  padding: 33px 32px 80px 24px;
+  overflow-y: auto;
+}
+.msg-row {
+  margin-bottom: 13px;
+  display: flex;
+}
+.msg-client {
+  justify-content: flex-start;
+}
+.msg-lawyer {
+  justify-content: flex-end;
+}
+.msg-bubble {
+  background: linear-gradient(90deg,#eaf5fd,#d8edff 60%,#dee9ff);
+  color: #204078;
+  padding: 13px 16px 13px 16px;
+  border-radius: 17px;
+  min-width: 52px;
+  max-width: 340px;
+  font-size: 14.7px;
+  display: inline-block;
+  position: relative;
+  margin-left: 9px; margin-right: 9px;
+  box-shadow: 0 2px 16px #8cd4ff14;
+  word-break: break-word;
+}
+.msg-lawyer .msg-bubble {
+  background: linear-gradient(90deg,#ebedfc 10%,#f7f9fd 90%);
+  color: #233;
+}
+.msg-time {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-top: 3px;
+  padding-top: 2px;
+  text-align: right;
+}
+.close-btn {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: #778;
+  font-size: 23px;
+  padding: 0 15px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background .12s;
+}
+.close-btn:hover {
+  color: #b11;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 950px) {
+  .allchat-listview {
+    width: 220px;
+    min-width: 140px;
+  }
+  .profile-pic { width: 34px; height: 34px; }
+  .msg-bubble { max-width: 200px; font-size: 13.9px;}
+  .allchat-item-content .allchat-preview { max-width: 90px; }
+  .allchat-messages-area { padding: 22px 10px 60px 10px; }
+  .allchat-chatbox-header { padding: 12px 10px 10px 10px;}
+}
+@media (max-width: 700px) {
+  .allchat-listview {
+    width: 68px;
+    min-width: 58px;
+  }
+  .allchat-list-title,
+  .allchat-names,
+  .allchat-preview,
+  .allchat-msgcount {
+    display: none !important;
+  }
+  .allchat-list-item {
+    flex-direction: column; align-items: center; gap: 3px;
+    padding: 11px 1px 7px 1px;
+    margin: 0 4px 2.5px 4px;
+  }
+  .profile-pic { width: 30px; height: 30px; }
+  .allchat-item-content { display: none !important; }
+  .allchat-detailsview,
+  .allchat-messages-area { padding: 8px !important; }
+}
+@media (max-width:480px) {
+  .allchat-listview { 
+    margin-left: 10% !important;
+     min-width: 140px;
+   }
+  .allchat-detailsview { width: 100vw; min-width: 0; }
+  .allchat-messages-area, .allchat-chatbox-header { padding: 9px 2vw 32px 2vw !important;}
+}

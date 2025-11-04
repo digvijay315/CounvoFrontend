@@ -1,0 +1,165 @@
+.first-bg-color {
+    background-color: #ff5e14;
+}
+
+.first-color {
+    color: #ff5e14;
+}
+
+.first__screen-form button[type="submit"] span {
+    background-color: #e84a02;
+}
+
+
+.second-bg-color {
+    background-color: #ff5e14;
+}
+
+
+.link-reg .submit__listing span {
+    background-color: #e84a02;
+}
+
+
+.hand__picked-wrap:hover .hand__picked-item {
+    background-color: #ff5e14;
+}
+
+
+.listing__products .nav-pills .nav-link.active {
+    background-color: #ff5e14;
+}
+
+
+.hand__picked-item svg path {
+    fill: #222;
+}
+
+.hand__picked-item--line {
+    background-color: #ff5e14;
+}
+
+
+.listing__products .listing-card .price {
+    color: #ff5e14;
+}
+
+
+.article-slider__arrowRight:hover,
+.article-slider__arrowLeft:hover {
+    background-color: #ff5e14;
+    border-color: #ff5e14;
+}
+
+
+.home-card_icon .icon-count {
+    color: #ff5e14;
+}
+
+
+.footer-email {
+    background-color: #ff5e14;
+}
+
+.footer-email .form-email form input {
+    border-color: #f59265;
+}
+
+
+.check:before {
+    color: #ff5e14;
+}
+
+
+.footer-middle .title::before {
+    background-color: #ff5e14;
+}
+
+.footer-middle .column-three .card-price {
+    color: #fff;
+}
+
+
+
+.footer-middle .column-first i {
+    color: #ff5e14;
+}
+
+
+.footer-middle .column-second ul li:after {
+    color: #ff5e14;
+}
+
+
+.listing-card__box_featured {
+    background-color: #fdfaf3 !important;
+}
+
+.section-custom-color {
+    background-color: #fdfaf3 !important;
+}
+
+
+.listing__products .nav-pills .nav-link:hover {
+    color: #ff5e14;
+}
+
+.fl-category-single a:hover {
+    color: #ff5e14;
+}
+
+.listing-btn-ico:hover,
+.listing-btn-ico.active,
+.listing-btn-action a[aria-expanded="true"] {
+    background-color: #ff5e14;
+}
+
+.first__screen .layer2 .slide {
+    border-color: #ff5e14;
+}
+
+
+.lay1 span {
+    color: #ff5e14;
+}
+
+
+.fl-icon-contain svg {
+    fill: #ff5e14;
+}
+
+
+.fl-icon-list svg {
+    fill: #ff5e14;
+}
+
+
+.fl-icon-list-box .fl-icon {
+    color: #ff5e14;
+}
+
+
+.uk-tooltip {
+    background: #ff5e14;
+}
+
+html .fl-post-shadow ul li a {
+    color: #ff5e14;
+}
+
+
+html .dl-menuwrapper button {
+    background: #ff5e14;
+}
+
+
+.link-reg ul li a:hover,
+.header-home #dl-menu.dl-menuwrapper ul li:hover a {
+    color: #ff5e14;
+}
+
+
+.fl-mega-menu ul li:hover > a,
+.fl-header.fl-header-single .link-reg li:hover i {
+    color: #ff5e14;
+}

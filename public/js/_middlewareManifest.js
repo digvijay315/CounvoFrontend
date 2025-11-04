@@ -1,0 +1,1 @@
+self.__MIDDLEWARE_MANIFEST=[["\u002F[service]",false]];self.__MIDDLEWARE_MANIFEST_CB&&self.__MIDDLEWARE_MANIFEST_CB()
