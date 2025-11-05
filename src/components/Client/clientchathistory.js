@@ -7,8 +7,8 @@ import Header from "../Layout/header";
 import { HiOutlinePaperClip } from "react-icons/hi";
 import { IoSend } from "react-icons/io5";
 import "../Client/css/client_chat_history.css";
-import { IconButton } from "@mui/material";
-import { Call } from "@mui/icons-material";
+import { IconButton, Stack, Menu, MenuItem } from "@mui/material";
+import { Call, VideoCall, ArrowDropDown, Close } from "@mui/icons-material";
 import CallScreen from "../../_modules/calling/CallScreen";
 
 function Clientchathistory() {
@@ -25,6 +25,7 @@ function Clientchathistory() {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const [callMenuAnchor, setCallMenuAnchor] = useState(null);
 
   const fetchlawyers = async () => {
     try {
@@ -350,6 +351,19 @@ function Clientchathistory() {
     }
   };
 
+  const handleOpenCallMenu = (event) => {
+    setCallMenuAnchor(event.currentTarget);
+  };
+
+  const handleCloseCallMenu = () => {
+    setCallMenuAnchor(null);
+  };
+
+  const handleCallOptionSelect = (callType) => {
+    handleStartCall(chatLawyer._id, callType);
+    handleCloseCallMenu();
+  };
+
   return (
     <div>
       <Header />
@@ -578,38 +592,172 @@ function Clientchathistory() {
               </div>
             </div>
             <div className="header-actions">
-              <IconButton
-                onClick={() => handleStartCall(chatLawyer._id, "voice")}
-              >
-                <Call />
-              </IconButton>
-              <button
-                onClick={handleSwapLawyer}
-                style={{
-                  background: "none",
-                  border: "1px solid lightgray",
-                  color: "black",
-                  fontSize: "12px",
-                  cursor: "pointer",
-                }}
-                title="Switch Lawyer"
-              >
-                Switch
-                {/* <span style={{fontSize:"14px"}}>switch</span> */}
-              </button>
-              <button
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "white",
-                  fontSize: "18px",
-                  cursor: "pointer",
-                }}
-                onClick={() => setChatLawyer(null)}
-                title="Close Chat"
-              >
-                ✖
-              </button>
+              <Stack direction="row" spacing={1}>
+                <IconButton
+                  size="small"
+                  onClick={handleOpenCallMenu}
+                  aria-controls="call-menu"
+                  aria-haspopup="true"
+                  sx={{
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    color: "white",
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.25)",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    },
+                    "&:active": {
+                      transform: "translateY(0px)",
+                    },
+                  }}
+                >
+                  <Call sx={{ fontSize: 18 }} />
+                  <ArrowDropDown sx={{ fontSize: 16, marginLeft: "2px" }} />
+                </IconButton>
+                <Menu
+                  id="call-menu"
+                  anchorEl={callMenuAnchor}
+                  open={Boolean(callMenuAnchor)}
+                  onClose={handleCloseCallMenu}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  PaperProps={{
+                    sx: {
+                      marginTop: "8px",
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+                      border: "1px solid rgba(0, 0, 0, 0.05)",
+                      minWidth: "180px",
+                      overflow: "visible",
+                      "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        top: 0,
+                        right: 14,
+                        width: 10,
+                        height: 10,
+                        backgroundColor: "white",
+                        transform: "translateY(-50%) rotate(45deg)",
+                        zIndex: 0,
+                        borderLeft: "1px solid rgba(0, 0, 0, 0.05)",
+                        borderTop: "1px solid rgba(0, 0, 0, 0.05)",
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem
+                    onClick={() => handleCallOptionSelect("voice")}
+                    sx={{
+                      padding: "12px 20px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#1f2937",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        backgroundColor: "#f0f9ff",
+                        color: "#3b82f6",
+                        "& .MuiSvgIcon-root": {
+                          color: "#3b82f6",
+                          transform: "scale(1.1)",
+                        },
+                      },
+                    }}
+                  >
+                    <Call
+                      sx={{
+                        fontSize: 18,
+                        marginRight: "12px",
+                        color: "#6b7280",
+                        transition: "all 0.2s ease",
+                      }}
+                    />
+                    Voice Call
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => handleCallOptionSelect("video")}
+                    sx={{
+                      padding: "12px 20px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#1f2937",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        backgroundColor: "#f0fdf4",
+                        color: "#10b981",
+                        "& .MuiSvgIcon-root": {
+                          color: "#10b981",
+                          transform: "scale(1.1)",
+                        },
+                      },
+                    }}
+                  >
+                    <VideoCall
+                      sx={{
+                        fontSize: 18,
+                        marginRight: "12px",
+                        color: "#6b7280",
+                        transition: "all 0.2s ease",
+                      }}
+                    />
+                    Video Call
+                  </MenuItem>
+                </Menu>
+                <IconButton
+                  size="small"
+                  onClick={handleSwapLawyer}
+                  title="Switch Lawyer"
+                  sx={{
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    color: "white",
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.25)",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    },
+                    "&:active": {
+                      transform: "translateY(0px)",
+                    },
+                  }}
+                >
+                  Switch
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => setChatLawyer(null)}
+                  title="Close Chat"
+                  sx={{
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    color: "white",
+                    padding: "8px",
+                    borderRadius: "10px",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      backgroundColor: "rgba(239, 68, 68, 0.9)",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)",
+                    },
+                    "&:active": {
+                      transform: "translateY(0px)",
+                    },
+                  }}
+                >
+                  <Close sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Stack>
             </div>
             {/* <button
               onClick={() => setChatLawyer(null)}

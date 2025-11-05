@@ -412,7 +412,7 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 1000,
+          zIndex: 1002,
         }}
         className="callscreen app-container call-screen"
       >
@@ -438,7 +438,7 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 1000,
+          zIndex: 1002,
         }}
         className={`callscreen app-container call-screen ${
           callType === "voice" ? "voice-call" : "video-call"
@@ -549,17 +549,7 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
       </div>
     );
   }
-
-  // Fallback - should not normally reach here
-  return (
-    <div className="app-container call-screen">
-      <div className="call-loading">
-        <AlertCircle size={48} />
-        <h2>Initializing call...</h2>
-        <p>Please wait while we set up your {callType === "video" ? "video" : "voice"} call</p>
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default CallScreen;
