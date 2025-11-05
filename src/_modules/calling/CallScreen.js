@@ -10,7 +10,14 @@ import {
 import "../../css/call_screen.css";
 import { APP_CONFIG } from "../../_constants/config";
 
-const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'incoming', onCallEnded }) => {
+const CallScreen = ({
+  callType = "video",
+  callerId,
+  userId,
+  callerInfo,
+  callDirection = "incoming",
+  onCallEnded,
+}) => {
   const [inCall, setInCall] = useState(false);
   const [channelName, setChannelName] = useState("");
   const [token, setToken] = useState(null);
@@ -402,6 +409,12 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
     };
   }, []);
 
+  const getCallerName = () => {
+    if (callerInfo?.fullName) {
+      return callerInfo.fullName;
+    }
+    return callerId;
+  };
   // Loading Screen
   if (isLoading && !inCall) {
     return (
@@ -421,7 +434,7 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
           <h2>Connecting to call...</h2>
           <p>
             Setting up {callType === "video" ? "video" : "voice"} call with{" "}
-            {callerId}
+            {getCallerName()}
           </p>
         </div>
       </div>
@@ -453,7 +466,7 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
               ) : (
                 <Phone size={24} className="header-icon" />
               )}
-              <h2>{callerId}</h2>
+              <h2>{getCallerName()}</h2>
             </div>
             <p className="call-status">
               <span className="status-dot"></span>
@@ -473,10 +486,10 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
             <div className="voice-call-display">
               <div className="caller-avatar">
                 <span className="avatar-text">
-                  {callerId.charAt(0).toUpperCase()}
+                  {getCallerName().charAt(0).toUpperCase()}
                 </span>
               </div>
-              <h3>{callerId}</h3>
+              <h3>{getCallerName()}</h3>
               <p className="call-duration">Voice Call Active</p>
             </div>
           ) : (
@@ -486,7 +499,7 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
               <div className="remote-videos">
                 {remoteUsers.length === 0 ? (
                   <div className="waiting-message">
-                    <p>Waiting for {callerId} to join...</p>
+                    <p>Waiting for {getCallerName()} to join...</p>
                   </div>
                 ) : (
                   remoteUsers.map((user) => (
@@ -496,7 +509,7 @@ const CallScreen = ({ callType = "video", callerId, userId, callDirection = 'inc
                         className="remote-video"
                       ></div>
                       <span className="video-label">
-                        {callerId} (ID: {user.uid})
+                        {getCallerName()} (ID: {user.uid})
                       </span>
                     </div>
                   ))

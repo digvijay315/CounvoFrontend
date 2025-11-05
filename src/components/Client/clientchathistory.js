@@ -10,6 +10,7 @@ import "../Client/css/client_chat_history.css";
 import { IconButton, Stack, Menu, MenuItem } from "@mui/material";
 import { Call, VideoCall, ArrowDropDown, Close } from "@mui/icons-material";
 import CallScreen from "../../_modules/calling/CallScreen";
+import IncomingCallScreen from "../../_modules/calling/IncomingCallScreen";
 
 function Clientchathistory() {
   const userData = JSON.parse(localStorage.getItem("userDetails"));
@@ -26,6 +27,7 @@ function Clientchathistory() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const [callMenuAnchor, setCallMenuAnchor] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null); // {callerId, callerInfo, callType}
 
   const fetchlawyers = async () => {
     try {
@@ -109,11 +111,60 @@ function Clientchathistory() {
       }
     });
 
+    // Incoming call event
+    socket.on("incomingCall", async ({ callerId, callType, callerModel }) => {
+      console.log("Incoming call from:", callerId, callType);
+
+      // Fetch caller info
+      let callerInfo = null;
+      if (callerModel === "Lawyer") {
+        try {
+          const res = await api.get(`/api/lawyer/getlawyerprofile/${callerId}`);
+          callerInfo = res.data;
+        } catch (err) {
+          console.error("Failed to fetch caller info:", err);
+        }
+      }
+
+      setIncomingCall({
+        callerId,
+        callerInfo: callerInfo || { fullName: "Unknown Lawyer" },
+        callType,
+      });
+    });
+
+    // Call rejected by recipient
+    socket.on("callRejected", ({ message }) => {
+      console.log("Call was rejected:", message);
+      setCallingData({
+        isActive: false,
+        callType: "voice",
+        lawyerId: null,
+        callerInfo: null,
+      });
+      Swal.fire({
+        icon: "error",
+        title: "Call Declined",
+        text: message || "The lawyer declined your call.",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    });
+
+    // Call accepted by recipient
+    socket.on("callAccepted", ({ accepterId }) => {
+      console.log("Call accepted by:", accepterId);
+      // Call screen already active, just log
+    });
+
     return () => {
       socket.off("connect");
       socket.off("receiveMessage");
       socket.off("onlineLawyersList");
       socket.off("updateOnlineUsers");
+      socket.off("incomingCall");
+      socket.off("callRejected");
+      socket.off("callAccepted");
       socket.disconnect();
     };
   }, [userData?.user?._id, chatLawyer]);
@@ -326,13 +377,27 @@ function Clientchathistory() {
     isActive: false,
     callType: "voice",
     lawyerId: null,
+    callerInfo: null,
   });
   const handleStartCall = async (lawyerId, callType) => {
     try {
+      // Emit call initiation to server
+      socket.emit("initiateCall", {
+        callerId: userData.user._id,
+        receiverId: lawyerId,
+        callType,
+        callerModel: "User",
+        receiverModel: "Lawyer",
+      });
+
       setCallingData({
         isActive: true,
         callType,
         lawyerId,
+        callerInfo: {
+          fullName: chatLawyer.fullName,
+          profilepic: chatLawyer.profilepic,
+        },
       });
     } catch (error) {
       console.error("Error starting call:", error);
@@ -345,6 +410,7 @@ function Clientchathistory() {
         isActive: false,
         callType: "video",
         lawyerId: null,
+        callerInfo: null,
       });
     } catch (error) {
       console.error("Error ending call:", error);
@@ -362,6 +428,51 @@ function Clientchathistory() {
   const handleCallOptionSelect = (callType) => {
     handleStartCall(chatLawyer._id, callType);
     handleCloseCallMenu();
+  };
+
+  // Handle incoming call acceptance
+  const handleAcceptCall = () => {
+    if (!incomingCall) return;
+
+    // Emit call acceptance
+    socket.emit("acceptCall", {
+      callerId: incomingCall.callerId,
+      accepterId: userData.user._id,
+    });
+
+    // Start the call
+    setCallingData({
+      isActive: true,
+      callType: incomingCall.callType,
+      lawyerId: incomingCall.callerId,
+      callerInfo: incomingCall.callerInfo,
+    });
+
+    // Clear incoming call
+    setIncomingCall(null);
+  };
+
+  // Handle incoming call rejection
+  const handleRejectCall = () => {
+    if (!incomingCall) return;
+
+    // Emit call rejection
+    socket.emit("rejectCall", {
+      callerId: incomingCall.callerId,
+      rejecterId: userData.user._id,
+      message: "Call was declined",
+    });
+
+    // Clear incoming call
+    setIncomingCall(null);
+
+    Swal.fire({
+      icon: "info",
+      title: "Call Declined",
+      text: "You declined the call.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
   };
 
   return (
@@ -906,9 +1017,20 @@ function Clientchathistory() {
         <CallScreen
           userId={userData.user._id}
           callerId={callingData.lawyerId}
+          callerInfo={callingData.callerInfo}
           callType={callingData.callType}
           callDirection="outgoing"
           onCallEnded={handleEndCall}
+        />
+      )}
+
+      {incomingCall && (
+        <IncomingCallScreen
+          callerInfo={incomingCall.callerInfo}
+          callType={incomingCall.callType}
+          onAccept={handleAcceptCall}
+          onReject={handleRejectCall}
+          userType="client"
         />
       )}
 
