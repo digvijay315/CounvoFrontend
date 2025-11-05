@@ -1,14 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Lawyersidebar from './lawyersidebar';
-import socket from './socket';
-import Swal from 'sweetalert2';
-import api from '../api';
-import Header from './Layout/header';
-import { HiOutlinePaperClip } from 'react-icons/hi';
-import { IoSend } from 'react-icons/io5';
+import React, { useState, useEffect, useRef } from "react";
+import Lawyersidebar from "./lawyersidebar";
+import socket from "./socket";
+import Swal from "sweetalert2";
+import api from "../api";
+import Header from "./Layout/header";
+import { HiOutlinePaperClip } from "react-icons/hi";
+import { IoSend } from "react-icons/io5";
+import CallScreen from "../_modules/calling/CallScreen";
+import { IconButton, Stack } from "@mui/material";
+import { Call, Close } from "@mui/icons-material";
 
 function LawyerChatHistory() {
-  const lawyerdetails = JSON.parse(localStorage.getItem('lawyerDetails')); // should be lawyer info
+  const userData = JSON.parse(localStorage.getItem("userDetails"));
+  const lawyerdetails = JSON.parse(localStorage.getItem("lawyerDetails")); // should be lawyer info
 
   const [recentChats, setRecentChats] = useState([]);
   const [onlineClients, setOnlineClients] = useState([]);
@@ -22,22 +26,22 @@ function LawyerChatHistory() {
   // Fetch all recent chat history for this lawyer
   const fetchRecentChats = async () => {
     try {
-      const res = await api.get('api/admin/chathistoryforrecentchat');
+      const res = await api.get("api/admin/chathistoryforrecentchat");
       const result = res.data;
       const lawyerChats = result.filter(
-        chat =>
+        (chat) =>
           chat.to === lawyerdetails.lawyer._id && chat.toModel === "Lawyer"
       );
       setRecentChats(lawyerChats);
     } catch (err) {
-      console.error('Error fetching lawyer chats:', err);
+      console.error("Error fetching lawyer chats:", err);
     }
   };
 
   // Get unique client IDs from history
   const uniqueClientMap = {};
   const uniqueChatClients = [];
-  recentChats.forEach(chat => {
+  recentChats.forEach((chat) => {
     if (!uniqueClientMap[chat.from]) {
       uniqueClientMap[chat.from] = true;
       uniqueChatClients.push(chat);
@@ -46,11 +50,11 @@ function LawyerChatHistory() {
 
   // Fetch all user data for clients lawyer chatted with
   const fetchClientsData = async () => {
-    const ids = uniqueChatClients.map(chat => chat.from);
+    const ids = uniqueChatClients.map((chat) => chat.from);
     const allClients = [];
     for (let id of ids) {
       try {
-        const res = await api.get('/api/user/' + id);
+        const res = await api.get("/api/user/" + id);
         allClients.push(res.data);
       } catch {}
     }
@@ -65,137 +69,157 @@ function LawyerChatHistory() {
     fetchClientsData();
   }, [recentChats.length]);
 
-
-
   const markMessagesRead = async (clientId) => {
     try {
       const lawyerId = lawyerdetails.lawyer._id;
-      socket.emit('markMessagesRead', {
+      socket.emit("markMessagesRead", {
         readerId: lawyerId,
         senderId: clientId,
-        readerModel: 'Lawyer'
+        readerModel: "Lawyer",
       });
     } catch (err) {
-      console.error('Failed to mark messages read', err);
+      console.error("Failed to mark messages read", err);
     }
   };
-  
-  
 
   // Online clients (if you have this)
   useEffect(() => {
     if (!lawyerdetails.lawyer._id) return;
     if (!socket.connected) socket.connect();
 
-    socket.on('connect', () => {
-      socket.emit('lawyerOnline', lawyerdetails.lawyer._id);
-      socket.emit('getOnlineClients');
+    socket.on("connect", () => {
+      socket.emit("lawyerOnline", lawyerdetails.lawyer._id);
+      socket.emit("getOnlineClients");
     });
 
-    socket.on('onlineClientsList', ids => {
+    socket.on("onlineClientsList", (ids) => {
       setOnlineClients(ids);
     });
 
-    socket.on('receiveMessage', ({ from, message }) => {
+    socket.on("receiveMessage", ({ from, message }) => {
       // Notification for lawyer if not in this chat
       if (!chatClient || chatClient._id !== from) {
-        setOfflineNotified(prev => ({
+        setOfflineNotified((prev) => ({
           ...prev,
-          [from]: true
+          [from]: true,
         }));
         Swal.fire({
-          icon: 'info',
-          title: 'New Message',
-          text: 'Client sent you a message!',
+          icon: "info",
+          title: "New Message",
+          text: "Client sent you a message!",
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
       }
       if (chatClient && chatClient._id === from) {
-        setMessages(prev => [...prev, { text: message, isMe: false }]);
-        setOfflineNotified(prev => ({
+        setMessages((prev) => [...prev, { text: message, isMe: false }]);
+        setOfflineNotified((prev) => ({
           ...prev,
-          [from]: false
+          [from]: false,
         }));
       }
     });
 
     return () => {
-      socket.off('connect');
-      socket.off('receiveMessage');
-      socket.off('onlineClientsList');
+      socket.off("connect");
+      socket.off("receiveMessage");
+      socket.off("onlineClientsList");
       socket.disconnect();
     };
   }, [lawyerdetails.lawyer._id, chatClient]);
 
+  const fetchChatHistory = async (user1Id, user2Id) => {
+    try {
+      const res = await api.get(`api/admin/chathistory/${user1Id}/${user2Id}`);
 
-   const fetchChatHistory = async (user1Id, user2Id) => {
-      try {
-        const res = await api.get(`api/admin/chathistory/${user1Id}/${user2Id}`);
-      
-        
-        const data = await res.data;
-  
-        if (res.status === 200) {
-          const formatted = data.map(msg => ({
-            text: msg.message,
-            isMe: msg.from === user1Id,
-            timestamp: msg.timestamp,
-            isSystem: false,
-          fileUrl:msg.fileUrl,
-          fileName:msg.fileName, 
-          fileType:msg.fileType
-          }));
-          setMessages(formatted);
-        } else {
-          console.error('❌ Failed to fetch history:', data.error);
-        }
-      } catch (err) {
-        console.error('❌ Network error:', err);
+      const data = await res.data;
+
+      if (res.status === 200) {
+        const formatted = data.map((msg) => ({
+          text: msg.message,
+          isMe: msg.from === user1Id,
+          timestamp: msg.timestamp,
+          isSystem: false,
+          fileUrl: msg.fileUrl,
+          fileName: msg.fileName,
+          fileType: msg.fileType,
+        }));
+        setMessages(formatted);
+      } else {
+        console.error("❌ Failed to fetch history:", data.error);
       }
-    };
-
-
+    } catch (err) {
+      console.error("❌ Network error:", err);
+    }
+  };
 
   // Fetch full chat with this client
   const handleOpenChat = async (client) => {
     setChatClient(client);
-    markMessagesRead(client._id)
-    setOfflineNotified(prev => ({
+    markMessagesRead(client._id);
+    setOfflineNotified((prev) => ({
       ...prev,
-      [client._id]: false
+      [client._id]: false,
     }));
     const lawyerId = lawyerdetails.lawyer._id;
-   await fetchChatHistory(lawyerId,client._id)
+    await fetchChatHistory(lawyerId, client._id);
   };
 
   // Send a message to client
-  const handleSendMessage = msgText => {
+  const handleSendMessage = (msgText) => {
     if (!msgText.trim() || !chatClient) return;
-    socket.emit('privateMessage', {
+    socket.emit("privateMessage", {
       toUserId: chatClient._id,
       message: msgText,
-      fromUserType: 'lawyer',
-      timestamp: new Date().toISOString()
+      fromUserType: "lawyer",
+      timestamp: new Date().toISOString(),
     });
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
-      { text: msgText, isMe: true, timestamp: new Date().toISOString() }
+      { text: msgText, isMe: true, timestamp: new Date().toISOString() },
     ]);
   };
 
-  return (
-    <div style={{ minHeight: '100vh', background: '#f6f7fb' }}>
-   <Lawyersidebar />
-      <div style={{ display: 'flex' }}>
-       
+  // ======== Calling Functionallity
+  const [callingData, setCallingData] = useState({
+    isActive: false,
+    callType: "voice",
+    clientId: null,
+  });
+  const handleStartCall = async (clientId, callType) => {
+    try {
+      setCallingData({
+        isActive: true,
+        callType,
+        clientId,
+      });
+    } catch (error) {
+      console.error("Error starting call:", error);
+    }
+  };
 
+  const handleEndCall = async () => {
+    try {
+      setCallingData({
+        isActive: false,
+        callType: "video",
+        clientId: null,
+      });
+    } catch (error) {
+      console.error("Error ending call:", error);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f6f7fb" }}>
+      <Lawyersidebar />
+      <div style={{ display: "flex" }}>
         <div
           style={{
             flex: 1,
             marginLeft: "20%",
-            marginTop:"7%",
-            padding:"20px"
+            marginTop: "7%",
+            padding: "20px",
             // background: '#fff',
           }}
           className="main-content"
@@ -206,7 +230,7 @@ function LawyerChatHistory() {
               <div>No clients you have chatted with yet.</div>
             ) : (
               uniqueChatClients.map((chat, idx) => {
-                const client = clients.find(ci => ci._id === chat.from);
+                const client = clients.find((ci) => ci._id === chat.from);
                 if (!client) return null;
                 const isOnline = onlineClients.includes(client._id);
                 const hasUnread = offlineNotified[client._id];
@@ -233,7 +257,7 @@ function LawyerChatHistory() {
                             color: "#2563eb",
                             fontWeight: "bold",
                             marginLeft: 8,
-                            fontSize: "0.9em"
+                            fontSize: "0.9em",
                           }}
                         >
                           • New
@@ -277,72 +301,102 @@ function LawyerChatHistory() {
             <div className="chat-popup" style={{ right: 80 }}>
               <div className="chat-header">
                 <div>
-                  <b>
-                    {chatClient.fullName}
-                  </b>
+                  <b>{chatClient.fullName}</b>
                   <div style={{ fontSize: 12, color: "#444" }}>
                     {onlineClients.includes(chatClient._id)
                       ? "🟢 Online"
                       : "🔴 Offline"}
                   </div>
                 </div>
-                <button
-                  className="action-btn"
-                  style={{ marginLeft: 'auto' }}
-                  onClick={() => setChatClient(null)}
-                >
-                  ✖
-                </button>
+                <Stack direction="row" spacing={1}>
+                  <IconButton
+                    onClick={() => handleStartCall(chatClient._id, "voice")}
+                  >
+                    <Call />
+                  </IconButton>
+                  <IconButton onClick={() => setChatClient(null)}>
+                    <Close />
+                  </IconButton>
+                </Stack>
               </div>
-              <div className="chat-messages" style={{ height: 300, overflow: "auto" }}>
-               {messages.map((msg, idx) => (
-          <div key={idx} className={`message ${msg.isMe ? 'sent' : 'received'}`}
-            style={{
-              maxWidth: "80%",
-              padding: "0.75rem 1rem",
-              borderRadius: "18px",
-              fontSize: "0.875rem",
-              lineHeight: 1.4,
-              background: msg.isMe ? "#1e40af" : "white",
-              color: msg.isMe ? "white" : "#1f2937",
-              border: msg.isMe ? "none" : "1px solid #e5e7eb",
-              alignSelf: msg.isMe ? "flex-end" : "flex-start",
-              wordWrap: "break-word"
-            }}>
-            {msg.text}
-            {msg.fileUrl && (
-              msg.fileType && msg.fileType.startsWith('image/')
-                ? 
-                <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                  <img src={msg.fileUrl} alt={msg.fileName} style={{ maxWidth: 150, maxHeight: 150, marginTop: 8, borderRadius: 4 }} />
-                  </a>
-                : <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">📄 {msg.fileName}</a>
-            )}
-            <div style={{
-              fontSize: '10px',
-              color: msg.isMe ? 'white' : 'black',
-              marginTop: '2px',
-              textAlign: msg.isMe ? 'right' : 'left'
-            }}>
-              {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ''}
-            </div>
-          </div>
-        ))}
+              <div
+                className="chat-messages"
+                style={{ height: 300, overflow: "auto" }}
+              >
+                {messages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`message ${msg.isMe ? "sent" : "received"}`}
+                    style={{
+                      maxWidth: "80%",
+                      padding: "0.75rem 1rem",
+                      borderRadius: "18px",
+                      fontSize: "0.875rem",
+                      lineHeight: 1.4,
+                      background: msg.isMe ? "#1e40af" : "white",
+                      color: msg.isMe ? "white" : "#1f2937",
+                      border: msg.isMe ? "none" : "1px solid #e5e7eb",
+                      alignSelf: msg.isMe ? "flex-end" : "flex-start",
+                      wordWrap: "break-word",
+                    }}
+                  >
+                    {msg.text}
+                    {msg.fileUrl &&
+                      (msg.fileType && msg.fileType.startsWith("image/") ? (
+                        <a
+                          href={msg.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <img
+                            src={msg.fileUrl}
+                            alt={msg.fileName}
+                            style={{
+                              maxWidth: 150,
+                              maxHeight: 150,
+                              marginTop: 8,
+                              borderRadius: 4,
+                            }}
+                          />
+                        </a>
+                      ) : (
+                        <a
+                          href={msg.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          📄 {msg.fileName}
+                        </a>
+                      ))}
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: msg.isMe ? "white" : "black",
+                        marginTop: "2px",
+                        textAlign: msg.isMe ? "right" : "left",
+                      }}
+                    >
+                      {msg.timestamp
+                        ? new Date(msg.timestamp).toLocaleString()
+                        : ""}
+                    </div>
+                  </div>
+                ))}
               </div>
               <div className="chat-input">
                 <input
                   ref={inputRef}
-                  style={{ width: '80%', marginRight: 4 }}
+                  style={{ width: "80%", marginRight: 4 }}
                   type="text"
                   placeholder="Type a message..."
-                  onKeyDown={e => {
+                  onKeyDown={(e) => {
                     if (e.key === "Enter" && e.target.value.trim()) {
                       handleSendMessage(e.target.value.trim());
                       e.target.value = "";
                     }
                   }}
                 />
-                  
+
                 {/* <button
                   className="actionbutton"
                   style={{ width: 38 }}
@@ -356,57 +410,56 @@ function LawyerChatHistory() {
                   ➤
                 </button> */}
 
-              <button
-                                className="actionbutton"
-                      type="button"
-                      onClick={() => {
-                        if (inputRef.current && inputRef.current.value.trim()) {
-                          handleSendMessage(inputRef.current.value.trim());
-                          inputRef.current.value = '';
-                        }
-                      }}
-                      style={{
-                        position: 'absolute',
-                        right: '20px',
-                        top: '92%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: '#54656f',
-                        fontSize: '24px',
-                        cursor: 'pointer',
-                        padding: 0,
-                        margin: 0
-                      }}
-                      title="Send"
-                      tabIndex={-1}
-                    >
-                      <IoSend />
-                    </button>
-                        
-                           <button
-                             className="actionbutton"
-                          type="button"
-                          // onClick={() => fileInputRef.current.click()}
-                          style={{
-                            position: 'absolute',
-                            right: '20%',
-                            top: '92%',
-                            transform: 'translateY(-50%)',
-                            background: 'none',
-                            border: 'none',
-                            color: 'gray',
-                            fontSize: '20px',
-                            cursor: 'pointer',
-                            padding: 0,
-                            margin: 0
-                          }}
-                          title="Attach Document"
-                          tabIndex={-1}
-                        >
-                            <HiOutlinePaperClip />
-                        </button>
+                <button
+                  className="actionbutton"
+                  type="button"
+                  onClick={() => {
+                    if (inputRef.current && inputRef.current.value.trim()) {
+                      handleSendMessage(inputRef.current.value.trim());
+                      inputRef.current.value = "";
+                    }
+                  }}
+                  style={{
+                    position: "absolute",
+                    right: "20px",
+                    top: "92%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: "#54656f",
+                    fontSize: "24px",
+                    cursor: "pointer",
+                    padding: 0,
+                    margin: 0,
+                  }}
+                  title="Send"
+                  tabIndex={-1}
+                >
+                  <IoSend />
+                </button>
 
+                <button
+                  className="actionbutton"
+                  type="button"
+                  // onClick={() => fileInputRef.current.click()}
+                  style={{
+                    position: "absolute",
+                    right: "20%",
+                    top: "92%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: "gray",
+                    fontSize: "20px",
+                    cursor: "pointer",
+                    padding: 0,
+                    margin: 0,
+                  }}
+                  title="Attach Document"
+                  tabIndex={-1}
+                >
+                  <HiOutlinePaperClip />
+                </button>
               </div>
             </div>
           )}
@@ -423,13 +476,22 @@ function LawyerChatHistory() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                zIndex: 99
+                zIndex: 99,
               }}
             >
               <span>Loading...</span>
             </div>
           )}
         </div>
+        {callingData.isActive && (
+          <CallScreen
+            userId={lawyerdetails.lawyer._id}
+            callerId={lawyerdetails.lawyer._id}
+            callType={callingData.callType}
+            callDirection="outgoing"
+            onCallEnded={handleEndCall}
+          />
+        )}
       </div>
       <style>{`
 

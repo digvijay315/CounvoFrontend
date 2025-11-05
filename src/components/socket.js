@@ -1,11 +1,8 @@
 // socket.js
 import { io } from 'socket.io-client';
+import { APP_CONFIG } from "../_constants/config";
 
-// const socket = io('http://localhost:5000', {
-//   autoConnect: false, // important: don't auto-connect immediately
-// });
-
-const socket = io('https://api.counvo.in', {
+const socket = io(APP_CONFIG.SOCKET_URL, {
   autoConnect: false, // important: don't auto-connect immediately
 });
 

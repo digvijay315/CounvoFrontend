@@ -7,11 +7,13 @@ import Header from "../Layout/header";
 import { HiOutlinePaperClip } from "react-icons/hi";
 import { IoSend } from "react-icons/io5";
 import "../Client/css/client_chat_history.css";
+import { IconButton } from "@mui/material";
+import { Call } from "@mui/icons-material";
+import CallScreen from "../../_modules/calling/CallScreen";
 
 function Clientchathistory() {
   const userData = JSON.parse(localStorage.getItem("userDetails"));
 
-  
   const [recentChats, setRecentChats] = useState([]);
   const [onlineLawyers, setOnlineLawyers] = useState([]);
   const [lawyers, setLawyers] = useState([]);
@@ -224,8 +226,6 @@ function Clientchathistory() {
     }
   };
 
-
-
   const handleSwapLawyer = async () => {
     setIsLoading(true);
 
@@ -267,18 +267,16 @@ function Clientchathistory() {
     return phoneRegex.test(text) || emailRegex.test(text);
   }
 
-    const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState([]);
 
-
-
-    // ✅ Fetch favorites
+  // ✅ Fetch favorites
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const userId=userData.user._id
+        const userId = userData.user._id;
         const res = await api.get(`api/user/get-favorite/${userId}`);
-       
-        const favIds = res.data.map(f => f.lawyerId._id);
+
+        const favIds = res.data.map((f) => f.lawyerId._id);
         setFavorites(favIds);
       } catch (error) {
         console.error("Error fetching favorites:", error);
@@ -287,45 +285,70 @@ function Clientchathistory() {
     fetchFavorites();
   }, [userData.user._id]);
 
-
-
-const handleToggleFavorite = async (lawyerId) => {
-  try {
-    const res = await api.post("api/user/add-to-favorite", {
-      userId: userData.user._id,
-      lawyerId,
-    });
-
-    if (res.data.isFavorite) {
-      setFavorites((prev) => [...prev, lawyerId]);
-      Swal.fire({
-        icon: "success",
-        title: "Added to Favorites ❤️",
-        text: "This lawyer has been added to your favorites list.",
-        showConfirmButton: true,
+  const handleToggleFavorite = async (lawyerId) => {
+    try {
+      const res = await api.post("api/user/add-to-favorite", {
+        userId: userData.user._id,
+        lawyerId,
       });
-    } else {
-      setFavorites((prev) => prev.filter((id) => id !== lawyerId));
+
+      if (res.data.isFavorite) {
+        setFavorites((prev) => [...prev, lawyerId]);
+        Swal.fire({
+          icon: "success",
+          title: "Added to Favorites ❤️",
+          text: "This lawyer has been added to your favorites list.",
+          showConfirmButton: true,
+        });
+      } else {
+        setFavorites((prev) => prev.filter((id) => id !== lawyerId));
+        Swal.fire({
+          icon: "info",
+          title: "Removed from Favorites 💔",
+          text: "This lawyer has been removed from your favorites list.",
+          showConfirmButton: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
       Swal.fire({
-        icon: "info",
-        title: "Removed from Favorites 💔",
-        text: "This lawyer has been removed from your favorites list.",
-        showConfirmButton: true,
-        
+        icon: "error",
+        title: "Something went wrong!",
+        text: "Unable to update favorite. Please try again later.",
+        confirmButtonColor: "#3b82f6",
       });
     }
-  } catch (error) {
-    console.error("Error toggling favorite:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Something went wrong!",
-      text: "Unable to update favorite. Please try again later.",
-      confirmButtonColor: "#3b82f6",
-    });
-  }
-};
+  };
 
+  // ======== Calling Functionallity
+  const [callingData, setCallingData] = useState({
+    isActive: false,
+    callType: "voice",
+    lawyerId: null,
+  });
+  const handleStartCall = async (lawyerId, callType) => {
+    try {
+      setCallingData({
+        isActive: true,
+        callType,
+        lawyerId,
+      });
+    } catch (error) {
+      console.error("Error starting call:", error);
+    }
+  };
 
+  const handleEndCall = async () => {
+    try {
+      setCallingData({
+        isActive: false,
+        callType: "video",
+        lawyerId: null,
+      });
+    } catch (error) {
+      console.error("Error ending call:", error);
+    }
+  };
 
   return (
     <div>
@@ -347,28 +370,25 @@ const handleToggleFavorite = async (lawyerId) => {
 
               return (
                 <div key={chat._id} className="lawyer-card">
-                    {/* Favorite Icon (top-right corner) */}
-<button
-
-  className="favorite-always-btn"
-  onClick={() => handleToggleFavorite(lawyer._id)}
-  title={
-    favorites.includes(lawyer._id)
-      ? "Remove from Favorites"
-      : "Add to Favorites"
-  }
->
-  <span
-    style={{
-      color: favorites.includes(lawyer._id) ? "red" : "#bbb",
-      fontSize: "20px",
-    }}
-  >
-    {favorites.includes(lawyer._id) ? "❤️" : "🤍"}
-  </span>
-</button>
-
-
+                  {/* Favorite Icon (top-right corner) */}
+                  <button
+                    className="favorite-always-btn"
+                    onClick={() => handleToggleFavorite(lawyer._id)}
+                    title={
+                      favorites.includes(lawyer._id)
+                        ? "Remove from Favorites"
+                        : "Add to Favorites"
+                    }
+                  >
+                    <span
+                      style={{
+                        color: favorites.includes(lawyer._id) ? "red" : "#bbb",
+                        fontSize: "20px",
+                      }}
+                    >
+                      {favorites.includes(lawyer._id) ? "❤️" : "🤍"}
+                    </span>
+                  </button>
 
                   <img
                     src={lawyer.profilepic}
@@ -558,6 +578,11 @@ const handleToggleFavorite = async (lawyerId) => {
               </div>
             </div>
             <div className="header-actions">
+              <IconButton
+                onClick={() => handleStartCall(chatLawyer._id, "voice")}
+              >
+                <Call />
+              </IconButton>
               <button
                 onClick={handleSwapLawyer}
                 style={{
@@ -727,6 +752,16 @@ const handleToggleFavorite = async (lawyerId) => {
             </button>
           </div>
         </div>
+      )}
+
+      {callingData.isActive && (
+        <CallScreen
+          userId={userData.user._id}
+          callerId={callingData.lawyerId}
+          callType={callingData.callType}
+          callDirection="outgoing"
+          onCallEnded={handleEndCall}
+        />
       )}
 
       {isLoading && (
