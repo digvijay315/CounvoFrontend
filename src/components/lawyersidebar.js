@@ -181,7 +181,8 @@ const[missingtext,setmissingtext]=useState('')
           align-items: center;
           padding: 0 2rem;
           position: fixed;
-          top: 0; left: 0; right: 0; height: 70px; z-index:1001;
+          top: 0; left: 0; right: 0; height: 70px; 
+          z-index: 1000;
           width: 100%;
         }
         .logo-text {
@@ -286,7 +287,6 @@ const[missingtext,setmissingtext]=useState('')
       <header>
         <div className="logo-text">
           <img src={logo} style={{ height: "150px" }} alt="logo" />
-         
         </div>
         {screenWidth < 769 && (
           <button
@@ -299,23 +299,27 @@ const[missingtext,setmissingtext]=useState('')
         )}
       </header>
       {renderBackdrop()}
-      <aside className={sidebarOpen && screenWidth < 769 ? 'mobile-open' : ''}>
-         {/* <div className="logo-text">
+      <aside className={sidebarOpen && screenWidth < 769 ? "mobile-open" : ""}>
+        {/* <div className="logo-text">
                   <img src={logo} style={{ height: "50px" }} alt="logo" />
                 </div> */}
         <ul className="sidebar-menu">
           {menuItems.map((item) => (
             <li
               key={item.label}
-              className={`sidebar-item ${isActiveMenuItem(item.path) ? 'active' : ''}`}
+              className={`sidebar-item ${
+                isActiveMenuItem(item.path) ? "active" : ""
+              }`}
               onClick={() => handleMenuClick(item)}
             >
               <span>{item.icon}</span>
               {item.label}
-              {item.label === 'Messages' && hasNewMessages && (
+              {item.label === "Messages" && hasNewMessages && (
                 <span className="new-message-indicator"></span>
               )}
-              {item.badge && <span className="sidebar-badge">{item.badge}</span>}
+              {item.badge && (
+                <span className="sidebar-badge">{item.badge}</span>
+              )}
             </li>
           ))}
         </ul>
