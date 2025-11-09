@@ -141,6 +141,7 @@ function Clientchathistory() {
         callType: "voice",
         lawyerId: null,
         callerInfo: null,
+        callStatus: "idle",
       });
       Swal.fire({
         icon: "error",
@@ -154,7 +155,11 @@ function Clientchathistory() {
     // Call accepted by recipient
     socket.on("callAccepted", ({ accepterId }) => {
       console.log("Call accepted by:", accepterId);
-      // Call screen already active, just log
+      // Update call status to connected
+      setCallingData((prev) => ({
+        ...prev,
+        callStatus: "connected",
+      }));
     });
 
     return () => {
@@ -378,6 +383,7 @@ function Clientchathistory() {
     callType: "voice",
     lawyerId: null,
     callerInfo: null,
+    callStatus: "idle", // idle, ringing, connected
   });
   const handleStartCall = async (lawyerId, callType) => {
     try {
@@ -398,6 +404,7 @@ function Clientchathistory() {
           fullName: chatLawyer.fullName,
           profilepic: chatLawyer.profilepic,
         },
+        callStatus: "ringing", // Set initial status as ringing
       });
     } catch (error) {
       console.error("Error starting call:", error);
@@ -411,6 +418,7 @@ function Clientchathistory() {
         callType: "video",
         lawyerId: null,
         callerInfo: null,
+        callStatus: "idle",
       });
     } catch (error) {
       console.error("Error ending call:", error);
@@ -440,12 +448,13 @@ function Clientchathistory() {
       accepterId: userData.user._id,
     });
 
-    // Start the call
+    // Start the call - when accepting, it's immediately connected
     setCallingData({
       isActive: true,
       callType: incomingCall.callType,
       lawyerId: incomingCall.callerId,
       callerInfo: incomingCall.callerInfo,
+      callStatus: "connected", // Incoming calls are immediately connected when accepted
     });
 
     // Clear incoming call
@@ -1020,6 +1029,7 @@ function Clientchathistory() {
           callerInfo={callingData.callerInfo}
           callType={callingData.callType}
           callDirection="outgoing"
+          callStatus={callingData.callStatus}
           onCallEnded={handleEndCall}
         />
       )}

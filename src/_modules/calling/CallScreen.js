@@ -16,6 +16,7 @@ const CallScreen = ({
   userId,
   callerInfo,
   callDirection = "incoming",
+  callStatus = "ringing",
   onCallEnded,
 }) => {
   const [inCall, setInCall] = useState(false);
@@ -393,12 +394,12 @@ const CallScreen = ({
     }
   };
 
-  // Auto-start call when component mounts
+  // Auto-start call when component mounts or when call status changes to connected
   useEffect(() => {
-    if (userId && callerId && !inCall && !isLoading) {
+    if (userId && callerId && !inCall && !isLoading && callStatus === "connected") {
       handleStartCall();
     }
-  }, [userId, callerId]);
+  }, [userId, callerId, callStatus]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -415,8 +416,8 @@ const CallScreen = ({
     }
     return callerId;
   };
-  // Loading Screen
-  if (isLoading && !inCall) {
+  // Loading Screen or Ringing Screen
+  if ((isLoading && !inCall) || (!inCall && callStatus === "ringing")) {
     return (
       <div
         style={{
@@ -431,10 +432,13 @@ const CallScreen = ({
       >
         <div className="call-loading">
           <Loader size={48} className="spinning" />
-          <h2>Connecting to call...</h2>
+          <h2>
+            {callStatus === "ringing" ? "Ringing..." : "Connecting to call..."}
+          </h2>
           <p>
-            Setting up {callType === "video" ? "video" : "voice"} call with{" "}
-            {getCallerName()}
+            {callStatus === "ringing"
+              ? `Calling ${getCallerName()}...`
+              : `Setting up ${callType === "video" ? "video" : "voice"} call with ${getCallerName()}`}
           </p>
         </div>
       </div>
