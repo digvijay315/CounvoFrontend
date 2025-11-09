@@ -18,6 +18,7 @@ const CallScreen = ({
   callDirection = "incoming",
   callStatus = "ringing",
   onCallEnded,
+  screen = "lawyer",
 }) => {
   const [inCall, setInCall] = useState(false);
   const [channelName, setChannelName] = useState("");
@@ -396,7 +397,13 @@ const CallScreen = ({
 
   // Auto-start call when component mounts or when call status changes to connected
   useEffect(() => {
-    if (userId && callerId && !inCall && !isLoading && callStatus === "connected") {
+    if (
+      userId &&
+      callerId &&
+      !inCall &&
+      !isLoading &&
+      callStatus === "connected"
+    ) {
       handleStartCall();
     }
   }, [userId, callerId, callStatus]);
@@ -411,7 +418,11 @@ const CallScreen = ({
   }, []);
 
   const getCallerName = () => {
-    if (callerInfo?.fullName) {
+    console.log(callerInfo);
+    if (screen === "client" && callerInfo?.firstName && callerInfo?.lastName) {
+      return callerInfo?.firstName + " " + callerInfo?.lastName;
+    }
+    if (screen === "lawyer" && callerInfo?.fullName) {
       return callerInfo.fullName;
     }
     return callerId;
@@ -438,7 +449,9 @@ const CallScreen = ({
           <p>
             {callStatus === "ringing"
               ? `Calling ${getCallerName()}...`
-              : `Setting up ${callType === "video" ? "video" : "voice"} call with ${getCallerName()}`}
+              : `Setting up ${
+                  callType === "video" ? "video" : "voice"
+                } call with ${getCallerName()}`}
           </p>
         </div>
       </div>

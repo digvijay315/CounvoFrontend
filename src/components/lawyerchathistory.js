@@ -785,6 +785,7 @@ function LawyerChatHistory() {
             callDirection="outgoing"
             callStatus={callingData.callStatus}
             onCallEnded={handleEndCall}
+            screen="lawyer"
           />
         )}
         {incomingCall && (

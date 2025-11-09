@@ -119,7 +119,7 @@ function Clientchathistory() {
       let callerInfo = null;
       if (callerModel === "Lawyer") {
         try {
-          const res = await api.get(`/api/lawyer/getlawyerprofile/${callerId}`);
+          const res = await api.get(`/api/lawyer/getlawyer/${callerId}`);
           callerInfo = res.data;
         } catch (err) {
           console.error("Failed to fetch caller info:", err);
@@ -421,7 +421,8 @@ function Clientchathistory() {
         callType,
         lawyerId,
         callerInfo: {
-          fullName: chatLawyer.fullName,
+          firstName: chatLawyer.firstName,
+          lastName: chatLawyer.lastName,
           profilepic: chatLawyer.profilepic,
         },
         callStatus: "ringing", // Set initial status as ringing
@@ -1059,6 +1060,7 @@ function Clientchathistory() {
           callDirection="outgoing"
           callStatus={callingData.callStatus}
           onCallEnded={handleEndCall}
+          screen="client"
         />
       )}
 
