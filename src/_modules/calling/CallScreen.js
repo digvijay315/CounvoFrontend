@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import {
-    Phone,
-    Video, Mic,
-    MicOff,
-    VideoOff, AlertCircle,
-    Loader
+  Phone,
+  Video,
+  Mic,
+  MicOff,
+  VideoOff,
+  AlertCircle,
+  Loader,
+  Volume2,
+  Speaker,
+  Headphones,
+  Smartphone,
+  ChevronUp,
+  VolumeX,
 } from "lucide-react";
 import "../../css/call_screen.css";
 import { APP_CONFIG } from "../../_constants/config";
@@ -31,6 +39,10 @@ const CallScreen = ({
   const [permissionError, setPermissionError] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceLevel, setVoiceLevel] = useState(0);
+  const [audioOutputDevices, setAudioOutputDevices] = useState([]);
+  const [selectedAudioOutput, setSelectedAudioOutput] = useState("");
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [isAudioOutputMuted, setIsAudioOutputMuted] = useState(false);
 
   const APP_ID = APP_CONFIG.AGORA_APP_ID;
   const BACKEND_URL = APP_CONFIG.API_URL;
@@ -39,6 +51,87 @@ const CallScreen = ({
   const clientRef = useRef(null);
   const localAudioTrackRef = useRef(null);
   const localVideoTrackRef = useRef(null);
+
+  // Identify device type from label
+  const identifyDeviceType = (label) => {
+    const lowerLabel = label.toLowerCase();
+
+    // Check for earpiece/phone speaker
+    if (
+      lowerLabel.includes("earpiece") ||
+      lowerLabel.includes("receiver") ||
+      lowerLabel.includes("phone speaker")
+    ) {
+      return {
+        type: "Earpiece",
+        icon: Smartphone,
+      };
+    }
+
+    // Check for headphones/earphones/headset
+    if (
+      lowerLabel.includes("headphone") ||
+      lowerLabel.includes("headset") ||
+      lowerLabel.includes("earphone") ||
+      lowerLabel.includes("airpods") ||
+      lowerLabel.includes("buds") ||
+      lowerLabel.includes("bluetooth") ||
+      lowerLabel.includes("wireless")
+    ) {
+      return {
+        type: "Earphones",
+        icon: Headphones,
+      };
+    }
+
+    // Default to speaker for anything else
+    return {
+      type: "Speaker",
+      icon: Speaker,
+    };
+  };
+
+  // Enumerate audio output devices
+  const getAudioOutputDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioOutputs = devices.filter(
+        (device) => device.kind === "audiooutput"
+      );
+      setAudioOutputDevices(audioOutputs);
+
+      // Set default device if none selected
+      if (audioOutputs.length > 0 && !selectedAudioOutput) {
+        setSelectedAudioOutput(audioOutputs[0].deviceId);
+      }
+
+      return audioOutputs;
+    } catch (error) {
+      console.error("Error enumerating audio devices:", error);
+      return [];
+    }
+  };
+
+  // Change audio output device
+  const changeAudioOutput = async (deviceId) => {
+    try {
+      setSelectedAudioOutput(deviceId);
+
+      // Apply to all remote users' audio tracks
+      remoteUsers.forEach((user) => {
+        if (user.audioTrack) {
+          // Set playback device for remote audio track
+          user.audioTrack.setPlaybackDevice(deviceId).catch((err) => {
+            console.error("Error setting playback device:", err);
+          });
+        }
+      });
+
+      console.log("Audio output changed to device:", deviceId);
+    } catch (error) {
+      console.error("Error changing audio output:", error);
+    }
+  };
 
   // Fetch Agora token from backend
   const fetchToken = async (channel) => {
@@ -148,6 +241,18 @@ const CallScreen = ({
 
       // Play audio track
       user.audioTrack.play();
+
+      // Apply selected audio output device if available
+      if (selectedAudioOutput) {
+        user.audioTrack.setPlaybackDevice(selectedAudioOutput).catch((err) => {
+          console.error("Error setting playback device for new user:", err);
+        });
+      }
+
+      // Apply current mute state
+      if (isAudioOutputMuted) {
+        user.audioTrack.setVolume(0);
+      }
     }
   };
 
@@ -395,6 +500,19 @@ const CallScreen = ({
     }
   };
 
+  // Toggle audio output (speaker) mute
+  const toggleAudioOutputMute = () => {
+    const newMutedState = !isAudioOutputMuted;
+    setIsAudioOutputMuted(newMutedState);
+
+    // Mute/unmute all remote users' audio tracks
+    remoteUsers.forEach((user) => {
+      if (user.audioTrack) {
+        user.audioTrack.setVolume(newMutedState ? 0 : 100);
+      }
+    });
+  };
+
   // Auto-start call when component mounts or when call status changes to connected
   useEffect(() => {
     if (
@@ -407,6 +525,46 @@ const CallScreen = ({
       handleStartCall();
     }
   }, [userId, callerId, callStatus]);
+
+  // Enumerate audio devices when in call
+  useEffect(() => {
+    if (inCall) {
+      getAudioOutputDevices();
+
+      // Listen for device changes
+      const handleDeviceChange = () => {
+        getAudioOutputDevices();
+      };
+
+      navigator.mediaDevices.addEventListener(
+        "devicechange",
+        handleDeviceChange
+      );
+
+      return () => {
+        navigator.mediaDevices.removeEventListener(
+          "devicechange",
+          handleDeviceChange
+        );
+      };
+    }
+  }, [inCall]);
+
+  // Close audio menu when clicking outside
+  useEffect(() => {
+    if (showAudioMenu) {
+      const handleClickOutside = (event) => {
+        if (!event.target.closest(".audio-output-selector")) {
+          setShowAudioMenu(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showAudioMenu]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -544,15 +702,16 @@ const CallScreen = ({
 
         {/* Call Controls */}
         <div className="call-controls">
+          {/* Microphone Mute Button */}
           <button
             className={`control-btn ${isMuted ? "muted" : ""} ${
               !isMuted && isSpeaking ? "speaking" : ""
             }`}
             onClick={toggleMute}
-            title={isMuted ? "Unmute" : "Mute"}
+            title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
             style={{
-              "--voice-level": voiceLevel / 100, // 0 to 1
-              "--voice-intensity": Math.min(voiceLevel / 50, 1), // 0 to 1, capped
+              "--voice-level": voiceLevel / 100,
+              "--voice-intensity": Math.min(voiceLevel / 50, 1),
             }}
           >
             {isMuted ? <MicOff size={28} /> : <Mic size={28} />}
@@ -566,6 +725,88 @@ const CallScreen = ({
             >
               {isVideoOff ? <VideoOff size={28} /> : <Video size={28} />}
             </button>
+          )}
+
+          {/* Audio Output Selector with Output Mute */}
+          {audioOutputDevices.length > 1 && (
+            <div className="audio-output-selector">
+              <div className="audio-control-group">
+                {/* Left Button - Mute/Unmute Audio Output (Speaker) */}
+                <button
+                  className={`control-btn audio-output-mute-btn ${
+                    isAudioOutputMuted ? "muted" : ""
+                  }`}
+                  onClick={toggleAudioOutputMute}
+                  title={
+                    isAudioOutputMuted
+                      ? "Unmute Audio Output"
+                      : "Mute Audio Output"
+                  }
+                >
+                  {(() => {
+                    if (isAudioOutputMuted) {
+                      return <VolumeX size={28} />;
+                    }
+                    const selectedDevice = audioOutputDevices.find(
+                      (d) => d.deviceId === selectedAudioOutput
+                    );
+                    if (selectedDevice) {
+                      const deviceInfo = identifyDeviceType(
+                        selectedDevice.label || "Speaker"
+                      );
+                      const SelectedIcon = deviceInfo.icon;
+                      return <SelectedIcon size={28} />;
+                    }
+                    return <Volume2 size={28} />;
+                  })()}
+                </button>
+
+                {/* Right Button - Audio Output Selection */}
+                <button
+                  className="control-btn audio-selector-btn"
+                  onClick={() => setShowAudioMenu(!showAudioMenu)}
+                  title="Select Audio Output"
+                >
+                  <ChevronUp size={20} />
+                </button>
+              </div>
+
+              {showAudioMenu && (
+                <div className="audio-menu">
+                  <div className="audio-menu-header">
+                    <h4>Audio Output</h4>
+                  </div>
+                  <div className="audio-menu-items">
+                    {audioOutputDevices.map((device) => {
+                      const deviceInfo = identifyDeviceType(
+                        device.label || "Speaker"
+                      );
+                      const DeviceIcon = deviceInfo.icon;
+                      return (
+                        <button
+                          key={device.deviceId}
+                          className={`audio-menu-item ${
+                            selectedAudioOutput === device.deviceId
+                              ? "active"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            changeAudioOutput(device.deviceId);
+                            setShowAudioMenu(false);
+                          }}
+                        >
+                          <DeviceIcon size={22} />
+                          <span>{deviceInfo.type}</span>
+                          {selectedAudioOutput === device.deviceId && (
+                            <span className="checkmark">✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <button

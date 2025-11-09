@@ -676,10 +676,7 @@
     position: relative;
   }
 
-  .control-btn:hover:not(.end-call) {
-    background: rgba(59, 130, 246, 0.3);
-    transform: translateY(-3px);
-  }
+  
 
   .control-btn.muted {
     background: rgba(239, 68, 68, 0.3);
@@ -750,6 +747,183 @@
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     transform: translateY(-3px);
     box-shadow: 0 8px 24px rgba(239, 68, 68, 0.6);
+  }
+
+  /* ===== AUDIO OUTPUT SELECTOR ===== */
+  .audio-output-selector {
+    position: relative;
+  }
+
+  .audio-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(59, 130, 246, 0.15);
+    border-radius: 32px;
+    padding: 4px;
+    backdrop-filter: blur(10px);
+  }
+
+  .audio-output-mute-btn {
+    border-radius: 28px 0 0 28px !important;
+    padding-right: 12px !important;
+  }
+
+  .audio-output-mute-btn.muted {
+    background: rgba(239, 68, 68, 0.3);
+  }
+
+  .audio-selector-btn {
+    width: 48px !important;
+    border-radius: 0 28px 28px 0 !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    padding-left: 12px !important;
+  }
+
+
+  .audio-menu {
+    position: absolute;
+    bottom: 85px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(17, 24, 39, 0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    min-width: 320px;
+    max-width: 450px;
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+    z-index: 150;
+  }
+
+  .audio-menu::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(17, 24, 39, 0.98);
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  .audio-menu-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .audio-menu-header h4 {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .audio-menu-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+    padding: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .audio-menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    width: 100%;
+    font-family: "Inter", sans-serif;
+    position: relative;
+  }
+
+  .audio-menu-item:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .audio-menu-item.active {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: #3b82f6;
+    color: white;
+  }
+
+  .audio-menu-item svg {
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+  }
+
+  .audio-menu-item:hover svg {
+    color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.1);
+  }
+
+  .audio-menu-item.active svg {
+    color: #60a5fa;
+  }
+
+  .audio-menu-item span {
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+  }
+
+  .audio-menu-item .checkmark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #10b981;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* Custom scrollbar for audio menu */
+  .audio-menu-items::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .audio-menu-items::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .audio-menu-items::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+
+  .audio-menu-items::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
 
   /* ===== ANIMATIONS ===== */
@@ -855,6 +1029,56 @@
       width: 60px;
       height: 60px;
     }
+
+    .audio-menu {
+      min-width: 280px;
+      max-width: 90vw;
+      bottom: 70px;
+    }
+
+    .audio-menu-header {
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+
+    .audio-menu-items {
+      gap: 6px;
+      padding: 10px;
+    }
+
+    .audio-menu-item {
+      padding: 16px 12px;
+      font-size: 12px;
+      gap: 6px;
+    }
+
+    .audio-menu-item svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .audio-menu-item .checkmark {
+      font-size: 18px;
+      top: 6px;
+      right: 6px;
+    }
+
+    .audio-control-group {
+      padding: 3px;
+    }
+
+    .audio-selector-btn {
+      width: 44px !important;
+    }
+
+    .audio-selector-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .audio-output-mute-btn {
+      padding-right: 10px !important;
+    }
   }
 
   @media (max-width: 480px) {
@@ -870,6 +1094,51 @@
     .control-btn {
       width: 56px;
       height: 56px;
+    }
+
+    .audio-menu {
+      min-width: 260px;
+      max-width: calc(100vw - 40px);
+    }
+
+    .audio-menu-items {
+      gap: 6px;
+      padding: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    }
+
+    .audio-menu-item {
+      padding: 14px 10px;
+      font-size: 11px;
+      gap: 6px;
+    }
+
+    .audio-menu-item svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .audio-menu-item .checkmark {
+      font-size: 16px;
+      top: 4px;
+      right: 4px;
+    }
+
+    .audio-control-group {
+      padding: 3px;
+    }
+
+    .audio-selector-btn {
+      width: 40px !important;
+    }
+
+    .audio-selector-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .audio-output-mute-btn {
+      padding-right: 8px !important;
     }
   }
 }
