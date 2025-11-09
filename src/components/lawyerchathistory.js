@@ -174,6 +174,25 @@ function LawyerChatHistory() {
       }));
     });
 
+    // Call ended by other party
+    socket.on("callEnded", ({ enderId }) => {
+      console.log("Call ended by other party:", enderId);
+      setCallingData({
+        isActive: false,
+        callType: "voice",
+        clientId: null,
+        callerInfo: null,
+        callStatus: "idle",
+      });
+      Swal.fire({
+        icon: "info",
+        title: "Call Ended",
+        text: "The other party has ended the call.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    });
+
     return () => {
       socket.off("connect");
       socket.off("receiveMessage");
@@ -181,6 +200,7 @@ function LawyerChatHistory() {
       socket.off("incomingCall");
       socket.off("callRejected");
       socket.off("callAccepted");
+      socket.off("callEnded");
       socket.disconnect();
     };
   }, [lawyerdetails.lawyer._id, chatClient]);
@@ -273,6 +293,14 @@ function LawyerChatHistory() {
 
   const handleEndCall = async () => {
     try {
+      // Notify the other party that the call has ended
+      if (callingData.clientId) {
+        socket.emit("endCall", {
+          callerId: lawyerdetails.lawyer._id,
+          receiverId: callingData.clientId,
+        });
+      }
+
       setCallingData({
         isActive: false,
         callType: "video",
