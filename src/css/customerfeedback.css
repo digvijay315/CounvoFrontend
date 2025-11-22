@@ -56,7 +56,7 @@
 }
 .c-feedback-btn {
   margin-top: 10px;
-  background: linear-gradient(90deg, #3b82f6 60%, #6886fd 100%);
+  background: #3b82f6 !important;
   color: #fff;
   font-weight: 600;
   font-size: 16.5px;
