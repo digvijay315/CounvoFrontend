@@ -1040,59 +1040,64 @@ const filterLawyersAndChat = () => {
 
 
 
-    return(
-<div>
-      <Header/>
-  <div className="olc-root">
-
-    <section className="olc-banner-bg" style={{marginTop:"10px"}}>
-      <div className="olc-banner" id="main-banner">
-       
-        <div className="olc-banner-content">
-          {/* Left: Headline and Benefits */}
-          <div className="olc-banner-left">
-         <div className="olc-process-desktop">
-              <p className="olc-process-title">Process</p>
-             <div className="olc-process-steps">
-  <div className="olc-process-step">
-     <span style={{ fontSize: '32px' }} className="icons">📝</span>
-    <span>Select details</span>
-  </div>
-   <span className="arrow"
-   style={{
-  fontSize: '32px',
-  background:"#2d3a5c",
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  fontWeight: 'bold'
-}}>
-  &gt;&gt;
-</span>
-  <div className="olc-process-step">
-    <span style={{ fontSize: '32px' }} className="icons">⏳</span>
-    <span>Wait for a few minutes</span>
-  </div>
-  <span className="arrow"
-  style={{
-  fontSize: '32px',
-  background: "#2d3a5c",
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  fontWeight: 'bold'
-}}>
-  &gt;&gt;
-</span>
-  <div className="olc-process-step">
-    <span style={{ fontSize: '32px' }} className="icons">💬</span>
-    <span>Chat with lawyer</span>
-  </div>
-
-  
-</div>
-
-            </div>
-               {/* Process Steps (Mobile) */}
-        {/* <div className="olc-process-mobile">
+    return (
+      <div>
+        <Header />
+        <div className="olc-root">
+          <section className="olc-banner-bg">
+            <div className="olc-banner" id="main-banner">
+              <div className="olc-banner-content">
+                {/* Left: Headline and Benefits */}
+                <div className="olc-banner-left">
+                  <div className="olc-process-desktop">
+                    <p className="olc-process-title">Process</p>
+                    <div className="olc-process-steps">
+                      <div className="olc-process-step">
+                        <span style={{ fontSize: "32px" }} className="icons">
+                          📝
+                        </span>
+                        <span>Select details</span>
+                      </div>
+                      <span
+                        className="arrow"
+                        style={{
+                          fontSize: "32px",
+                          background: "#2d3a5c",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        &gt;&gt;
+                      </span>
+                      <div className="olc-process-step">
+                        <span style={{ fontSize: "32px" }} className="icons">
+                          ⏳
+                        </span>
+                        <span>Wait for a few minutes</span>
+                      </div>
+                      <span
+                        className="arrow"
+                        style={{
+                          fontSize: "32px",
+                          background: "#2d3a5c",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        &gt;&gt;
+                      </span>
+                      <div className="olc-process-step">
+                        <span style={{ fontSize: "32px" }} className="icons">
+                          💬
+                        </span>
+                        <span>Chat with lawyer</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Process Steps (Mobile) */}
+                  {/* <div className="olc-process-mobile">
           <p className="olc-process-title">Process</p>
           <div className="olc-process-steps">
            <div className="olc-process-step">
@@ -1110,244 +1115,268 @@ const filterLawyersAndChat = () => {
           </div>
         </div> */}
 
-            <div className="findlawyer">
-  <div className="findlawyer-glass" />
-  <h2 className="findlawyer-title">
-    🔎 Find a Lawyer
-  </h2>
-  <div className="findlawyer-controls">
-    <select
-      value={specialization}
-      onChange={e => setSpecialization(e.target.value)}
-      className="findlawyer-select"
-    >
-      {SPECIALIZATIONS.map(spec => (
-        <option key={spec.value} value={spec.value}>
-          {spec.label}
-        </option>
-      ))}
-    </select>
-    <select
-      value={court}
-      onChange={e => setcourt(e.target.value)}
-      className="findlawyer-select"
-    >
-      {Courts.map(st => (
-        <option key={st.value} value={st.value}>
-          {st.label}
-        </option>
-      ))}
-    </select>
-       <select
-      value={language}
-      onChange={e => setlanguage(e.target.value)}
-      className="findlawyer-select"
-    >
-      {languages.map(st => (
-        <option key={st.value} value={st.value}>
-          {st.label}
-        </option>
-      ))}
-    </select>
-    <button
-      className="action-btn findlawyer-btn"
-      title="Chat Now"
-      onClick={filterLawyersAndChat}
-    >
-      Chat Now
-    </button>
-  </div>
-</div>
+                  <div className="findlawyer">
+                    <div className="findlawyer-glass" />
+                    <h2 className="findlawyer-title">🔎 Find a Lawyer</h2>
+                    <div className="findlawyer-controls">
+                      <select
+                        value={specialization}
+                        onChange={(e) => setSpecialization(e.target.value)}
+                        className="findlawyer-select"
+                      >
+                        {SPECIALIZATIONS.map((spec) => (
+                          <option key={spec.value} value={spec.value}>
+                            {spec.label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={court}
+                        onChange={(e) => setcourt(e.target.value)}
+                        className="findlawyer-select"
+                      >
+                        {Courts.map((st) => (
+                          <option key={st.value} value={st.value}>
+                            {st.label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={language}
+                        onChange={(e) => setlanguage(e.target.value)}
+                        className="findlawyer-select"
+                      >
+                        {languages.map((st) => (
+                          <option key={st.value} value={st.value}>
+                            {st.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        className="action-btn findlawyer-btn"
+                        title="Chat Now"
+                        onClick={filterLawyersAndChat}
+                      >
+                        Chat Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-
-
-          
-           
-          </div>
-        
-        </div>
-     
-
-           <section class="legal-queries-section">
-  <h2 class="section-title">Most Asked Legal Queries</h2>
-  <div class="queries-grid">
-    <div class="query-card" onClick={()=>setSpecialization('civil lawyer')}>
-      {/* <span class="query-icon">🚗</span> */}
-      <h3>Car Challan</h3>
-      {/* <p>Information and help regarding traffic fines and challans.</p> */}
-    </div>
-    {/* <div class="query-card">
+              <section class="legal-queries-section">
+                <h2 class="section-title">Most Asked Legal Queries</h2>
+                <div class="queries-grid">
+                  <div
+                    class="query-card"
+                    onClick={() => setSpecialization("civil lawyer")}
+                  >
+                    {/* <span class="query-icon">🚗</span> */}
+                    <h3>Car Challan</h3>
+                    {/* <p>Information and help regarding traffic fines and challans.</p> */}
+                  </div>
+                  {/* <div class="query-card">
       <span class="query-icon">📄</span>
       <h3>Legal Notice</h3>
       {/* <p>Drafting and responding to legal notices efficiently.</p> 
     </div> */}
-    <div class="query-card" onClick={()=>setSpecialization('legal notice drafting')}>
-      {/* <span class="query-icon ">💸</span> */}
-      <h3>Cheque Bounce</h3>
-      {/* <p>Guidance on cheque bounce cases and legal remedies.</p> */}
-    </div>
-    <div class="query-card" onClick={()=>setSpecialization('consumer lawyer')}>
-      {/* <span class="query-icon">📦</span> */}
-      <h3>Product/Service Default</h3>
-      {/* <p>Assistance for faulty products or unsatisfactory services.</p> */}
-    </div>
-    <div class="query-card" onClick={()=>setSpecialization('cyber lawyer')}>
-      {/* <span class="query-icon">🕵️</span> */}
-      <h3>Online Fraud</h3>
-      {/* <p>Support for victims of cyber fraud and scams.</p> */}
-    </div>
-  </div>
-</section>
+                  <div
+                    class="query-card"
+                    onClick={() => setSpecialization("legal notice drafting")}
+                  >
+                    {/* <span class="query-icon ">💸</span> */}
+                    <h3>Cheque Bounce</h3>
+                    {/* <p>Guidance on cheque bounce cases and legal remedies.</p> */}
+                  </div>
+                  <div
+                    class="query-card"
+                    onClick={() => setSpecialization("consumer lawyer")}
+                  >
+                    {/* <span class="query-icon">📦</span> */}
+                    <h3>Product/Service Default</h3>
+                    {/* <p>Assistance for faulty products or unsatisfactory services.</p> */}
+                  </div>
+                  <div
+                    class="query-card"
+                    onClick={() => setSpecialization("cyber lawyer")}
+                  >
+                    {/* <span class="query-icon">🕵️</span> */}
+                    <h3>Online Fraud</h3>
+                    {/* <p>Support for victims of cyber fraud and scams.</p> */}
+                  </div>
+                </div>
+              </section>
+            </div>
 
-      </div>
+            <section class="lawyer-help-section">
+              <h2 class="help-title">
+                Not sure which type of lawyer you need?
+              </h2>
+              <p class="help-desc">
+                No problem!{" "}
+                <a
+                  href="https://www.google.com/"
+                  target="_blank"
+                  class="google-link"
+                >
+                  Click here
+                </a>{" "}
+                and type the following:<br></br>
+                <span class="help-template">
+                  "My legal issue is [your case]. What category of lawyer do I
+                  need — criminal, civil, family, corporate, consumer, labour,
+                  or cyber?"
+                </span>
+              </p>
+              <div class="help-example">
+                <strong>Example:</strong>
+                <br></br>
+                My legal issue is my employer is not paying my salary. What
+                category of lawyer do I need — criminal, civil, family,
+                corporate, consumer, labour, or cyber?
+              </div>
+            </section>
 
- 
-
-
-     
-
- 
-
-<section class="lawyer-help-section">
-  <h2 class="help-title">Not sure which type of lawyer you need?</h2>
-  <p class="help-desc">
-    No problem! <a href="https://www.google.com/" target="_blank" class="google-link">Click here</a> and type the following:<br></br>
-    <span class="help-template">"My legal issue is [your case]. What category of lawyer do I need — criminal, civil, family, corporate, consumer, labour, or cyber?"</span>
-  </p>
-  <div class="help-example">
-    <strong>Example:</strong><br></br>
-    My legal issue is my employer is not paying my salary. What category of lawyer do I need — criminal, civil, family, corporate, consumer, labour, or cyber?
-  </div>
-
-</section>
-
- <section className="olc-expertise-section">
-    <h2 className="olc-expertise-title">Legal Matter Categories</h2>
-    <div className="olc-expertise-list">
-      {legalExpertise.map((area, idx) => (
-        <div className="olc-expertise-card" key={area.title}>
-          <img
-            src={area.img}
-            alt={area.alt}
-            className="olc-expertise-img"
-            loading="lazy"
-          />
-          <div className="olc-expertise-content">
-            <p className="olc-expertise-area">
-              <a href={area.link} target="_blank" rel="noopener noreferrer">
-                {area.title}
-              </a>
-            </p>
-            <p className="olc-expertise-desc">{area.description}</p>
-            {/* <a href={area.link} target="_blank" rel="noopener noreferrer">
+            <section className="olc-expertise-section">
+              <h2 className="olc-expertise-title">Legal Matter Categories</h2>
+              <div className="olc-expertise-list">
+                {legalExpertise.map((area, idx) => (
+                  <div className="olc-expertise-card" key={area.title}>
+                    <img
+                      src={area.img}
+                      alt={area.alt}
+                      className="olc-expertise-img"
+                      loading="lazy"
+                    />
+                    <div className="olc-expertise-content">
+                      <p className="olc-expertise-area">
+                        <a
+                          href={area.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {area.title}
+                        </a>
+                      </p>
+                      <p className="olc-expertise-desc">{area.description}</p>
+                      {/* <a href={area.link} target="_blank" rel="noopener noreferrer">
               <button className="olc-expertise-btn">{area.cta}</button>
             </a> */}
-          </div>
-        </div>
-      ))}
-    </div>
-  </section>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-   <div className="legal-services-container">
-    <h2 className="legal-services-heading">Services Provided by Lawyers</h2>
-    <div className="service-card-grid">
-      {categories.map((cat) => (
-        <div key={cat.title} className="service-card">
-          <div className="category-title">{cat.title}</div>
-          <ul className="service-list">
-            {cat.services.map((srv) => (
-              <li key={srv}>{srv}</li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
- 
-  </div>
-
- <section className="olc-legalrep-section">
-    <div className="olc-legalrep-container">
-      <h2 className="olc-legalrep-title">Importance of Legal Representation</h2>
-      <p className="olc-legalrep-lead">
-        Having skilled legal representation ensures your rights are protected and offers expert guidance through complex legal matters. A qualified lawyer provides strategic advice, minimises risks, and strengthens your position in disputes or negotiations. Below are some reasons for hiring a lawyer:
-      </p>
-      <ul className="olc-legalrep-list">
-        {legalPoints.map((point, idx) => (
-          <li className="olc-legalrep-listitem" key={idx}>
-            <span className="olc-legalrep-dot"></span>
-            <span>
-              <b>{point.title}</b> {point.desc}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </section>
-
- 
-
-
-
-   <section className="olc-benefits-section">
-    <h2 className="olc-benefits-title">Benefits of Online Lawyer Consultation</h2>
-    <div className="olc-benefits-wrapper">
-      <p className="olc-benefits-lead">
-        Online lawyer consultations offer numerous advantages that enhance your legal experience. Here’s how you can benefit:
-      </p>
-      <div className="olc-benefits-list-bg">
-        <div className="olc-benefits-list">
-          {onlineBenefits.map((item, idx) => (
-            <div className="olc-benefit-card" key={idx}>
-              <p className="olc-benefit-title">{item.title}:</p>
-              <p className="olc-benefit-desc">{item.desc}</p>
+            <div className="legal-services-container">
+              <h2 className="legal-services-heading">
+                Services Provided by Lawyers
+              </h2>
+              <div className="service-card-grid">
+                {categories.map((cat) => (
+                  <div key={cat.title} className="service-card">
+                    <div className="category-title">{cat.title}</div>
+                    <ul className="service-list">
+                      {cat.services.map((srv) => (
+                        <li key={srv}>{srv}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
 
+            <section className="olc-legalrep-section">
+              <div className="olc-legalrep-container">
+                <h2 className="olc-legalrep-title">
+                  Importance of Legal Representation
+                </h2>
+                <p className="olc-legalrep-lead">
+                  Having skilled legal representation ensures your rights are
+                  protected and offers expert guidance through complex legal
+                  matters. A qualified lawyer provides strategic advice,
+                  minimises risks, and strengthens your position in disputes or
+                  negotiations. Below are some reasons for hiring a lawyer:
+                </p>
+                <ul className="olc-legalrep-list">
+                  {legalPoints.map((point, idx) => (
+                    <li className="olc-legalrep-listitem" key={idx}>
+                      <span className="olc-legalrep-dot"></span>
+                      <span>
+                        <b>{point.title}</b> {point.desc}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
 
- <section className="olc-whyzolvit-section">
-    <div className="olc-whyzolvit-container">
-      <h2 className="olc-whyzolvit-title">
-        Why Choose Counvo For Online Legal Consultation?
-      </h2>
-      <p className="olc-whyzolvit-lead">
-        Counvo offers tailored legal support, ensuring that you are connected with experienced lawyers. Whether it be corporate, personal, business, or IP law, we provide access to a network of skilled Lawyers across various niches. Our platform simplifies the process, offering transparent communication, efficient legal counsel, and ongoing support throughout the legal process. Choose Zolvit for comprehensive legal solutions, personalised attention, and a hassle-free experience in securing the best legal consultation for your case.
-      </p>
-      <div className="olc-whyzolvit-grid">
-        {whyZolvitCards.map((card, idx) => (
-          <div className="olc-whyzolvit-card" key={idx}>
-            <div className="olc-whyzolvit-img-bg">
-              <img
-                src={card.img}
-                alt=""
-                className="olc-whyzolvit-img"
-                loading="lazy"
-              />
-              <img
-                src="https://assets.vakilsearch.com/live-images/bg.svg"
-                alt=""
-                className="olc-whyzolvit-bg"
-                aria-hidden="true"
-                loading="lazy"
-              />
-            </div>
-            <p className="olc-whyzolvit-desc">{card.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
+            <section className="olc-benefits-section">
+              <h2 className="olc-benefits-title">
+                Benefits of Online Lawyer Consultation
+              </h2>
+              <div className="olc-benefits-wrapper">
+                <p className="olc-benefits-lead">
+                  Online lawyer consultations offer numerous advantages that
+                  enhance your legal experience. Here’s how you can benefit:
+                </p>
+                <div className="olc-benefits-list-bg">
+                  <div className="olc-benefits-list">
+                    {onlineBenefits.map((item, idx) => (
+                      <div className="olc-benefit-card" key={idx}>
+                        <p className="olc-benefit-title">{item.title}:</p>
+                        <p className="olc-benefit-desc">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
 
+            <section className="olc-whyzolvit-section">
+              <div className="olc-whyzolvit-container">
+                <h2 className="olc-whyzolvit-title">
+                  Why Choose Counvo For Online Legal Consultation?
+                </h2>
+                <p className="olc-whyzolvit-lead">
+                  Counvo offers tailored legal support, ensuring that you are
+                  connected with experienced lawyers. Whether it be corporate,
+                  personal, business, or IP law, we provide access to a network
+                  of skilled Lawyers across various niches. Our platform
+                  simplifies the process, offering transparent communication,
+                  efficient legal counsel, and ongoing support throughout the
+                  legal process. Choose Zolvit for comprehensive legal
+                  solutions, personalised attention, and a hassle-free
+                  experience in securing the best legal consultation for your
+                  case.
+                </p>
+                <div className="olc-whyzolvit-grid">
+                  {whyZolvitCards.map((card, idx) => (
+                    <div className="olc-whyzolvit-card" key={idx}>
+                      <div className="olc-whyzolvit-img-bg">
+                        <img
+                          src={card.img}
+                          alt=""
+                          className="olc-whyzolvit-img"
+                          loading="lazy"
+                        />
+                        <img
+                          src="https://assets.vakilsearch.com/live-images/bg.svg"
+                          alt=""
+                          className="olc-whyzolvit-bg"
+                          aria-hidden="true"
+                          loading="lazy"
+                        />
+                      </div>
+                      <p className="olc-whyzolvit-desc">{card.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
 
-
-
-
-
-{/*========================================= chat section start============================================================= */}
-      <style>{`
+            {/*========================================= chat section start============================================================= */}
+            <style>{`
 
   .lawyers-grid {
           display: grid;
@@ -1624,103 +1653,120 @@ const filterLawyersAndChat = () => {
         
       `}</style>
 
-  {/* Chat Popup */}
+            {/* Chat Popup */}
 
-      {chatLawyer && (
-        <div className={`chat-popup${isFlipping ? ' flip' : ''}`}>
-          <div className="chat-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img
-                src={chatLawyer.profilepic}
-                alt="profile"
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid white',
-                }}
-              />
-              <div>
-                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                  {chatLawyer.firstName} {chatLawyer.lastName}
-                  {/* <span style={{fontSize:"10px",color:"lightgray",fontWeight:"normal"}}>
+            {chatLawyer && (
+              <div className={`chat-popup${isFlipping ? " flip" : ""}`}>
+                <div className="chat-header">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    <img
+                      src={chatLawyer.profilepic}
+                      alt="profile"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: "2px solid white",
+                      }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: "bold", fontSize: "14px" }}>
+                        {chatLawyer.firstName} {chatLawyer.lastName}
+                        {/* <span style={{fontSize:"10px",color:"lightgray",fontWeight:"normal"}}>
                     {chatLawyer.yearsOfExperience}years of experience</span> */}
-                 
+                      </div>
+                      <div style={{ fontSize: "12px", opacity: 0.9 }}>
+                        {chatLawyer.isOnline ? "🟢 Online" : "🔴 Offline"}
+                      </div>
+                    </div>
+                  </div>
+                  {typingStatus && (
+                    <div
+                      className="typing-indicator"
+                      style={{
+                        color: "white",
+                        paddingRight: "80px",
+                        paddingTop: "20px",
+                      }}
+                    >
+                      {typingStatus}
+                    </div>
+                  )}
+                  <div className="header-actions">
+                    <button
+                      onClick={handleSwapLawyer}
+                      style={{
+                        background: "white",
+                        border: "1px solid lightgray",
+                        color: "black",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                      }}
+                      title="Switch Lawyer"
+                    >
+                      Switch
+                      {/* <span style={{fontSize:"14px"}}>switch</span> */}
+                    </button>
+                    <button
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "white",
+                        fontSize: "18px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        logSessionTime();
+                        // const start = localStorage.getItem('switchStartTime');
+                        // if (start && chatLawyer?._id) {
+                        //   const startTime = new Date(start);
+                        //   const now = new Date();
+                        //   const durationMs = now - startTime; // in milliseconds
+                        //   const durationSec = Math.floor(durationMs / 1000);
 
-                </div>
-                <div style={{ fontSize: '12px', opacity: 0.9 }}>
-                  {chatLawyer.isOnline ? '🟢 Online' : '🔴 Offline'}
-                </div>
-              </div>
-            </div>
-                 {typingStatus && <div className="typing-indicator" style={{color:"white",paddingRight:"80px",paddingTop:"20px"}}>{typingStatus}</div>}
-            <div className="header-actions">
-        <button
-        onClick={handleSwapLawyer}
-           style={{
-                background: 'white',
-                border:"1px solid lightgray",
-                color: 'black',
-                fontSize: '12px',
-                cursor: 'pointer',
-              }}
-        
-          title="Switch Lawyer"
-        >
-          Switch
-          {/* <span style={{fontSize:"14px"}}>switch</span> */}
-        </button>
-        <button
-           style={{
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                fontSize: '18px',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                  logSessionTime()
-                  // const start = localStorage.getItem('switchStartTime');
-                  // if (start && chatLawyer?._id) {
-                  //   const startTime = new Date(start);
-                  //   const now = new Date();
-                  //   const durationMs = now - startTime; // in milliseconds
-                  //   const durationSec = Math.floor(durationMs / 1000);
+                        //   console.log(`User spent ${durationSec} seconds with lawyer ${chatLawyer._id}`);
+                        // }
 
-                  //   console.log(`User spent ${durationSec} seconds with lawyer ${chatLawyer._id}`);
-                  // }
+                        Swal.fire({
+                          title: "Are you sure?",
+                          text: "Do you really want to close the chat?",
+                          icon: "warning",
+                          showCancelButton: true,
+                          confirmButtonColor: "#3085d6",
+                          cancelButtonColor: "#d33",
+                          confirmButtonText: "Yes, close it!",
+                          didOpen: () => {
+                            document.querySelector(
+                              ".swal2-container"
+                            ).style.zIndex = "9999";
+                          },
+                        }).then((result) => {
+                          if (result.isConfirmed) {
+                            setChatLawyer(null);
+                            handleSendMessage("user closed the chat");
+                            handleShow(); // open modal after confirmation
+                            Swal.fire(
+                              "Closed!",
+                              "Your chat has been closed.",
+                              "success"
+                            );
+                          }
+                        });
+                      }}
+                      title="Close Chat"
+                    >
+                      ✖
+                    </button>
+                  </div>
 
-              Swal.fire({
-                title: "Are you sure?",
-                text: "Do you really want to close the chat?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, close it!",
-                 didOpen: () => {
-                  document.querySelector('.swal2-container').style.zIndex = '9999';
-                }
-                
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setChatLawyer(null);
-                  handleSendMessage("user closed the chat");
-                  handleShow(); // open modal after confirmation
-                  Swal.fire("Closed!", "Your chat has been closed.", "success");
-                }
-              });
-            }}
-          
-          
-          title="Close Chat"
-        >
-          ✖
-        </button>
-      </div>
-    
-            {/* <button
+                  {/* <button
               onClick={() => setChatLawyer(null)}
               style={{
                 background: 'none',
@@ -1730,224 +1776,244 @@ const filterLawyersAndChat = () => {
                 cursor: 'pointer',
               }}
             >✖</button> */}
-          </div>
+                </div>
 
-       <div className="chat-messages">
-  {!isAccepted ? (
-    // Show loader while waiting
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100%",
-        width: "100%",
-        padding: "20px",
-      }}
-    >
-      {/* Spinner */}
-      <div
-        style={{
-          border: "4px solid #f3f3f3",
-          borderTop: "4px solid #3b82f6",
-          borderRadius: "50%",
-          width: 40,
-          height: 40,
-          animation: "spin 1s linear infinite",
-          marginBottom: 12,
-        }}
-      ></div>
-      <span style={{ color: "#3b82f6", fontWeight: 500 }}>
-        Waiting for lawyer to accept your request...
-      </span>
+                <div className="chat-messages">
+                  {!isAccepted ? (
+                    // Show loader while waiting
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        width: "100%",
+                        padding: "20px",
+                      }}
+                    >
+                      {/* Spinner */}
+                      <div
+                        style={{
+                          border: "4px solid #f3f3f3",
+                          borderTop: "4px solid #3b82f6",
+                          borderRadius: "50%",
+                          width: 40,
+                          height: 40,
+                          animation: "spin 1s linear infinite",
+                          marginBottom: 12,
+                        }}
+                      ></div>
+                      <span style={{ color: "#3b82f6", fontWeight: 500 }}>
+                        Waiting for lawyer to accept your request...
+                      </span>
 
-      <style>
-        {`
+                      <style>
+                        {`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
         `}
-      </style>
-    </div>
-  ) : (
-    // Normal messages after accepted
-    <>
-      {messages.map((msg, idx) => (
-        <div key={idx} className={`message ${msg.isMe ? 'sent' : 'received'}`}>
-          {msg.text}
-          {msg.fileUrl && (
-            msg.fileType && msg.fileType.startsWith('image/') ? (
-              <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                <img src={msg.fileUrl} alt={msg.fileName} style={{ maxWidth: 150, maxHeight: 150 }} />
-              </a>
-            ) : (
-              <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                📄 {msg.fileName}
-              </a>
-            )
-          )}
-          <div style={{ fontSize: '10px', color: 'black', marginTop: '2px', textAlign: msg.isMe ? 'right' : 'left' }}>
-            {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ''}
-          </div>
+                      </style>
+                    </div>
+                  ) : (
+                    // Normal messages after accepted
+                    <>
+                      {messages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`message ${
+                            msg.isMe ? "sent" : "received"
+                          }`}
+                        >
+                          {msg.text}
+                          {msg.fileUrl &&
+                            (msg.fileType &&
+                            msg.fileType.startsWith("image/") ? (
+                              <a
+                                href={msg.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <img
+                                  src={msg.fileUrl}
+                                  alt={msg.fileName}
+                                  style={{ maxWidth: 150, maxHeight: 150 }}
+                                />
+                              </a>
+                            ) : (
+                              <a
+                                href={msg.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                📄 {msg.fileName}
+                              </a>
+                            ))}
+                          <div
+                            style={{
+                              fontSize: "10px",
+                              color: "black",
+                              marginTop: "2px",
+                              textAlign: msg.isMe ? "right" : "left",
+                            }}
+                          >
+                            {msg.timestamp
+                              ? new Date(msg.timestamp).toLocaleString()
+                              : ""}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                <div
+                  className="chat-input"
+                  style={{
+                    pointerEvents: isAccepted ? "auto" : "none", // disables all interactions if false
+                    opacity: isAccepted ? 1 : 0.6, // optional: makes it look disabled
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    onChange={handleFileChange}
+                  />
+                  <input
+                    value={message}
+                    type="text"
+                    placeholder="Type a message..."
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      handleTyping();
+                      if (e.key === "Enter" && e.target.value.trim()) {
+                        handleSendMessage(e.target.value.trim());
+                        setMessage("");
+                      }
+                    }}
+                  />
+                  <button
+                    className="actionbutton"
+                    type="button"
+                    onClick={() => {
+                      handleSendMessage(message);
+                      setMessage("");
+                    }}
+                    style={{
+                      position: "absolute",
+                      right: "20px",
+                      top: "92%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "#54656f",
+                      fontSize: "24px",
+                      cursor: "pointer",
+                      padding: 0,
+                      margin: 0,
+                    }}
+                    title="Send"
+                    tabIndex={-1}
+                  >
+                    <IoSend />
+                  </button>
+
+                  <button
+                    className="actionbutton"
+                    type="button"
+                    onClick={() => fileInputRef.current.click()}
+                    style={{
+                      position: "absolute",
+                      right: "20%",
+                      top: "92%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "gray",
+                      fontSize: "20px",
+                      cursor: "pointer",
+                      padding: 0,
+                      margin: 0,
+                    }}
+                    title="Attach Document"
+                    tabIndex={-1}
+                  >
+                    <HiOutlinePaperClip />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+          <Footer />
         </div>
-      ))}
-    </>
-  )}
-</div>
 
-
-          <div className="chat-input"
-           style={{
-    pointerEvents: isAccepted ? "auto" : "none", // disables all interactions if false
-    opacity: isAccepted ? 1 : 0.6, // optional: makes it look disabled
-  }} >
-            <input
-    type="file"
-    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-    ref={fileInputRef}
-    style={{ display: 'none' }}
-    onChange={handleFileChange}
-  />
-            <input
-            value={message}
-              type="text"
-              placeholder="Type a message..."
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => {
-                handleTyping()
-                if (e.key === 'Enter' && e.target.value.trim()) {
-                  handleSendMessage(e.target.value.trim());
-                  setMessage('');
-                }
+        {isLoading && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(255,255,255,0.5)",
+              backdropFilter: "blur(8px)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 9999,
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(255,255,255,0.9)",
+                padding: "40px 60px",
+                borderRadius: "20px",
+                boxShadow: "0 8px 32px rgba(80,120,220,0.10)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
               }}
-            />
-              <button
-              className="actionbutton"
-    type="button"
-    onClick={()=>{handleSendMessage(message);
-       setMessage('')}
-      }
-    style={{
-      position: 'absolute',
-      right: '20px',
-      top: '92%',
-      transform: 'translateY(-50%)',
-      background: 'none',
-      border: 'none',
-      color: '#54656f',
-      fontSize: '24px',
-      cursor: 'pointer',
-      padding: 0,
-      margin: 0
-    }}
-    title="Send"
-    tabIndex={-1}
-  >
-    <IoSend />
-  </button>
-
-   <button
-     className="actionbutton"
-  type="button"
-  onClick={() => fileInputRef.current.click()}
-  style={{
-    position: 'absolute',
-    right: '20%',
-    top: '92%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    color: 'gray',
-    fontSize: '20px',
-    cursor: 'pointer',
-    padding: 0,
-    margin: 0
-  }}
-  title="Attach Document"
-  tabIndex={-1}
->
-    <HiOutlinePaperClip />
-</button>
+            >
+              <div
+                style={{
+                  border: "6px solid #e0e7ff",
+                  borderTop: "6px solid #6366f1",
+                  borderRadius: "50%",
+                  width: 60,
+                  height: 60,
+                  animation: "spin 1s linear infinite",
+                  marginBottom: 16,
+                }}
+              />
+              <span style={{ color: "#6366f1", fontSize: 18, fontWeight: 600 }}>
+                Connecting you to a lawyer...
+              </span>
+              <style>
+                {`@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }`}
+              </style>
+            </div>
           </div>
-       
+        )}
 
-        </div>
-        
-      )}
-
-    </section>
-    <Footer/>
-  </div>
-
-   {isLoading && (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(255,255,255,0.5)",
-      backdropFilter: "blur(8px)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: 9999,
-    }}
-  >
-    <div
-      style={{
-        background: "rgba(255,255,255,0.9)",
-        padding: "40px 60px",
-        borderRadius: "20px",
-        boxShadow: "0 8px 32px rgba(80,120,220,0.10)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      <div
-        style={{
-          border: "6px solid #e0e7ff",
-          borderTop: "6px solid #6366f1",
-          borderRadius: "50%",
-          width: 60,
-          height: 60,
-          animation: "spin 1s linear infinite",
-          marginBottom: 16,
-        }}
-      />
-      <span style={{ color: "#6366f1", fontSize: 18, fontWeight: 600 }}>
-        Connecting you to a lawyer...
-      </span>
-      <style>
-        {`@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }`}
-      </style>
-    </div>
-  </div>
-)}
-
-
-
-
-  <Modal show={show} onHide={handleClose} backdrop="static" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Feedback Form</Modal.Title>
-        </Modal.Header>
-        <Modal.Body><CustomerFeedbackForm/></Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Cancel
-          </Button>
-        
-        </Modal.Footer>
-      </Modal>
-
-
-  </div>
-)
+        <Modal show={show} onHide={handleClose} backdrop="static" centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Feedback Form</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <CustomerFeedbackForm />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleClose}>
+              Cancel
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
+    );
 }
 
 export default Home;
