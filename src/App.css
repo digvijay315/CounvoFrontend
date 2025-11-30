@@ -1,8 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
 
-*
-{
+*{
   margin: 0;
+  font-family: 'Inter Tight', sans-serif;
 }
+
 .App {
   text-align: center;
  
@@ -317,22 +319,6 @@ ul {
   margin: 0;
   padding: 0;
 }
-
-button {
-  cursor: pointer;
-  border: none;
-  background: #dc3545;
-  color: white;
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background: #b02a37;
-}
-
 
 header {
   background: linear-gradient(90deg, #1e2a78, #4b59f7);

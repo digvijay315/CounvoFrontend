@@ -1,5 +1,7 @@
 
 import { BrowserRouter,Routes,Route } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
 import Home from './components/home';
 import Login from './components/login';
 //import Register from './components/register';
@@ -29,42 +31,96 @@ import Privacyolicy from './components/privacy_policy';
 import ShippingPolicy from './components/shipping_policy';
 import CancelliationPolicy from './components/cancellation_policy';
 import AdminReport from './components/Admin/AdminReport';
-
-
-
-
+import Payment from "./components/Client/Payment";
+import AuthLayout from "./layouts/AuthLayout";
+import SignInForm from "./components/Auth/SignInForm";
+import SignUpForm from "./components/Auth/SignUpForm";
 
 function App() {
   return (
-    <BrowserRouter>
-    <div>
-     <Routes>
-      <Route path='/' element={<Home/>}></Route>
-      <Route path='/login' element={<Login/>}></Route>
-      <Route path='/home' element={<Home/>}></Route>
-      <Route path='/ClientDashboard' element={<ProtectedRoute><ClientDashboard/></ProtectedRoute>}></Route>
-      <Route path='/LawyerDashboard' element={<ProtectedRoute1><LawyerDashboard/></ProtectedRoute1>}></Route>
-      <Route path='/AdminPanel' element={<AdminPanel/>}></Route>
-      <Route path='LawyerDashboard/completelawyerprofile' element={<LawyerProfileModal/>}></Route>
-      <Route path='/pendinglawyers' element={<PendingLawyersTable/>}></Route>
-      <Route path='/allclients' element={<Clients/>}></Route>
-      <Route path='/findlawyer' element={<Findalawyer/>}></Route>
-      <Route path='/supports' element={<Support/>}></Route>
-      <Route path='/clientprofile' element={<ClientProfileModal/>}></Route>
-      <Route path='/clientchathistory' element={<Clientchathistory/>}></Route>
-      <Route path='/termsandconditions' element={<TermsAndConditions/>}></Route>
-      <Route path='/aboutus' element={<AboutUs/>}></Route>
-      <Route path='/contactus' element={<ContactUs/>}></Route>
-      <Route path='/allchat' element={<Allchat/>}></Route>
-      <Route path='/lawyerchathistory' element={<ProtectedRoute1><LawyerChatHistory/></ProtectedRoute1>}></Route>
-      <Route path='/privacy-policy' element={<Privacyolicy/>}></Route>
-      <Route path='/shipping-policy' element={<ShippingPolicy/>}></Route>
-      <Route path='/cancellation-policy' element={<CancelliationPolicy/>}></Route>
-      <Route path='/admin-report' element={<AdminReport/>}></Route>
-    </Routes>  
+    <Provider store={store}>
+      <BrowserRouter>
+      <div>
+        <Routes>
+          {/* Auth Layout Routes - Beautiful split-screen design */}
+          <Route path="/auth" element={<AuthLayout />}>
+            <Route path="signin" element={<SignInForm />} />
+            <Route path="signup" element={<SignUpForm />} />
+            {/* Add your register component here when ready */}
+            {/* <Route path="register" element={<Register />} /> */}
+          </Route>
 
-   </div>
-   </BrowserRouter>
+          {/* Regular Routes */}
+          <Route path="/" element={<Home />}></Route>
+          <Route path="/login" element={<Login />}></Route>
+          <Route path="/home" element={<Home />}></Route>
+          <Route
+            path="/ClientDashboard"
+            element={
+              <ProtectedRoute>
+                <ClientDashboard />
+              </ProtectedRoute>
+            }
+          ></Route>
+          <Route
+            path="/LawyerDashboard"
+            element={
+              <ProtectedRoute1>
+                <LawyerDashboard />
+              </ProtectedRoute1>
+            }
+          ></Route>
+          <Route path="/AdminPanel" element={<AdminPanel />}></Route>
+          <Route
+            path="LawyerDashboard/completelawyerprofile"
+            element={<LawyerProfileModal />}
+          ></Route>
+          <Route
+            path="/pendinglawyers"
+            element={<PendingLawyersTable />}
+          ></Route>
+          <Route path="/allclients" element={<Clients />}></Route>
+          <Route path="/findlawyer" element={<Findalawyer />}></Route>
+          <Route path="/supports" element={<Support />}></Route>
+          <Route path="/clientprofile" element={<ClientProfileModal />}></Route>
+          <Route
+            path="/clientchathistory"
+            element={<Clientchathistory />}
+          ></Route>
+          <Route
+            path="/termsandconditions"
+            element={<TermsAndConditions />}
+          ></Route>
+          <Route path="/aboutus" element={<AboutUs />}></Route>
+          <Route path="/contactus" element={<ContactUs />}></Route>
+          <Route path="/allchat" element={<Allchat />}></Route>
+          <Route
+            path="/lawyerchathistory"
+            element={
+              <ProtectedRoute1>
+                <LawyerChatHistory />
+              </ProtectedRoute1>
+            }
+          ></Route>
+          <Route path="/privacy-policy" element={<Privacyolicy />}></Route>
+          <Route path="/shipping-policy" element={<ShippingPolicy />}></Route>
+          <Route
+            path="/cancellation-policy"
+            element={<CancelliationPolicy />}
+          ></Route>
+          <Route path="/admin-report" element={<AdminReport />}></Route>
+          <Route
+            path="/payment"
+            element={
+              <ProtectedRoute>
+                <Payment />
+              </ProtectedRoute>
+            }
+          ></Route>
+        </Routes>
+      </div>
+      </BrowserRouter>
+    </Provider>
   );
 }
 
