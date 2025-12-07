@@ -1,7 +1,10 @@
 
 import { BrowserRouter,Routes,Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import { store } from './redux/store';
+import theme from './theme/theme';
 import Home from './components/home';
 import Login from "./components/login";
 import LawyerDashboard from "./components/LawyerDashboard";
@@ -35,7 +38,9 @@ import DashboardContent from "./components/dashboard/DashboardContent";
 function App() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <BrowserRouter>
         <Routes>
           {/* Auth Layout Routes - Beautiful split-screen design */}
           <Route path="/auth" element={<AuthLayout />}>
@@ -120,6 +125,7 @@ function App() {
           ></Route>
         </Routes>
       </BrowserRouter>
+      </ThemeProvider>
     </Provider>
   );
 }

@@ -13,6 +13,7 @@ import {
   useTheme,
   Avatar,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import {
   Dashboard as DashboardIcon,
   Gavel as GavelIcon,
@@ -66,7 +67,7 @@ const NavigationSidebar = ({ mobileOpen, onClose }) => {
   const isActivePath = (path) => {
     return (
       location.pathname === path ||
-      (location.pathname.includes(path) && location.pathname !== "/dashboard")
+      (location.pathname.includes(path) && path !== "/dashboard")
     );
   };
 
@@ -111,28 +112,29 @@ const NavigationSidebar = ({ mobileOpen, onClose }) => {
               selected={isActivePath(item.path)}
               onClick={() => handleNavigation(item.path)}
               sx={{
-                borderRadius: 2,
                 transition: "all 0.2s ease",
                 "&.Mui-selected": {
-                  background: "#667eea15",
-                  color: "#667eea",
+                  backgroundColor: alpha(theme.palette.primary.light, 0.15),
+                  color: theme.palette.primary.main,
                   fontWeight: 600,
                   "&:hover": {
-                    background: "#764ba225",
+                    backgroundColor: alpha(theme.palette.primary.light, 0.25),
                   },
                   "& .MuiListItemIcon-root": {
-                    color: "#667eea",
+                    color: theme.palette.primary.main,
                   },
                 },
                 "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  backgroundColor: alpha(theme.palette.primary.light, 0.08),
                 },
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 40,
-                  color: isActivePath(item.path) ? "#667eea" : "inherit",
+                  color: isActivePath(item.path)
+                    ? theme.palette.primary.main
+                    : "inherit",
                 }}
               >
                 {item.icon}
@@ -158,19 +160,18 @@ const NavigationSidebar = ({ mobileOpen, onClose }) => {
           <ListItemButton
             sx={{
               p: 1.5,
-              px:2,
+              px: 2,
               transition: "all 0.2s ease",
               "&:hover": {
-                backgroundColor: "#667eea08",
+                backgroundColor: alpha(theme.palette.primary.main, 0.08),
               },
-              borderRadius: 0,
             }}
           >
             <Avatar
               sx={{
                 width: 40,
                 height: 40,
-                background: "linear-gradient(135deg, #667eea, #764ba2)",
+                backgroundColor: theme.palette.primary.main,
                 fontWeight: "bold",
                 mr: 1.5,
               }}
@@ -200,11 +201,10 @@ const NavigationSidebar = ({ mobileOpen, onClose }) => {
         <ListItemButton
           onClick={handleLogout}
           sx={{
-            borderRadius: 0,
             color: "error.main",
             transition: "all 0.2s ease",
             "&:hover": {
-              backgroundColor: "rgba(244, 67, 54, 0.08)",
+              backgroundColor: alpha(theme.palette.error.light, 0.08),
             },
           }}
         >
