@@ -147,7 +147,7 @@ export const useCases = {
   // Buttons
   primaryButton: {
     backgroundColor: colors.primary.main,
-    color: colors.text.primary,
+    color: colors.text.white,
     shadow: shadows.primary,
   },
   secondaryButton: {
@@ -155,7 +155,7 @@ export const useCases = {
     color: colors.text.white,
     shadow: shadows.secondary,
   },
-  
+
   // Cards
   premiumCard: {
     backgroundColor: colors.primary.light,
@@ -167,7 +167,7 @@ export const useCases = {
     border: `1px solid ${colors.divider}`,
     shadow: shadows.md,
   },
-  
+
   // Highlights
   activeItem: {
     backgroundColor: colors.primary[100],

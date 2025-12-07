@@ -1,0 +1,138 @@
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import AuthLayout from "../layouts/AuthLayout";
+import SignInForm from "../components/Auth/SignInForm";
+import SignUpForm from "../components/Auth/SignUpForm";
+import DashboardContent from "../components/dashboard/DashboardContent";
+import { NAVIGATION_CONSTANTS } from "../_constants/navigationConstants";
+import Findalawyer from "../components/Client/FindLawyer";
+import Clients from "../components/Admin/clients";
+import ClientConsultationHistory from "../components/Client/ClientConsultationHistory";
+import ClientChathistory from "../components/Client/ClientChathistory";
+import Support from "../components/Support";
+import AdminPanel from "../components/AdminPanel";
+import LawyerDashboard from "../components/LawyerDashboard";
+import LawyerConsultationHistory from "../components/Lawyer/LawyerConsultationHistory";
+import Payment from "../components/Client/Payment";
+import AdminReport from "../components/Admin/AdminReport";
+import Home from "../components/home";
+import ShippingPolicy from "../components/shipping_policy";
+import CancelliationPolicy from "../components/cancellation_policy";
+import Privacyolicy from "../components/privacy_policy";
+import ContactUs from "../components/contactus";
+import AboutUs from "../components/aboutus";
+import useAuth from "../hooks/useAuth";
+import GuestRoute from "./GuestRoute";
+import ProtectedRoute from "./ProtectedRoute";
+import DashboardLayout from "../layouts/DashboardLayout";
+import LawyerChatHistory from "../components/LawyerChatHistory";
+import LawyerProfile from "../components/Lawyer/LawyerProfile";
+import ClientProfile from "../components/Client/ClientProfile";
+
+const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
+  const { user } = useAuth();
+  switch (user?.role) {
+    case "admin":
+      return AdminElement ?? null;
+    case "lawyer":
+      return LawyerElement ?? null;
+    default:
+      return UserElement ?? null;
+  }
+};
+/* <Route path="/" element={<Home />}></Route>
+              <Route path="/aboutus" element={<AboutUs />}></Route>
+              <Route path="/contactus" element={<ContactUs />}></Route>
+              <Route path="/privacy-policy" element={<Privacyolicy />}></Route>
+              <Route
+                path="/shipping-policy"
+                element={<ShippingPolicy />}
+              ></Route>
+              <Route
+                path="/cancellation-policy"
+                element={<CancelliationPolicy />}
+              /> */
+const router = createBrowserRouter([
+  {
+    element: <GuestRoute />,
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      { path: "/aboutus", element: <AboutUs /> },
+      { path: "/contactus", element: <ContactUs /> },
+      { path: "/privacy-policy", element: <Privacyolicy /> },
+      { path: "/shipping-policy", element: <ShippingPolicy /> },
+      { path: "/cancellation-policy", element: <CancelliationPolicy /> },
+      {
+        path: "/auth",
+        element: <AuthLayout />,
+        children: [
+          { path: NAVIGATION_CONSTANTS.LOGIN_PATH, element: <SignInForm /> },
+          { path: NAVIGATION_CONSTANTS.REGISTER_PATH, element: <SignUpForm /> },
+        ],
+      },
+    ],
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <DashboardLayout />,
+        path: NAVIGATION_CONSTANTS.DASHBOARD_PATH,
+        children: [
+          {
+            path: NAVIGATION_CONSTANTS.DASHBOARD_PATH,
+            element: (
+              <RoleBasedRoutes
+                UserElement={<DashboardContent />}
+                LawyerElement={<LawyerDashboard />}
+                AdminElement={<AdminPanel />}
+              />
+            ),
+          },
+          {
+            path: NAVIGATION_CONSTANTS.PROFILE_PATH,
+            element: (
+              <RoleBasedRoutes
+                UserElement={<ClientProfile />}
+                LawyerElement={<LawyerProfile />}
+              />
+            ),
+          },
+          {
+            path: NAVIGATION_CONSTANTS.FIND_LAWYER_PATH,
+            element: <RoleBasedRoutes UserElement={<Findalawyer />} />,
+          },
+          {
+            path: NAVIGATION_CONSTANTS.CLIENTS_PATH,
+            element: <RoleBasedRoutes LawyerElement={<LawyerChatHistory />} />,
+          },
+          {
+            path: NAVIGATION_CONSTANTS.MESSAGES_PATH,
+            element: (
+              <RoleBasedRoutes
+                UserElement={<ClientChathistory />}
+                LawyerElement={<LawyerChatHistory />}
+              />
+            ),
+          },
+          {
+            path: NAVIGATION_CONSTANTS.HISTORY_PATH,
+            element: (
+              <RoleBasedRoutes
+                UserElement={<ClientConsultationHistory />}
+                LawyerElement={<LawyerConsultationHistory />}
+              />
+            ),
+          },
+          { path: NAVIGATION_CONSTANTS.SUPPORT_PATH, element: <Support /> },
+          { path: NAVIGATION_CONSTANTS.PAYMENT_PATH, element: <Payment /> },
+          { path: NAVIGATION_CONSTANTS.REPORT_PATH, element: <AdminReport /> },
+        ],
+      },
+    ],
+  },
+]);
+
+export default router;

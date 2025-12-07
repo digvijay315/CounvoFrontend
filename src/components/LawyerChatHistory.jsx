@@ -1,20 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import Lawyersidebar from "./lawyersidebar";
 import socket from "./socket";
 import Swal from "sweetalert2";
 import api from "../api";
-import Header from "./Layout/header";
 import { HiOutlinePaperClip } from "react-icons/hi";
 import { IoSend } from "react-icons/io5";
 import CallScreen from "../_modules/calling/CallScreen";
 import IncomingCallScreen from "../_modules/calling/IncomingCallScreen";
 import { IconButton, Stack, Menu, MenuItem } from "@mui/material";
 import { Call, Close, VideoCall, ArrowDropDown } from "@mui/icons-material";
+import useAuth from "../hooks/useAuth";
+import "./LawyerChatHistory.css";
 
 function LawyerChatHistory() {
-  const userData = JSON.parse(localStorage.getItem("userDetails"));
-  const lawyerdetails = JSON.parse(localStorage.getItem("lawyerDetails")); // should be lawyer info
-
+  const { userId: lawyerID } = useAuth();
   const [recentChats, setRecentChats] = useState([]);
   const [onlineClients, setOnlineClients] = useState([]);
   const [clients, setClients] = useState([]); // all clients who ever chatted
@@ -32,8 +30,7 @@ function LawyerChatHistory() {
       const res = await api.get("api/admin/chathistoryforrecentchat");
       const result = res.data;
       const lawyerChats = result.filter(
-        (chat) =>
-          chat.to === lawyerdetails.lawyer._id && chat.toModel === "Lawyer"
+        (chat) => chat.to === lawyerID && chat.toModel === "Lawyer"
       );
       setRecentChats(lawyerChats);
     } catch (err) {
@@ -74,7 +71,7 @@ function LawyerChatHistory() {
 
   const markMessagesRead = async (clientId) => {
     try {
-      const lawyerId = lawyerdetails.lawyer._id;
+      const lawyerId = lawyerID;
       socket.emit("markMessagesRead", {
         readerId: lawyerId,
         senderId: clientId,
@@ -87,11 +84,11 @@ function LawyerChatHistory() {
 
   // Online clients (if you have this)
   useEffect(() => {
-    if (!lawyerdetails.lawyer._id) return;
+    if (!lawyerID) return;
     if (!socket.connected) socket.connect();
 
     socket.on("connect", () => {
-      socket.emit("lawyerOnline", lawyerdetails.lawyer._id);
+      socket.emit("lawyerOnline", lawyerID);
       socket.emit("getOnlineClients");
     });
 
@@ -203,7 +200,7 @@ function LawyerChatHistory() {
       socket.off("callEnded");
       socket.disconnect();
     };
-  }, [lawyerdetails.lawyer._id, chatClient]);
+  }, [lawyerID, chatClient]);
 
   const fetchChatHistory = async (user1Id, user2Id) => {
     try {
@@ -238,7 +235,7 @@ function LawyerChatHistory() {
       ...prev,
       [client._id]: false,
     }));
-    const lawyerId = lawyerdetails.lawyer._id;
+    const lawyerId = lawyerID;
     await fetchChatHistory(lawyerId, client._id);
   };
 
@@ -269,7 +266,7 @@ function LawyerChatHistory() {
     try {
       // Emit call initiation to server
       socket.emit("initiateCall", {
-        callerId: lawyerdetails.lawyer._id,
+        callerId: lawyerID,
         receiverId: clientId,
         callType,
         callerModel: "Lawyer",
@@ -296,7 +293,7 @@ function LawyerChatHistory() {
       // Notify the other party that the call has ended
       if (callingData.clientId) {
         socket.emit("endCall", {
-          callerId: lawyerdetails.lawyer._id,
+          callerId: lawyerID,
           receiverId: callingData.clientId,
         });
       }
@@ -333,7 +330,7 @@ function LawyerChatHistory() {
     // Emit call acceptance
     socket.emit("acceptCall", {
       callerId: incomingCall.callerId,
-      accepterId: lawyerdetails.lawyer._id,
+      accepterId: lawyerID,
     });
 
     // Start the call - when accepting, it's immediately connected
@@ -356,7 +353,7 @@ function LawyerChatHistory() {
     // Emit call rejection
     socket.emit("rejectCall", {
       callerId: incomingCall.callerId,
-      rejecterId: lawyerdetails.lawyer._id,
+      rejecterId: lawyerID,
       message: "Call was declined",
     });
 
@@ -373,14 +370,11 @@ function LawyerChatHistory() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f6f7fb" }}>
-      <Lawyersidebar />
+    <div className="lawyer-chat-history">
       <div style={{ display: "flex" }}>
         <div
           style={{
             flex: 1,
-            marginLeft: "20%",
-            marginTop: "7%",
             padding: "20px",
             // background: '#fff',
           }}
@@ -778,7 +772,7 @@ function LawyerChatHistory() {
         </div>
         {callingData.isActive && (
           <CallScreen
-            userId={lawyerdetails.lawyer._id}
+            userId={lawyerID}
             callerId={callingData.clientId}
             callerInfo={callingData.callerInfo}
             callType={callingData.callType}
@@ -798,271 +792,6 @@ function LawyerChatHistory() {
           />
         )}
       </div>
-      <style>{`
-
-  .lawyers-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .lawyer-card {
-          background: #f9fafb;
-          border-radius: 12px;
-          padding: 1.5rem;
-          text-align: center;
-          transition: all 0.3s ease;
-          border: 1px solid #e5e7eb;
-        }
-
-        .lawyer-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
-          background: white;
-        }
-
-        .lawyer-avatar {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 3px solid #3b82f6;
-          margin: 0 auto 1rem;
-        }
-
-        .lawyer-name {
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .lawyer-status {
-          font-size: 0.875rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .lawyer-details {
-          font-size: 0.875rem;
-          color: #6b7280;
-          margin-bottom: 1rem;
-        }
-
-        .lawyer-actions {
-          display: flex;
-          justify-content: center;
-          gap: 0.75rem;
-        }
-
-        .action-btn {
-          background: white;
-          color:blue;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 0.5rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .action-btn:hover {
-          background: #f3f4f6;
-          transform: translateY(-1px);
-        }
-      .chat-popup {
-          position: fixed;
-          bottom: 10px;
-          left:40%;
-          width: 480px;
-          height: 600px;
-          background: white;
-          border-radius: 16px;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
-          overflow: hidden;
-          z-index: 1000;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .chat-header {
-          background: linear-gradient(135deg, #3b82f6, #1e40af);
-          color: white;
-          padding: 1rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .chat-messages {
-          flex: 1;
-          padding: 1rem;
-          overflow-y: auto;
-          background: #f9fafb;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .message {
-          max-width: 80%;
-          padding: 0.75rem 1rem;
-          border-radius: 18px;
-          font-size: 0.875rem;
-          line-height: 1.4;
-          word-wrap: break-word;
-        }
-
-        .message.sent {
-          align-self: flex-end;
-          background: #3b82f6;
-          color: white;
-        }
-
-        .message.received {
-          align-self: flex-start;
-          background: white;
-          color: #1f2937;
-          border: 1px solid #e5e7eb;
-        }
-
-        .message.system {
-          align-self: center;
-          background: #eff6ff;
-          color: #1e40af;
-          border: 1px solid #bfdbfe;
-          text-align: center;
-          font-style: italic;
-        }
-
-     .chat-input {
-       width:85%;
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  border-top: 1px solid #e5e7eb;
-  background: white;
-  gap: 0.5rem;
-}
-
-
-      .chat-input input {
-  flex: 1 1 auto;
-
-  padding: 0.75rem 1rem;
-  border-radius: 20px;
-  border: 1px solid #e5e7eb;
-  font-size: 0.875rem;
-  outline: none;
-  transition: border-color 0.2s ease;
-  background: #fff;
-}
-  .actionbutton{
-        margin-top:10px !important;
-      
-  }
-
-
-        .chat-input input:focus {
-          border-color: #3b82f6;
-        }
-
-  
-    @media (max-width: 768px) {
-          .main-content {
-            margin-left: 0;
-            padding: 1rem;
-          }
-
-          .charts-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .time-info {
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-
-          .lawyers-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .chat-popup {
-            width: calc(100vw - 20px);
-            height: calc(100vh - 100px);
-            bottom: 10px;
-            right: 10px;
-            left: 10px;
-          }
-              @media (max-width: 1024px) {
-    .lawyers-grid {
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-    .chat-popup {
-      width: 320px;
-      height: 450px;
-    }
-  }
-
-@media (max-width: 480px) {
-  .main1 {
-    margin-left: 0px;
-  }
-  .lawyers-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  .chat-popup {
-    width: 100vw;
-    height: 100% !important;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    border-radius: 0;
-  }
-  .chat-header {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-    height: 56px;
-    justify-content: space-between;
-    padding: 0.5rem 1rem;
-  }
-  .header-actions {
-    margin-left: 0;
-    margin-top: 0;
-    display: flex;
-    gap: 0.5rem;
-  }
- .chat-input {
-    padding-bottom: 2.5rem;
-    gap: 0.25rem;
-     width:90%;
-  }
-  .chat-input input {
-    font-size: 1rem;
-    padding: 0.65rem 1rem;
- 
-  }
-    .actionbutton
-    {
-    margin-top:-10px !important;
-    }
-
-  select {
-    min-width: 100% !important;
-  }
-  .main1 > div {
-    padding: 20px 8px !important;
-  }
-    
-}
-
-      
-        
-      `}</style>
     </div>
   );
 }

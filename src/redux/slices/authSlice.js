@@ -1,70 +1,24 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from "../../api";
 
-// Initial state
+// Initial state - redux-persist will handle rehydration
 const initialState = {
   user: null,
   token: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  userType: null,
-};
-
-// Load user from localStorage on app load
-const loadUserFromStorage = () => {
-  try {
-    const userDetails = localStorage.getItem('userDetails');
-    const lawyerDetails = localStorage.getItem('lawyerDetails');
-    const adminDetails = localStorage.getItem('adminDetails');
-    const token = localStorage.getItem('authToken');
-
-    if (userDetails && token) {
-      const parsed = JSON.parse(userDetails);
-      return {
-        user: parsed.user,
-        token,
-        isAuthenticated: true,
-        userType: 'client',
-      };
-    } else if (lawyerDetails && token) {
-      const parsed = JSON.parse(lawyerDetails);
-      return {
-        user: parsed.lawyer,
-        token,
-        isAuthenticated: true,
-        userType: 'lawyer',
-      };
-    } else if (adminDetails && token) {
-      const parsed = JSON.parse(adminDetails);
-      return {
-        user: parsed.user,
-        token,
-        isAuthenticated: true,
-        userType: 'admin',
-      };
-    }
-  } catch (error) {
-    console.error('Error loading user from storage:', error);
-  }
-  return {};
-};
-
-// Load initial state from localStorage
-const storedUser = loadUserFromStorage();
-const preloadedState = {
-  ...initialState,
-  ...storedUser,
+  userRole: null,
 };
 
 // Async Thunks
 
 // Login Thunk
 export const login = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/v2/auth/login', {
+      const response = await api.post("/api/v2/auth/login", {
         email: credentials.email,
         password: credentials.password,
       });
@@ -72,21 +26,18 @@ export const login = createAsyncThunk(
       if (response.data.success) {
         const { token, user } = response.data;
 
-        // Store in localStorage
-        localStorage.setItem('userDetails', JSON.stringify({ user, token }));
-        localStorage.setItem('authToken', token);
-
+        // redux-persist will automatically save to localStorage
         return {
           user,
           token,
-          userType: 'client',
+          userRole: user?.role,
         };
       }
     } catch (error) {
-      const errorMessage = 
-        error.response?.data?.message || 
-        error.message || 
-        'Login failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Login failed. Please try again.";
       return rejectWithValue(errorMessage);
     }
   }
@@ -94,28 +45,28 @@ export const login = createAsyncThunk(
 
 // Register Thunk
 export const register = createAsyncThunk(
-  'auth/register',
+  "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/v2/auth/register', {
+      const response = await api.post("/api/v2/auth/register", {
         fullName: userData.fullName,
         email: userData.email,
         mobile: userData.mobile,
         password: userData.password,
-        userType: userData.userType,
+        userRole: userData.userRole,
       });
 
       if (response.data.success) {
         return {
-          message: 'Registration successful',
+          message: "Registration successful",
           email: userData.email,
         };
       }
     } catch (error) {
-      const errorMessage = 
-        error.response?.data?.message || 
-        error.message || 
-        'Registration failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Registration failed. Please try again.";
       return rejectWithValue(errorMessage);
     }
   }
@@ -123,26 +74,21 @@ export const register = createAsyncThunk(
 
 // Logout Thunk
 export const logout = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      // Clear localStorage
-      localStorage.removeItem('userDetails');
-      localStorage.removeItem('lawyerDetails');
-      localStorage.removeItem('adminDetails');
-      localStorage.removeItem('authToken');
-      
+      // redux-persist will automatically clear persisted state
       return true;
     } catch (error) {
-      return rejectWithValue('Logout failed');
+      return rejectWithValue("Logout failed");
     }
   }
 );
 
 // Auth Slice
 const authSlice = createSlice({
-  name: 'auth',
-  initialState: preloadedState,
+  name: "auth",
+  initialState,
   reducers: {
     clearError: (state) => {
       state.error = null;
@@ -151,13 +97,13 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      state.userType = action.payload.userType;
+      state.userRole = action.payload.userRole;
     },
     clearUser: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      state.userType = null;
+      state.userRole = null;
     },
   },
   extraReducers: (builder) => {
@@ -172,7 +118,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.userType = action.payload.userType;
+        state.userRole = action.payload.userRole;
         state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
@@ -180,7 +126,7 @@ const authSlice = createSlice({
         state.error = action.payload;
         state.isAuthenticated = false;
       })
-      
+
       // Register
       .addCase(register.pending, (state) => {
         state.isLoading = true;
@@ -194,13 +140,13 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        state.userType = null;
+        state.userRole = null;
         state.isLoading = false;
         state.error = null;
       });
@@ -215,7 +161,7 @@ export const selectUser = (state) => state.auth.user;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectIsLoading = (state) => state.auth.isLoading;
 export const selectError = (state) => state.auth.error;
-export const selectUserType = (state) => state.auth.userType;
+export const selectUserRole = (state) => state.auth.userRole;
 
 export default authSlice.reducer;
 

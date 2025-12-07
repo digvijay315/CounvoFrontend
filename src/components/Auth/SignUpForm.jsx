@@ -23,14 +23,14 @@ const SignUpForm = () => {
     watch,
     setValue,
   } = useForm({
-    mode: 'onBlur',
+    mode: "onBlur",
     defaultValues: {
-      fullName: '',
-      email: '',
-      mobile: '',
-      password: '',
-      confirmPassword: '',
-      userType: 'client',
+      fullName: "",
+      email: "",
+      mobile: "",
+      password: "",
+      confirmPassword: "",
+      userType: "customer",
     },
   });
 

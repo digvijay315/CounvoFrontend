@@ -1,20 +1,40 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import NavigationSidebar from "../components/Layout/NavigationSidebar";
 import NavigationHeader from "../components/Layout/NavigationHeader";
 
 const DashboardLayout = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const sidebarRef = useRef(null);
+  const headerRef = useRef(null);
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    if (isMobile) {
+      // Mobile: Toggle drawer open/closed
+      setMobileOpen(!mobileOpen);
+    } else {
+      // Desktop: Toggle collapse state
+      if (sidebarRef.current) {
+        sidebarRef.current.handleToggleCollapse();
+      }
+    }
+  };
+
+  const handleMobileDrawerClose = () => {
+    setMobileOpen(false);
   };
 
   return (
     <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       {/* Left Navigation Sidebar */}
-      <NavigationSidebar mobileOpen={mobileOpen} onClose={handleDrawerToggle} />
+      <NavigationSidebar
+        ref={sidebarRef}
+        mobileOpen={mobileOpen}
+        onClose={handleMobileDrawerClose}
+      />
       {/* Main Content Area */}
       <Box
         component="main"
@@ -29,6 +49,7 @@ const DashboardLayout = () => {
       >
         {/* Navigation Header */}
         <NavigationHeader
+          ref={headerRef}
           onMenuClick={handleDrawerToggle}
           onNotificationClick={() => {}}
         />
@@ -38,7 +59,7 @@ const DashboardLayout = () => {
             flexGrow: 1,
             overflowY: "auto",
             overflowX: "hidden",
-            p:2
+            p: 2,
           }}
         >
           <Outlet />

@@ -1,6 +1,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import "./authLayout.css";
+import LogoHorizontal from "../components/counvoImg/LogoHorizontal.png";
 
 const AuthLayout = () => {
   return (
@@ -9,14 +10,15 @@ const AuthLayout = () => {
       <div className="auth-left">
         <div className="auth-form-container">
           {/* Logo/Brand */}
-          {/* <div className="auth-brand">
+          <div className="auth-brand">
             <img
-              src="/counvo - Findmylawyer_Icon (1).png"
+              src={LogoHorizontal}
               alt="Counvo Logo"
-              className="auth-logo"
+              height={60}
+              width={180}
+              objectFit="contain"
             />
-            <h1 className="auth-brand-name">Counvo</h1>
-          </div> */}
+          </div>
 
           {/* Form Content via Outlet */}
           <div className="auth-form-wrapper">
@@ -55,9 +57,11 @@ const AuthLayout = () => {
                     background: "rgba(255,255,255,0.25)",
                     backdropFilter: "blur(8px)",
                     WebkitBackdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255,255,255,0.28)"
+                    border: "1px solid rgba(255,255,255,0.28)",
                   }}
-                >⚖️</div>
+                >
+                  ⚖️
+                </div>
                 <h2 className="auth-tagline">
                   Your Legal Journey <br />
                   <span className="gradient-text">Starts Here</span>

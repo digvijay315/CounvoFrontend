@@ -20,6 +20,7 @@ import {
   selectIsAuthenticated,
 } from "../../redux/slices/authSlice";
 import "./authForms.css";
+import { NAVIGATION_CONSTANTS } from "../../_constants/navigationConstants";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ const SignInForm = () => {
         timer: 2000,
         showConfirmButton: false,
       }).then(() => {
-        navigate("/ClientDashboard");
+        navigate(NAVIGATION_CONSTANTS.DASHBOARD_PATH);
       });
     }
   }, [isAuthenticated, navigate]);

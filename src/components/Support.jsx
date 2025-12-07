@@ -4,7 +4,8 @@ import api from "../api";
 import Swal from "sweetalert2";
 // import { Support } from '@mui/icons-material';
 import socket from "./socket";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
+import { Send } from "lucide-react";
 
 function Support() {
   const lawyerdetails = JSON.parse(localStorage.getItem("lawyerDetails"));
@@ -134,7 +135,7 @@ function Support() {
         <Stack direction="row" spacing={2}>
           <Box sx={{ flex: 1 }}>
             {/* Recipient emails */}
-            <label style={{ fontWeight: 500, fontSize: 15, color: "#6366f1" }}>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>
               To
             </label>
             <div
@@ -195,7 +196,7 @@ function Support() {
             </div>
 
             {/* Subject */}
-            <label style={{ fontWeight: 500, fontSize: 15, color: "#6366f1" }}>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>
               Subject
             </label>
             <input
@@ -215,7 +216,7 @@ function Support() {
               }}
             />
             {/* Attachments */}
-            <label style={{ fontWeight: 500, fontSize: 15, color: "#6366f1" }}>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>
               Attachments
             </label>
             <div
@@ -275,7 +276,7 @@ function Support() {
           </Box>
           <Box sx={{ flex: 1 }}>
             {/* Message */}
-            <label style={{ fontWeight: 500, fontSize: 15, color: "#6366f1" }}>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>
               Message
             </label>
             <textarea
@@ -299,25 +300,15 @@ function Support() {
         </Stack>
 
         {/* Send button */}
-        <button
+        <Button
+          variant="contained"
+          color="primary"
           type="submit"
           disabled={isLoading}
-          style={{
-            padding: "12px 20px",
-            borderRadius: 10,
-            background: "#6366f1",
-            color: "#fff",
-            fontWeight: 700,
-            fontSize: 17,
-            border: "none",
-            boxShadow: "0 2px 12px 0 rgba(80,120,220,0.10)",
-            cursor: isLoading ? "not-allowed" : "pointer",
-            letterSpacing: 1,
-            transition: "background 0.2s, transform 0.1s",
-          }}
+          startIcon={<Send size={16} />}
         >
           {isLoading ? "Sending..." : "Send Query"}
-        </button>
+        </Button>
       </form>
     </Box>
   );

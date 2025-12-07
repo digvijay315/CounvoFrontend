@@ -1,11 +1,17 @@
 # Counvo Material UI Theme Documentation
 
-## ⚠️ CRITICAL: NO GRADIENTS POLICY
-**This theme uses SOLID COLORS ONLY. DO NOT use any gradients anywhere in the application.**  
+## ⚠️ CRITICAL: SIMPLE & CLEAN DESIGN - NO GRADIENTS
+**This theme uses SOLID COLORS ONLY. Keep designs SIMPLE. NO gradients, minimal backgrounds.**  
 See `NO_GRADIENTS_POLICY.md` for details.
 
+## Design Philosophy
+- **Simple & Clean**: Minimal design, no over-styling
+- **Solid Colors Only**: No gradients anywhere
+- **Minimal Backgrounds**: Only add backgrounds when absolutely necessary
+- **Professional**: Let content speak, not decoration
+
 ## Overview
-Professional legal/lawyer app theme with Yellow/Gold as the primary color, Navy Blue as secondary, and Burgundy as tertiary.
+Professional legal/lawyer app theme with Yellow/Amber as primary, Navy Blue as secondary, and Burgundy as tertiary.
 
 ## Color Palette
 

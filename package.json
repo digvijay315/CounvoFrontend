@@ -42,6 +42,7 @@
     "react-select": "^5.8.1",
     "react-toastify": "^10.0.5",
     "recharts": "^3.0.0",
+    "redux-persist": "^6.0.0",
     "socket.io-client": "^4.8.1",
     "styled-components": "^6.1.11",
     "sweetalert": "^2.1.2",

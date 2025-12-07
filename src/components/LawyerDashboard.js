@@ -1552,195 +1552,180 @@ const LawyerDashboard = () => {
 
       `}</style>
 
-      <div className="dashboard-container">
-        <Lawyersidebar />
-
-        {/* MAIN CONTENT */}
-        <main className="main-content">
-          {/* Welcome Section */}
-          <div className="welcome-section">
-            <h1 className="welcome-title">
-              Welcome back, {lawyerdetails?.lawyer?.firstName || "Lawyer"}! 👋
-            </h1>
-            <p className="welcome-subtitle">
-              Here's what's happening with your practice today.
-            </p>
-            <div className="login-info">
-              <div className="login-info-item">
-                <span>🕒</span>
-                <span>Last login: {formatLastLogin(lastLogin)}</span>
-              </div>
-              <div className="login-info-item">
-                <span>⏱️</span>
-                <span>
-                  Today's session:{" "}
-                  {((Date.now() - sessionStartTime) / (1000 * 60 * 60)).toFixed(
-                    1
-                  )}{" "}
-                  hours
-                </span>
-              </div>
-              <div className="login-info-item">
-                <span>📊</span>
-                <span>Status: Online</span>
-              </div>
+      <main className="main-content">
+        {/* Welcome Section */}
+        <div className="welcome-section">
+          <h1 className="welcome-title">
+            Welcome back, {lawyerdetails?.lawyer?.firstName || "Lawyer"}! 👋
+          </h1>
+          <p className="welcome-subtitle">
+            Here's what's happening with your practice today.
+          </p>
+          <div className="login-info">
+            <div className="login-info-item">
+              <span>🕒</span>
+              <span>Last login: {formatLastLogin(lastLogin)}</span>
+            </div>
+            <div className="login-info-item">
+              <span>⏱️</span>
+              <span>
+                Today's session:{" "}
+                {((Date.now() - sessionStartTime) / (1000 * 60 * 60)).toFixed(
+                  1
+                )}{" "}
+                hours
+              </span>
+            </div>
+            <div className="login-info-item">
+              <span>📊</span>
+              <span>Status: Online</span>
             </div>
           </div>
+        </div>
 
-          {/* Quick Actions */}
-          <div className="content-section">
-            <div className="section-header">
-              {/* <h2 className="section-title">⚡ Quick Actions</h2> */}
-            </div>
-            <div className="quick-actions">
-              {menuItems.slice(1, 4).map((item) => (
-                <div
-                  key={item.label}
-                  className="quick-action-card"
-                  onClick={() => {
-                    if (item.label === "Messages") {
-                      setHasNewMessages(false);
-                      setShowChat(true);
-                    } else {
-                      navigate(item.path);
-                    }
-                  }}
-                >
-                  <div className="quick-action-icon">{item.icon}</div>
-                  <div className="quick-action-label">
-                    {item.label}
-                    {item.label === "Messages" && hasNewMessages && (
-                      <span className="new-message-indicator"></span>
-                    )}
-                  </div>
-                  <div className="quick-action-desc">
-                    {item.label === "Profile" && "Manage your profile"}
-                    {item.label === "Clients" && "View all clients"}
-                    {item.label === "Messages" && "Chat with clients"}
-                    {/* {item.label === 'My Cases' && 'Manage your cases'} */}
-                    {/* {item.label === 'Schedule' && 'View appointments'} */}
-                    {/* {item.label === 'Billing' && 'Manage invoices'} */}
-                  </div>
+        {/* Quick Actions */}
+        <div className="content-section">
+          <div className="section-header">
+            {/* <h2 className="section-title">⚡ Quick Actions</h2> */}
+          </div>
+          <div className="quick-actions">
+            {menuItems.slice(1, 4).map((item) => (
+              <div
+                key={item.label}
+                className="quick-action-card"
+                onClick={() => {
+                  if (item.label === "Messages") {
+                    setHasNewMessages(false);
+                    setShowChat(true);
+                  } else {
+                    navigate(item.path);
+                  }
+                }}
+              >
+                <div className="quick-action-icon">{item.icon}</div>
+                <div className="quick-action-label">
+                  {item.label}
+                  {item.label === "Messages" && hasNewMessages && (
+                    <span className="new-message-indicator"></span>
+                  )}
                 </div>
-              ))}
-            </div>
+                <div className="quick-action-desc">
+                  {item.label === "Profile" && "Manage your profile"}
+                  {item.label === "Clients" && "View all clients"}
+                  {item.label === "Messages" && "Chat with clients"}
+                  {/* {item.label === 'My Cases' && 'Manage your cases'} */}
+                  {/* {item.label === 'Schedule' && 'View appointments'} */}
+                  {/* {item.label === 'Billing' && 'Manage invoices'} */}
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
 
-          {/* Stats Grid */}
-          <div className="stats-grid">
-            <div className="stats-card">
-              <div className="stats-value">{clients.length}</div>
-              <div className="stats-label">Total Clients</div>
-              <div className="stats-change positive">
-                ↗ +12% from last month
-              </div>
-            </div>
-            <div className="stats-card">
-              <div className="stats-value">
-                {cases.filter((c) => c.status === "Active").length}
-              </div>
-              <div className="stats-label">Active Cases</div>
-              <div className="stats-change positive">↗ +8% from last week</div>
-            </div>
-            <div className="stats-card">
-              <div className="stats-value">
-                {cases.filter((c) => c.status === "Pending").length}
-              </div>
-              <div className="stats-label">Pending Cases</div>
-              <div className="stats-change negative">↘ -3% from last week</div>
-            </div>
-            <div className="stats-card">
-              <div className="stats-value">
-                {cases.filter((c) => c.status === "Closed").length}
-              </div>
-              <div className="stats-label">Closed Cases</div>
-              <div className="stats-change positive">↗ +15% this month</div>
-            </div>
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          <div className="stats-card">
+            <div className="stats-value">{clients.length}</div>
+            <div className="stats-label">Total Clients</div>
+            <div className="stats-change positive">↗ +12% from last month</div>
           </div>
+          <div className="stats-card">
+            <div className="stats-value">
+              {cases.filter((c) => c.status === "Active").length}
+            </div>
+            <div className="stats-label">Active Cases</div>
+            <div className="stats-change positive">↗ +8% from last week</div>
+          </div>
+          <div className="stats-card">
+            <div className="stats-value">
+              {cases.filter((c) => c.status === "Pending").length}
+            </div>
+            <div className="stats-label">Pending Cases</div>
+            <div className="stats-change negative">↘ -3% from last week</div>
+          </div>
+          <div className="stats-card">
+            <div className="stats-value">
+              {cases.filter((c) => c.status === "Closed").length}
+            </div>
+            <div className="stats-label">Closed Cases</div>
+            <div className="stats-change positive">↗ +15% this month</div>
+          </div>
+        </div>
 
-          <div className="content-grid">
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginTop: "16px",
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#f9fafb", textAlign: "left" }}>
-                  <th
-                    style={{ padding: "8px", borderBottom: "1px solid #ddd" }}
+        <div className="content-grid">
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginTop: "16px",
+            }}
+          >
+            <thead>
+              <tr style={{ background: "#f9fafb", textAlign: "left" }}>
+                <th style={{ padding: "8px", borderBottom: "1px solid #ddd" }}>
+                  Date
+                </th>
+                <th style={{ padding: "8px", borderBottom: "1px solid #ddd" }}>
+                  Client Name
+                </th>
+                <th style={{ padding: "8px", borderBottom: "1px solid #ddd" }}>
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {uniqueChatClients.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="2"
+                    style={{ padding: "8px", textAlign: "center" }}
                   >
-                    Date
-                  </th>
-                  <th
-                    style={{ padding: "8px", borderBottom: "1px solid #ddd" }}
-                  >
-                    Client Name
-                  </th>
-                  <th
-                    style={{ padding: "8px", borderBottom: "1px solid #ddd" }}
-                  >
-                    Status
-                  </th>
+                    No clients you have chatted with yet.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {uniqueChatClients.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="2"
-                      style={{ padding: "8px", textAlign: "center" }}
-                    >
-                      No clients you have chatted with yet.
-                    </td>
-                  </tr>
-                ) : (
-                  uniqueChatClients.slice(-3).map((chat, idx) => {
-                    const client = allclients.find(
-                      (ci) => ci._id === chat.from
-                    );
-                    if (!client) return null;
-                    const isOnline = onlineClients.includes(client._id);
-                    return (
-                      <tr key={chat._id}>
-                        <td
-                          style={{
-                            padding: "8px",
-                            borderBottom: "1px solid #eee",
-                          }}
+              ) : (
+                uniqueChatClients.slice(-3).map((chat, idx) => {
+                  const client = allclients.find((ci) => ci._id === chat.from);
+                  if (!client) return null;
+                  const isOnline = onlineClients.includes(client._id);
+                  return (
+                    <tr key={chat._id}>
+                      <td
+                        style={{
+                          padding: "8px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        {new Date(client.createdAt).toLocaleString()}
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        {client.fullName}
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <span
+                          style={{ color: isOnline ? "#10b981" : "#ef4444" }}
                         >
-                          {new Date(client.createdAt).toLocaleString()}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px",
-                            borderBottom: "1px solid #eee",
-                          }}
-                        >
-                          {client.fullName}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px",
-                            borderBottom: "1px solid #eee",
-                          }}
-                        >
-                          <span
-                            style={{ color: isOnline ? "#10b981" : "#ef4444" }}
-                          >
-                            {isOnline ? "🟢 Online" : "🔴 Offline"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </main>
-      </div>
+                          {isOnline ? "🟢 Online" : "🔴 Offline"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
 
       {Object.entries(needsAccept).map(
         ([clientId, needed]) =>

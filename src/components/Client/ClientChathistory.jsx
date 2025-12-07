@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import Clientsidebar from "../clientsidebar";
 import socket from "../socket";
 import Swal from "sweetalert2";
 import api from "../../api";
-import Header from "../Layout/header";
 import { HiOutlinePaperClip } from "react-icons/hi";
 import { IoSend } from "react-icons/io5";
 import "../Client/css/client_chat_history.css";
@@ -12,7 +10,7 @@ import { Call, VideoCall, ArrowDropDown, Close } from "@mui/icons-material";
 import CallScreen from "../../_modules/calling/CallScreen";
 import IncomingCallScreen from "../../_modules/calling/IncomingCallScreen";
 
-function Clientchathistory() {
+function ClientChathistory() {
   const userData = JSON.parse(localStorage.getItem("userDetails"));
 
   const [recentChats, setRecentChats] = useState([]);
@@ -1124,4 +1122,4 @@ function Clientchathistory() {
   );
 }
 
-export default Clientchathistory;
+export default ClientChathistory;
