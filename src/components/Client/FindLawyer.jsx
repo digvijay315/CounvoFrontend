@@ -40,23 +40,22 @@ import {
 } from "@mui/icons-material";
 import CallScreen from "../../_modules/calling/CallScreen";
 import IncomingCallScreen from "../../_modules/calling/IncomingCallScreen";
+import useAuth from "../../hooks/useAuth";
 
 function Findalawyer() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [specialization, setSpecialization] = useState("");
   const [state, setState] = useState("");
-  const [filteredLawyers, setFilteredLawyers] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
-
-  const userData = JSON.parse(localStorage.getItem("userDetails"));
+  const { user: userData, userId } = useAuth();
 
   const fetchChatHistory = async () => {
     try {
       const res = await api.get("api/admin/chathistory");
       const result = res.data;
       const clientChats = result.filter(
-        (chat) => chat.from === userData.user._id && chat.fromModel === "User"
+        (chat) => chat.from === userId && chat.fromModel === "User"
       );
       setRecentChats(clientChats);
     } catch (error) {
@@ -77,8 +76,6 @@ function Findalawyer() {
       uniqueChats.push(chat);
     }
   });
-
-  const iconStyle = { width: 22, height: 22, verticalAlign: "middle" };
 
   const SPECIALIZATIONS = [
     { value: "", label: "Select Specialization" },
@@ -199,13 +196,13 @@ function Findalawyer() {
 
   // Your existing chat functionality...
   useEffect(() => {
-    if (!userData.user._id) return;
+    if (!userId) return;
 
     if (!socket.connected) socket.connect();
 
     socket.on("connect", () => {
       console.log("✅ Connected (client):", socket.id);
-      socket.emit("clientOnline", userData.user._id);
+      socket.emit("clientOnline", userId);
       socket.emit("getOnlineLawyers");
     });
 
@@ -304,13 +301,13 @@ function Findalawyer() {
       socket.off("callAccepted");
       socket.off("callEnded");
     };
-  }, [userData.user._id, chatLawyer]);
+  }, [userId, chatLawyer]);
 
   // ✅ Fetch favorites
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const userId = userData.user._id;
+        const userId = userId;
         const res = await api.get(`api/user/get-favorite/${userId}`);
 
         const favIds = res.data.map((f) => f.lawyerId._id);
@@ -320,12 +317,12 @@ function Findalawyer() {
       }
     };
     fetchFavorites();
-  }, [userData.user._id]);
+  }, [userId]);
 
   const handleToggleFavorite = async (lawyerId) => {
     try {
       const res = await api.post("api/user/add-to-favorite", {
-        userId: userData.user._id,
+        userId: userId,
         lawyerId,
       });
 
@@ -422,7 +419,7 @@ function Findalawyer() {
     const isOnline = onlineLawyers.includes(lawyer._id);
     setChatLawyer({ ...lawyer, isOnline });
 
-    const clientId = userData.user._id;
+    const clientId = userId;
     const lawyerId = lawyer._id;
 
     try {
@@ -525,7 +522,7 @@ function Findalawyer() {
     try {
       // Emit call initiation to server
       socket.emit("initiateCall", {
-        callerId: userData.user._id,
+        callerId: userId,
         receiverId: lawyerId,
         callType,
         callerModel: "User",
@@ -553,7 +550,7 @@ function Findalawyer() {
       // Notify the other party that the call has ended
       if (callingData.lawyerId) {
         socket.emit("endCall", {
-          callerId: userData.user._id,
+          callerId: userId,
           receiverId: callingData.lawyerId,
         });
       }
@@ -590,7 +587,7 @@ function Findalawyer() {
     // Emit call acceptance
     socket.emit("acceptCall", {
       callerId: incomingCall.callerId,
-      accepterId: userData.user._id,
+      accepterId: userId,
     });
 
     // Start the call - when accepting, it's immediately connected
@@ -613,7 +610,7 @@ function Findalawyer() {
     // Emit call rejection
     socket.emit("rejectCall", {
       callerId: incomingCall.callerId,
-      rejecterId: userData.user._id,
+      rejecterId: userId,
       message: "Call was declined",
     });
 
@@ -1114,7 +1111,7 @@ function Findalawyer() {
       {/* Calling Screen */}
       {callingData.isActive && (
         <CallScreen
-          userId={userData.user._id}
+          userId={userId}
           callerId={callingData.lawyerId}
           callerInfo={callingData.callerInfo}
           callType={callingData.callType}

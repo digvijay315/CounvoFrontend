@@ -9,9 +9,10 @@ import { IconButton, Stack, Menu, MenuItem } from "@mui/material";
 import { Call, VideoCall, ArrowDropDown, Close } from "@mui/icons-material";
 import CallScreen from "../../_modules/calling/CallScreen";
 import IncomingCallScreen from "../../_modules/calling/IncomingCallScreen";
+import useAuth from "../../hooks/useAuth";
 
 function ClientChathistory() {
-  const userData = JSON.parse(localStorage.getItem("userDetails"));
+  const { user: userData, userId } = useAuth();
 
   const [recentChats, setRecentChats] = useState([]);
   const [onlineLawyers, setOnlineLawyers] = useState([]);
@@ -47,7 +48,7 @@ function ClientChathistory() {
       const res = await api.get("api/admin/chathistoryforrecentchat");
       const result = res.data;
       const clientChats = result.filter(
-        (chat) => chat.from === userData.user._id && chat.fromModel === "User"
+        (chat) => chat.from === userId && chat.fromModel === "User"
       );
       setRecentChats(clientChats);
     } catch (error) {
@@ -71,7 +72,7 @@ function ClientChathistory() {
 
   const markMessagesRead = async (clientId) => {
     try {
-      const userid = userData.user._id;
+      const userid = userId;
       socket.emit("markMessagesRead", {
         readerId: userid,
         senderId: clientId,
@@ -90,7 +91,7 @@ function ClientChathistory() {
 
     socket.on("connect", () => {
       console.log("✅ Connected (client):", socket.id);
-      socket.emit("clientOnline", userData.user._id);
+      socket.emit("clientOnline", userId);
       socket.emit("getOnlineLawyers");
     });
 
@@ -258,7 +259,7 @@ function ClientChathistory() {
     markMessagesRead(lawyer._id);
     setChatLawyer({ ...lawyer, isOnline });
 
-    const clientId = userData.user._id;
+    const clientId = userId;
     const lawyerId = lawyer._id;
 
     try {
@@ -348,7 +349,7 @@ function ClientChathistory() {
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const userId = userData.user._id;
+        const userId = userId;
         const res = await api.get(`api/user/get-favorite/${userId}`);
 
         const favIds = res.data.map((f) => f.lawyerId._id);
@@ -358,12 +359,12 @@ function ClientChathistory() {
       }
     };
     fetchFavorites();
-  }, [userData.user._id]);
+  }, [userId]);
 
   const handleToggleFavorite = async (lawyerId) => {
     try {
       const res = await api.post("api/user/add-to-favorite", {
-        userId: userData.user._id,
+        userId: userId,
         lawyerId,
       });
 
@@ -407,7 +408,7 @@ function ClientChathistory() {
     try {
       // Emit call initiation to server
       socket.emit("initiateCall", {
-        callerId: userData.user._id,
+        callerId: userId,
         receiverId: lawyerId,
         callType,
         callerModel: "User",
@@ -435,7 +436,7 @@ function ClientChathistory() {
       // Notify the other party that the call has ended
       if (callingData.lawyerId) {
         socket.emit("endCall", {
-          callerId: userData.user._id,
+          callerId: userId,
           receiverId: callingData.lawyerId,
         });
       }
@@ -472,7 +473,7 @@ function ClientChathistory() {
     // Emit call acceptance
     socket.emit("acceptCall", {
       callerId: incomingCall.callerId,
-      accepterId: userData.user._id,
+      accepterId: userId,
     });
 
     // Start the call - when accepting, it's immediately connected
@@ -495,7 +496,7 @@ function ClientChathistory() {
     // Emit call rejection
     socket.emit("rejectCall", {
       callerId: incomingCall.callerId,
-      rejecterId: userData.user._id,
+      rejecterId: userId,
       message: "Call was declined",
     });
 
@@ -1050,7 +1051,7 @@ function ClientChathistory() {
 
       {callingData.isActive && (
         <CallScreen
-          userId={userData.user._id}
+          userId={userId}
           callerId={callingData.lawyerId}
           callerInfo={callingData.callerInfo}
           callType={callingData.callType}
