@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../api';
-import Swal from 'sweetalert2';
+import api from "../../api";
 
 // Initial state
 const initialState = {

@@ -443,13 +443,6 @@ aside ul li.logout:hover {
 
 
 
-.main1 {
-  margin-left: 250px;
-  padding: 80px 40px 40px 40px;
-  min-height: calc(100vh - 60px);
-  background: #f4f6f8;
-}
-
 h1 {
   margin-bottom: 30px;
   color: #1e2a78;

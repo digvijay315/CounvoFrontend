@@ -602,7 +602,6 @@ function Findalawyer() {
 
   return (
     <div>
-      <Header />
       <style>{`
 
   .lawyers-grid {

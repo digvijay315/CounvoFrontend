@@ -515,7 +515,6 @@ function Clientchathistory() {
 
   return (
     <div>
-      <Header />
       {/* Recent Chat Section */}
       <div
         className="recent-chat"
