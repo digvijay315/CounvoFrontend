@@ -8,6 +8,7 @@ import {
 } from "@mui/icons-material";
 
 export const NAVIGATION_CONSTANTS = {
+  LAWYER_PUBLIC_PROFILE_PATH: "/dashboard/lawyerprofile",
   PROFILE_PATH: "/dashboard/profile",
   SETTINGS_PATH: "/dashboard/settings",
   MESSAGES_PATH: "/dashboard/messages",

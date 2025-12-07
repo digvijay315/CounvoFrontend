@@ -27,6 +27,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import LawyerChatHistory from "../components/LawyerChatHistory";
 import LawyerProfile from "../components/Lawyer/LawyerProfile";
 import ClientProfile from "../components/Client/ClientProfile";
+import LawyerProfilePage from "../components/Client/LawyerProfilePage";
 
 const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
   const { user } = useAuth();
@@ -103,6 +104,10 @@ const router = createBrowserRouter([
           {
             path: NAVIGATION_CONSTANTS.FIND_LAWYER_PATH,
             element: <RoleBasedRoutes UserElement={<Findalawyer />} />,
+          },
+          {
+            path: `${NAVIGATION_CONSTANTS.LAWYER_PUBLIC_PROFILE_PATH}/:lawyerId`,
+            element: <RoleBasedRoutes UserElement={<LawyerProfilePage />} />,
           },
           {
             path: NAVIGATION_CONSTANTS.CLIENTS_PATH,

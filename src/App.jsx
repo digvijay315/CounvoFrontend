@@ -1,17 +1,30 @@
-
-import { Provider } from 'react-redux';
+import React from "react";
+import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+// import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { store, persistor } from "./redux/store";
-import theme from './theme/theme';
+import theme from "./theme/theme";
 import { RouterProvider } from "react-router-dom";
 import router from "./routes";
+
+// Create a client
+// const queryClient = new QueryClient({
+//   defaultOptions: {
+//     queries: {
+//       refetchOnWindowFocus: false,
+//       retry: 1,
+//       staleTime: 5 * 60 * 1000, // 5 minutes
+//     },
+//   },
+// });
 
 function App() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
+        {/* <QueryClientProvider client={queryClient}> */}
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <RouterProvider router={router} />
@@ -99,6 +112,7 @@ function App() {
             </Routes>
           </BrowserRouter> */}
         </ThemeProvider>
+        {/* </QueryClientProvider> */}
       </PersistGate>
     </Provider>
   );
