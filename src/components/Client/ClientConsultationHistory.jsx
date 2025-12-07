@@ -1,9 +1,15 @@
 import React from 'react'
+import PaymentHistory from "./PaymentHistory";
+import { Divider } from "@mui/material";
 
 const ClientConsultationHistory = () => {
   return (
-    <div>ClientConsultationHistory</div>
-  )
-}
+    <div>
+      ClientConsultationHistory
+      <Divider />
+      <PaymentHistory />
+    </div>
+  );
+};
 
 export default ClientConsultationHistory

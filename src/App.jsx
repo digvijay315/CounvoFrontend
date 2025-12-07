@@ -8,6 +8,7 @@ import { store, persistor } from "./redux/store";
 import theme from "./theme/theme";
 import { RouterProvider } from "react-router-dom";
 import router from "./routes";
+import { ToastContainer } from "react-toastify";
 
 // Create a client
 // const queryClient = new QueryClient({
@@ -27,6 +28,7 @@ function App() {
         {/* <QueryClientProvider client={queryClient}> */}
         <ThemeProvider theme={theme}>
           <CssBaseline />
+          <ToastContainer />
           <RouterProvider router={router} />
           {/* <BrowserRouter>
             <Routes>

@@ -7,67 +7,143 @@ const usePayment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const initializePayment = async (lawyerId, amount, notes = {}) => {
+  /**
+   * Confirms payment with backend after successful Razorpay payment
+   * This verifies the payment signature and updates the payment status
+   */
+  const confirmPayment = async (
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature
+  ) => {
+    try {
+      const response = await api.post("/api/v2/payment/confirm", {
+        razorpay_order_id: razorpayOrderId,
+        razorpay_payment_id: razorpayPaymentId,
+        razorpay_signature: razorpaySignature,
+      });
+      return response.data;
+    } catch (err) {
+      console.error("Error confirming payment:", err);
+      throw err;
+    }
+  };
+
+  /**
+   * Initializes payment process
+   * Creates order and opens Razorpay payment modal
+   */
+  const initializePayment = async (
+    lawyerId,
+    amount,
+    notes = {},
+    onSuccess = null
+  ) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
+      // Step 1: Create payment order
       const response = await api.post("/api/v2/payment/create", {
         lawyerId: lawyerId,
         amount: amount,
-        transferAmount: amount,
         notes: {
           consultation: notes.consultation || "online",
           consultationType: notes.consultationType || "online",
           additionalNotes: notes.additionalNotes || "",
         },
       });
+      if (response.data.error) {
+        toast.error(response?.data?.error);
+        setIsLoading(false);
+        return;
+      }
+      const orderData = response.data.order || response.data;
 
-      // Razorpay payment options
+      // Step 2: Configure Razorpay payment options
       const options = {
         key: APP_CONFIG.RAZORPAY_KEY_ID,
-        amount: response.data.amount,
-        currency: response.data.currency,
+        amount: orderData.amount,
+        currency: orderData.currency || "INR",
         name: "Counvo",
         description: "Lawyer Consultation Payment",
-        order_id: response.data.id,
-        handler: function (paymentResponse) {
-          toast.success("Payment successful!");
-          // You can add callback here to verify payment on backend
-          console.log("Payment Response:", paymentResponse);
+        order_id: orderData.id,
+
+        // Handler called when payment is successful
+        handler: async function (paymentResponse) {
+          try {
+            // Step 3: Verify payment on backend
+            const confirmResult = await confirmPayment(
+              paymentResponse.razorpay_order_id,
+              paymentResponse.razorpay_payment_id,
+              paymentResponse.razorpay_signature
+            );
+
+            toast.success("Payment successful and verified!");
+            console.log("Payment confirmed:", confirmResult);
+
+            // Call custom success callback if provided
+            if (onSuccess && typeof onSuccess === "function") {
+              onSuccess(confirmResult);
+            }
+          } catch (err) {
+            console.error("Payment verification error:", err);
+            toast.error(
+              "Payment completed but verification failed. Please contact support."
+            );
+          }
         },
+
         prefill: {
           name: response.data.notes?.userName || "",
           email: response.data.notes?.userEmail || "",
           contact: response.data.notes?.userPhone || "",
         },
+
         theme: {
-          color: "#F59E0B",
+          color: "#F59E0B", // Counvo primary color
+        },
+
+        modal: {
+          ondismiss: function () {
+            setIsLoading(false);
+            toast.info("Payment cancelled");
+          },
         },
       };
 
+      // Step 4: Open Razorpay payment modal
       const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", function (response) {
-        toast.error("Payment failed! Please try again.");
-        setError(response.error.description);
-      });
-      razorpay.on("payment.success", function (response) {
-        toast.success("Payment successful!");
-        console.log("Payment Response:", response);
-      });
-      razorpay.open();
 
+      razorpay.on("payment.failed", function (response) {
+        console.error("Payment failed:", response.error);
+        toast.error(`Payment failed: ${response.error.description}`);
+        setError(response.error.description);
+        setIsLoading(false);
+      });
+
+      razorpay.open();
       setIsLoading(false);
+
       return response.data;
     } catch (err) {
       setIsLoading(false);
-      setError(err.response?.data?.message || err.message);
-      toast.error(err.response?.data?.message || "Payment initialization failed");
+      let responseError =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message;
+      setError(responseError);
+      toast.error(responseError || "Payment initialization failed");
       throw err;
     }
   };
 
-  return { initializePayment, isLoading, error };
+  return {
+    initializePayment,
+    confirmPayment,
+    isLoading,
+    error,
+  };
 };
 
 export default usePayment;
