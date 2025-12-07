@@ -53,7 +53,7 @@ export const register = createAsyncThunk(
         email: userData.email,
         mobile: userData.mobile,
         password: userData.password,
-        userRole: userData.userRole,
+        userType: userData.userType,
       });
 
       if (response.data.success) {

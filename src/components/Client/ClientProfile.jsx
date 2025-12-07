@@ -221,7 +221,7 @@ const ClientProfile = () => {
                   {userData?.fullName}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Client Account
+                  Customer Account
                 </Typography>
                 {/* Action Buttons - Simple */}
                 <Box
