@@ -28,6 +28,8 @@ import LawyerChatHistory from "../components/LawyerChatHistory";
 import LawyerProfile from "../components/Lawyer/LawyerProfile";
 import ClientProfile from "../components/Client/ClientProfile";
 import LawyerProfilePage from "../components/Client/LawyerProfilePage";
+import ManageApprovals from "../components/Admin/ManageApprovals";
+import AdminManageUsers from "../components/Admin/AdminManageUsers";
 
 const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
   const { user } = useAuth();
@@ -134,6 +136,14 @@ const router = createBrowserRouter([
           { path: NAVIGATION_CONSTANTS.SUPPORT_PATH, element: <Support /> },
           { path: NAVIGATION_CONSTANTS.PAYMENT_PATH, element: <Payment /> },
           { path: NAVIGATION_CONSTANTS.REPORT_PATH, element: <AdminReport /> },
+          {
+            path: NAVIGATION_CONSTANTS.MANAGE_APPROVALS_PATH,
+            element: <RoleBasedRoutes AdminElement={<ManageApprovals />} />,
+          },
+          {
+            path: NAVIGATION_CONSTANTS.MANAGE_USERS_PATH,
+            element: <RoleBasedRoutes AdminElement={<AdminManageUsers />} />,
+          },
         ],
       },
     ],

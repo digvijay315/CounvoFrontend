@@ -5,9 +5,13 @@ import {
   Email,
   Support,
   People,
+  Checklist,
+  Person,
 } from "@mui/icons-material";
 
 export const NAVIGATION_CONSTANTS = {
+  MANAGE_APPROVALS_PATH: "/dashboard/manageapprovals",
+  MANAGE_USERS_PATH: "/dashboard/manageusers",
   LAWYER_PUBLIC_PROFILE_PATH: "/dashboard/lawyerprofile",
   PROFILE_PATH: "/dashboard/profile",
   SETTINGS_PATH: "/dashboard/settings",
@@ -30,7 +34,7 @@ export const NAVIGATION_MENU_ITEMS = [
     label: "Dashboard",
     path: NAVIGATION_CONSTANTS.DASHBOARD_PATH,
     icon: <Dashboard />,
-    allowedRoles: ["customer", "lawyer"],
+    allowedRoles: ["customer", "lawyer", "admin"],
   },
   {
     label: "Find Lawyer",
@@ -61,6 +65,18 @@ export const NAVIGATION_MENU_ITEMS = [
     path: NAVIGATION_CONSTANTS.SUPPORT_PATH,
     icon: <Support />,
     allowedRoles: ["customer", "lawyer"],
+  },
+  {
+    label: "Manage Approvals",
+    path: NAVIGATION_CONSTANTS.MANAGE_APPROVALS_PATH,
+    icon: <Checklist />,
+    allowedRoles: ["admin"],
+  },
+  {
+    label: "Manage Users",
+    path: NAVIGATION_CONSTANTS.MANAGE_USERS_PATH,
+    icon: <People />,
+    allowedRoles: ["admin"],
   },
 ];
 

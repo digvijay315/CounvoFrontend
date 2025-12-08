@@ -97,7 +97,10 @@ const SignInForm = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Email Input */}
         <div className="form-group">
-          <label htmlFor="signin-email">
+          <label
+            htmlFor="signin-email"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
             <Mail size={16} />
             Email Address
           </label>
@@ -128,7 +131,10 @@ const SignInForm = () => {
 
         {/* Password Input */}
         <div className="form-group">
-          <label htmlFor="signin-password">
+          <label
+            htmlFor="signin-password"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
             <Lock size={16} />
             Password
           </label>

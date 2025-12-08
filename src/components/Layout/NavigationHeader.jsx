@@ -16,10 +16,13 @@ import {
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  Notifications as NotificationsIcon, Settings as SettingsIcon,
+  Notifications as NotificationsIcon,
+  Settings as SettingsIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
-  Email as EmailIcon
+  Email as EmailIcon,
+  Error,
+  CheckCircle,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { APP_CONFIG } from "../../_constants/config";
@@ -32,7 +35,7 @@ const NavigationHeader = forwardRef(
     const navigate = useNavigate();
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [anchorElNotifications, setAnchorElNotifications] = useState(null);
-    const { user: userData, handleLogout } = useAuth();
+    const { user: userData, handleLogout, isVerified } = useAuth();
     const userFullName = userData?.fullName || "User";
     const userEmail = userData?.email || "user@example.com";
     const userInitials = userFullName
@@ -246,10 +249,53 @@ const NavigationHeader = forwardRef(
               },
             }}
           >
-            <Box sx={{ px: 2.5, py: 1.5 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                {userFullName}
-              </Typography>
+            <Box width="100%" sx={{ px: 2.5, py: 1.5 }}>
+              <Stack
+                width="100%"
+                direction="row"
+                alignItems="center"
+                justifyContent="flex-start"
+                gap={1}
+              >
+                <Typography
+                  display="inline-block"
+                  variant="subtitle2"
+                  fontWeight="bold"
+                >
+                  {userFullName}
+                </Typography>
+
+                {isVerified ? (
+                  <Typography
+                    display="inline-block"
+                    sx={{
+                      backgroundColor: theme.palette.success.main,
+                      color: theme.palette.success.contrastText,
+                      padding: "2px 8px",
+                      borderRadius: "15px",
+                      fontSize: 12,
+                    }}
+                    variant="body2"
+                  >
+                    Verified
+                  </Typography>
+                ) : (
+                  <Typography
+                    display="inline-block"
+                    sx={{
+                      backgroundColor: theme.palette.error.main,
+                      color: theme.palette.error.contrastText,
+                      padding: "2px 8px",
+                      borderRadius: "15px",
+                      fontSize: 12,
+                    }}
+                    variant="body2"
+                  >
+                    Unverified
+                  </Typography>
+                )}
+              </Stack>
+
               <Typography
                 variant="caption"
                 color="text.secondary"

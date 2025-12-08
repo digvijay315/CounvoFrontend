@@ -93,8 +93,8 @@ const SignUpForm = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* User Type Toggle */}
         <div className="form-group">
-          <label>
-            <Users size={16} style={{ display: "inline-block", marginRight: "5px" }} />
+          <label style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <Users size={16} />
             Register as
           </label>
           <div className="toggle-button-group">
@@ -135,8 +135,11 @@ const SignUpForm = () => {
 
         {/* Full Name */}
         <div className="form-group">
-          <label htmlFor="fullName">
-            <User size={16} style={{ display: "inline-block", marginRight: "5px" }} />
+          <label
+            htmlFor="fullName"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
+            <User size={16} />
             Full Name
           </label>
           <div className="input-with-icon">
@@ -165,8 +168,11 @@ const SignUpForm = () => {
 
         {/* Email */}
         <div className="form-group">
-          <label htmlFor="email">
-            <Mail size={16} style={{ display: "inline-block", marginRight: "5px" }} />
+          <label
+            htmlFor="email"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
+            <Mail size={16} />
             Email Address
           </label>
           <div className="input-with-icon">
@@ -195,8 +201,11 @@ const SignUpForm = () => {
 
         {/* Mobile */}
         <div className="form-group">
-          <label htmlFor="mobile">
-            <Phone size={16} style={{ display: "inline-block", marginRight: "5px" }} />
+          <label
+            htmlFor="mobile"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
+            <Phone size={16} />
             Mobile Number
           </label>
           <div className="input-with-icon">
@@ -226,8 +235,11 @@ const SignUpForm = () => {
 
         {/* Password */}
         <div className="form-group">
-          <label htmlFor="password">
-            <Lock size={16} style={{ display: "inline-block", marginRight: "5px" }} />
+          <label
+            htmlFor="password"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
+            <Lock size={16} />
             Password
           </label>
           <div className="input-with-icon">
@@ -265,8 +277,11 @@ const SignUpForm = () => {
 
         {/* Confirm Password */}
         <div className="form-group">
-          <label htmlFor="confirmPassword">
-            <Lock size={16} style={{ display: "inline-block", marginRight: "5px" }} />
+          <label
+            htmlFor="confirmPassword"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
+            <Lock size={16} />
             Confirm Password
           </label>
           <div className="input-with-icon">

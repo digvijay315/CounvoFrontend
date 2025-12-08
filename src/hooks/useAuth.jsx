@@ -22,7 +22,7 @@ const useAuth = () => {
   const error = useSelector(selectError);
   const userRole = useSelector(selectUserRole);
   const user = useSelector(selectUser);
-  const token = useSelector(state => state.auth.token);
+  const token = useSelector((state) => state.auth.token);
   const userId = user?._id;
 
   // Backward compatibility: matches localStorage.getItem('userDetails') pattern
@@ -33,15 +33,17 @@ const useAuth = () => {
       token,
     };
   };
+  // Get user verification status
+  const isVerified = user?.status === "verified";
 
   // Get user full name
-  const userFullName = user?.fullName || '';
+  const userFullName = user?.fullName || "";
 
   // Get user email
-  const userEmail = user?.email || '';
+  const userEmail = user?.email || "";
 
   // Get user mobile
-  const userMobile = user?.mobile || '';
+  const userMobile = user?.mobile || "";
 
   const handleLogout = () => {
     dispatch(clearUser());
@@ -49,12 +51,12 @@ const useAuth = () => {
   return {
     // Redux dispatch
     dispatch,
-    
+
     // Auth state
     isAuthenticated,
     isLoading,
     error,
-    
+
     // User data
     user,
     userId,
@@ -63,7 +65,7 @@ const useAuth = () => {
     userEmail,
     userMobile,
     token,
-    
+    isVerified,
     // Backward compatibility
     getUserData,
     userData: getUserData(), // Direct access to userData object
