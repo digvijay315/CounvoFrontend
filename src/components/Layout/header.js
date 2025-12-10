@@ -5,6 +5,7 @@ import logo from '../../components/counvoImg/Counvo Logo-01.png'
 import Swal from 'sweetalert2';
 import api from '../../api';
 import socket from '../socket';
+import { NAVIGATION_CONSTANTS } from "../../_constants/navigationConstants";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,106 +13,101 @@ export default function Header() {
   const [helpOpen, setHelpOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const userData = JSON.parse(localStorage.getItem('userDetails'));
+  const userData = JSON.parse(localStorage.getItem("userDetails"));
 
   const handleLogout = () => {
-    localStorage.removeItem('userDetails');
+    localStorage.removeItem("userDetails");
     Swal.fire({
-      icon: 'success',
-      title: 'Logout Successfull',
-      text: 'You are Successfully Logout..!',
+      icon: "success",
+      title: "Logout Successfull",
+      text: "You are Successfully Logout..!",
       showConfirmButton: true,
     });
-    navigate('/');
+    navigate("/");
     setMenuOpen(false);
   };
 
   // Helper to check active path (for subpaths)
   const isActive = (path) => {
-    if (path === '/') return location.pathname === '/';
+    if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
 
+  const [missingmessage, setmissingmessage] = useState(0);
+  const [missingtext, setmissingtext] = useState("");
+  useEffect(() => {
+    socket.on("missedMessagesNotification", async (notifications) => {
+      // Get unique client IDs to fetch
+      const clientIds = [...new Set(notifications.map((n) => n._id))];
 
-  const[missingmessage,setmissingmessage]=useState(0)
-  const[missingtext,setmissingtext]=useState('')
-    useEffect(() => {
-      socket.on('missedMessagesNotification', async (notifications) => {
-       
-        
-        // Get unique client IDs to fetch
-        const clientIds = [...new Set(notifications.map(n => n._id))];
-    
-        // Fetch clients data from API 
-        const clientIdNameMap = {};
-        await Promise.all(clientIds.map(async (id) => {
+      // Fetch clients data from API
+      const clientIdNameMap = {};
+      await Promise.all(
+        clientIds.map(async (id) => {
           try {
             const res = await api.get(`/api/lawyer/getlawyer/${id}`);
-            clientIdNameMap[id] = res.data.firstName || 'Lawyer';
+            clientIdNameMap[id] = res.data.firstName || "Lawyer";
           } catch {
-            clientIdNameMap[id] = 'Client'; // fallback
+            clientIdNameMap[id] = "Client"; // fallback
           }
-        }));
-    
-        // Show notifications with correct names
-        notifications.forEach(({ _id: clientId, count }) => {
-          const name = clientIdNameMap[clientId] || clientId;
-          setmissingmessage(count)
-          setmissingtext(`You have ${count} unread message${count > 1 ? 's' : ''} from ${name}.`)
-          
-          // const name = clientIdNameMap[clientId] || clientId;
-          // Swal.fire({
-          //   icon: 'info',
-          //   title: 'Unread Messages',
-          //   text: `You have ${count} unread message${count > 1 ? 's' : ''} from ${name}.`,
-          //   timer: 4000,
-          //   showConfirmButton: true,
-          // });
-        });
+        })
+      );
+
+      // Show notifications with correct names
+      notifications.forEach(({ _id: clientId, count }) => {
+        const name = clientIdNameMap[clientId] || clientId;
+        setmissingmessage(count);
+        setmissingtext(
+          `You have ${count} unread message${
+            count > 1 ? "s" : ""
+          } from ${name}.`
+        );
+
+        // const name = clientIdNameMap[clientId] || clientId;
+        // Swal.fire({
+        //   icon: 'info',
+        //   title: 'Unread Messages',
+        //   text: `You have ${count} unread message${count > 1 ? 's' : ''} from ${name}.`,
+        //   timer: 4000,
+        //   showConfirmButton: true,
+        // });
       });
-    
-      return () => socket.off('missedMessagesNotification');
-    }, []);
-  
-  
-    
-    
-    const showmissingmessage=()=>
-    {
-      //  socket.on('missedMessagesNotification', async (notifications) => {
-      //   // Get unique client IDs to fetch
-      //   const clientIds = [...new Set(notifications.map(n => n._id))];
-    
-      //   // Fetch clients data from API 
-      //   const clientIdNameMap = {};
-      //   await Promise.all(clientIds.map(async (id) => {
-      //     try {
-      //       const res = await api.get(`/api/user/${id}`);
-      //       clientIdNameMap[id] = res.data.fullName || 'Client';
-      //     } catch {
-      //       clientIdNameMap[id] = 'Client'; // fallback
-      //     }
-      //   }));
-    
-      //   // Show notifications with correct names
-      //   notifications.forEach(({ _id: clientId, count }) => {
-      //     const name = clientIdNameMap[clientId] || clientId;
-          Swal.fire({
-            icon: 'info',
-            title: 'Unread Messages',
-            text: missingtext,
-            timer: 4000,
-            showConfirmButton: true,
-          }).then(()=>
-          {
-            navigate('/clientchathistory')
-          });
-        
-   
-    
-      // return () => socket.off('missedMessagesNotification');
-  
-    }
+    });
+
+    return () => socket.off("missedMessagesNotification");
+  }, []);
+
+  const showmissingmessage = () => {
+    //  socket.on('missedMessagesNotification', async (notifications) => {
+    //   // Get unique client IDs to fetch
+    //   const clientIds = [...new Set(notifications.map(n => n._id))];
+
+    //   // Fetch clients data from API
+    //   const clientIdNameMap = {};
+    //   await Promise.all(clientIds.map(async (id) => {
+    //     try {
+    //       const res = await api.get(`/api/user/${id}`);
+    //       clientIdNameMap[id] = res.data.fullName || 'Client';
+    //     } catch {
+    //       clientIdNameMap[id] = 'Client'; // fallback
+    //     }
+    //   }));
+
+    //   // Show notifications with correct names
+    //   notifications.forEach(({ _id: clientId, count }) => {
+    //     const name = clientIdNameMap[clientId] || clientId;
+    Swal.fire({
+      icon: "info",
+      title: "Unread Messages",
+      text: missingtext,
+      timer: 4000,
+      showConfirmButton: true,
+    }).then(() => {
+      navigate("/clientchathistory");
+    });
+
+    // return () => socket.off('missedMessagesNotification');
+  };
 
   return (
     <>
@@ -224,110 +220,187 @@ export default function Header() {
       `}</style>
 
       <header className="header">
-            <img
+        <img
           src={logo}
           alt="Logo"
           className="logo"
-          onClick={() => { navigate('/'); setMenuOpen(false); }}
+          onClick={() => {
+            navigate("/");
+            setMenuOpen(false);
+          }}
         />
-      
-       
 
-        <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
+        <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
           <li
-            className={isActive('/') ? 'active' : ''}
-            onClick={() => { navigate('/'); setMenuOpen(false); }}
+            className={isActive("/") ? "active" : ""}
+            onClick={() => {
+              navigate("/");
+              setMenuOpen(false);
+            }}
           >
             Home
           </li>
           <li
-            className={isActive('/about') ? 'active' : ''}
-            onClick={() => { navigate('/aboutus'); setMenuOpen(false); }}
+            className={isActive("/about") ? "active" : ""}
+            onClick={() => {
+              navigate("/aboutus");
+              setMenuOpen(false);
+            }}
           >
             About
           </li>
           <li
-            className={isActive('/contact') ? 'active' : ''}
-            onClick={() => { navigate('/contactus'); setMenuOpen(false); }}
+            className={isActive("/contact") ? "active" : ""}
+            onClick={() => {
+              navigate("/contactus");
+              setMenuOpen(false);
+            }}
           >
             Contact
           </li>
-{userData?.user && (
-  <li 
-    style={{ position: 'relative', cursor: 'pointer' }} 
-    onClick={() => setSubmenuOpen(!submenuOpen)}
-  >
-    <span style={{ fontWeight: 'bold', color: 'blue' }}>
-      {userData.user.fullName} &#9662; {/* ▼ icon */}
-    </span>
-   <ul style={{
-  width: "200px",
-  position: 'absolute',
-  top: '100%',
-  right: 0,                  // change this!
-  background: '#fff',
-  listStyle: 'none',
-  padding: '10px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-  display: submenuOpen ? 'block' : 'none',
-  zIndex: 1000
-}}>
+          {userData?.user && (
+            <li
+              style={{ position: "relative", cursor: "pointer" }}
+              onClick={() => setSubmenuOpen(!submenuOpen)}
+            >
+              <span style={{ fontWeight: "bold", color: "blue" }}>
+                {userData.user.fullName} &#9662; {/* ▼ icon */}
+              </span>
+              <ul
+                style={{
+                  width: "200px",
+                  position: "absolute",
+                  top: "100%",
+                  right: 0, // change this!
+                  background: "#fff",
+                  listStyle: "none",
+                  padding: "10px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                  display: submenuOpen ? "block" : "none",
+                  zIndex: 1000,
+                }}
+              >
+                <li
+                  onClick={() => {
+                    navigate("/findlawyer");
+                    setMenuOpen(false);
+                    setSubmenuOpen(false);
+                  }}
+                >
+                  Find Lawyer
+                </li>
+                <li
+                  onClick={() => {
+                    navigate("/clientprofile");
+                    setMenuOpen(false);
+                    setSubmenuOpen(false);
+                  }}
+                >
+                  Profile
+                </li>
+                {/* <li onClick={() => { navigate('/supports'); setMenuOpen(false); setSubmenuOpen(false); }}>Supports</li> */}
+                <li
+                  onClick={() => {
+                    navigate("/clientchathistory");
+                    setMenuOpen(false);
+                    setSubmenuOpen(false);
+                  }}
+                >
+                  History
+                </li>
+                {/* <li onClick={() => { navigate('/termsandconditions'); setMenuOpen(false); setSubmenuOpen(false); }}>Terms & Conditions</li> */}
+                <li
+                  onClick={() => {
+                    showmissingmessage();
+                    setMenuOpen(false);
+                    setSubmenuOpen(false);
+                  }}
+                >
+                  Notifications{" "}
+                  <span style={{ color: "red", fontWeight: "bold" }}>
+                    {missingmessage}
+                  </span>{" "}
+                </li>
+                {/* Dropdown Help Menu */}
+                <li
+                  style={{ position: "relative", cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent menu close
+                    setHelpOpen(!helpOpen);
+                  }}
+                >
+                  Help ▾
+                  {helpOpen && (
+                    <ul
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        background: "white",
+                        border: "1px solid #ddd",
+                        padding: "5px 10px",
+                        listStyle: "none",
+                        minWidth: "180px",
+                        zIndex: 1000,
+                      }}
+                    >
+                      <li
+                        onClick={() => {
+                          navigate("/privacy-policy");
+                          setMenuOpen(false);
+                          setSubmenuOpen(false);
+                        }}
+                      >
+                        Privacy Policy
+                      </li>
+                      <li
+                        onClick={() => {
+                          navigate("/supports");
+                          setMenuOpen(false);
+                          setSubmenuOpen(false);
+                        }}
+                      >
+                        Support
+                      </li>
+                      <li
+                        onClick={() => {
+                          navigate("/termsandconditions");
+                          setMenuOpen(false);
+                          setSubmenuOpen(false);
+                        }}
+                      >
+                        Terms & Conditions
+                      </li>
+                    </ul>
+                  )}
+                </li>
 
-      <li onClick={() => { navigate('/findlawyer'); setMenuOpen(false); setSubmenuOpen(false); }}>Find Lawyer</li>
-      <li onClick={() => { navigate('/clientprofile'); setMenuOpen(false); setSubmenuOpen(false); }}>Profile</li>
-      {/* <li onClick={() => { navigate('/supports'); setMenuOpen(false); setSubmenuOpen(false); }}>Supports</li> */}
-      <li onClick={() => { navigate('/clientchathistory'); setMenuOpen(false); setSubmenuOpen(false); }}>History</li>
-      {/* <li onClick={() => { navigate('/termsandconditions'); setMenuOpen(false); setSubmenuOpen(false); }}>Terms & Conditions</li> */}
-       <li onClick={() => { showmissingmessage(); setMenuOpen(false); setSubmenuOpen(false); }}>Notifications <span style={{color:"red",fontWeight:"bold"}}>{missingmessage}</span> </li>
-        {/* Dropdown Help Menu */}
-      <li
-        style={{ position: "relative", cursor: "pointer" }}
-        onClick={(e) => {
-          e.stopPropagation(); // prevent menu close
-          setHelpOpen(!helpOpen);
-        }}
-      >
-        Help ▾
-        {helpOpen && (
-          <ul
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              background: "white",
-              border: "1px solid #ddd",
-              padding: "5px 10px",
-              listStyle: "none",
-              minWidth: "180px",
-              zIndex: 1000
-            }}
-          >
-            <li onClick={() => { navigate('/privacy-policy'); setMenuOpen(false); setSubmenuOpen(false); }}>Privacy Policy</li>
-            <li onClick={() => { navigate('/supports'); setMenuOpen(false); setSubmenuOpen(false); }}>Support</li>
-            <li onClick={() => { navigate('/termsandconditions'); setMenuOpen(false); setSubmenuOpen(false); }}>Terms & Conditions</li>
-          </ul>
-        )}
-      </li>
-     
-      <li onClick={() => { handleLogout(); setMenuOpen(false); setSubmenuOpen(false); }}>Logout</li>
-    </ul>
-  </li>
-)}
-
+                <li
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                    setSubmenuOpen(false);
+                  }}
+                >
+                  Logout
+                </li>
+              </ul>
+            </li>
+          )}
 
           <li
-            onClick={() => { navigate('/login'); setMenuOpen(false); }}
+            onClick={() => {
+              navigate(NAVIGATION_CONSTANTS.LOGIN_PATH);
+              setMenuOpen(false);
+            }}
             style={{ display: userData?.user ? "none" : "block" }}
-            className={isActive('/login') ? 'active' : ''}
+            className={isActive("/login") ? "active" : ""}
           >
             Login
           </li>
         </ul>
 
-        <div
-          className="hamburger"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
+        <div className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
           <span></span>
           <span></span>
           <span></span>
