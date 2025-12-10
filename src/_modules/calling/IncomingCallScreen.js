@@ -2,23 +2,23 @@ import React, { useState, useEffect } from "react";
 import { Call, VideoCall, Close, PhoneDisabled } from "@mui/icons-material";
 import { IconButton, Avatar } from "@mui/material";
 
-const IncomingCallScreen = ({ 
-  callerInfo, 
-  callType, 
-  onAccept, 
+const IncomingCallScreen = ({
+  callerInfo,
+  callType,
+  onAccept,
   onReject,
-  userType = "client" // "client" or "lawyer"
+  userType = "customer", // "customer" or "lawyer"
 }) => {
   const [ripple, setRipple] = useState(false);
 
   useEffect(() => {
     // Start ripple animation
     setRipple(true);
-    
+
     // Play ringtone sound (optional)
     const audio = new Audio("/ringtone.mp3"); // Add your ringtone file
     audio.loop = true;
-    audio.play().catch(err => console.log("Audio play failed:", err));
+    audio.play().catch((err) => console.log("Audio play failed:", err));
 
     return () => {
       audio.pause();
@@ -39,7 +39,7 @@ const IncomingCallScreen = ({
         {/* Content */}
         <div className="incoming-call-content">
           {/* Caller Avatar with Ripple Effect */}
-          <div className={`avatar-container ${ripple ? 'ripple' : ''}`}>
+          <div className={`avatar-container ${ripple ? "ripple" : ""}`}>
             <Avatar
               src={callerInfo?.profilepic}
               alt={callerInfo?.fullName || callerInfo?.firstName}
@@ -55,12 +55,15 @@ const IncomingCallScreen = ({
           {/* Caller Info */}
           <div className="caller-info">
             <h2 className="caller-name">
-              {callerInfo?.fullName || `${callerInfo?.firstName} ${callerInfo?.lastName}`}
+              {callerInfo?.fullName ||
+                `${callerInfo?.firstName} ${callerInfo?.lastName}`}
             </h2>
             <p className="call-type-label">
               {callType === "video" ? (
                 <>
-                  <VideoCall style={{ verticalAlign: "middle", marginRight: 8 }} />
+                  <VideoCall
+                    style={{ verticalAlign: "middle", marginRight: 8 }}
+                  />
                   Incoming Video Call
                 </>
               ) : (
@@ -70,9 +73,9 @@ const IncomingCallScreen = ({
                 </>
               )}
             </p>
-            {userType === "client" && callerInfo?.specializations && (
+            {userType === "customer" && callerInfo?.specializations && (
               <p className="caller-specialty">
-                {callerInfo.specializations.map(s => s.label).join(", ")}
+                {callerInfo.specializations.map((s) => s.label).join(", ")}
               </p>
             )}
           </div>

@@ -577,7 +577,11 @@ const CallScreen = ({
 
   const getCallerName = () => {
     console.log(callerInfo);
-    if (screen === "client" && callerInfo?.firstName && callerInfo?.lastName) {
+    if (
+      screen === "customer" &&
+      callerInfo?.firstName &&
+      callerInfo?.lastName
+    ) {
       return callerInfo?.firstName + " " + callerInfo?.lastName;
     }
     if (screen === "lawyer" && callerInfo?.fullName) {

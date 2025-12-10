@@ -10,6 +10,7 @@ import { Call, VideoCall, ArrowDropDown, Close } from "@mui/icons-material";
 import CallScreen from "../../_modules/calling/CallScreen";
 import IncomingCallScreen from "../../_modules/calling/IncomingCallScreen";
 import useAuth from "../../hooks/useAuth";
+import ChatPage from "../shared/ChatPage";
 
 function ClientChathistory() {
   const { user: userData, userId } = useAuth();
@@ -1119,6 +1120,7 @@ function ClientChathistory() {
           </div>
         </div>
       )}
+      <ChatPage userType="customer" />
     </div>
   );
 }

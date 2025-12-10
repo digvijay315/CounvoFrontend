@@ -30,6 +30,7 @@ import ClientProfile from "../components/Client/ClientProfile";
 import LawyerProfilePage from "../components/Client/LawyerProfilePage";
 import ManageApprovals from "../components/Admin/ManageApprovals";
 import AdminManageUsers from "../components/Admin/AdminManageUsers";
+import ChatPage from "../components/shared/ChatPage";
 
 const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
   const { user } = useAuth();
@@ -119,8 +120,8 @@ const router = createBrowserRouter([
             path: NAVIGATION_CONSTANTS.MESSAGES_PATH,
             element: (
               <RoleBasedRoutes
-                UserElement={<ClientChathistory />}
-                LawyerElement={<LawyerChatHistory />}
+                UserElement={<ChatPage userType="customer" />}
+                LawyerElement={<ChatPage userType="lawyer" />}
               />
             ),
           },
