@@ -19,6 +19,7 @@ import {
   Container,
   CircularProgress,
   Skeleton,
+  Stack,
 } from "@mui/material";
 import {
   Chat as ChatIcon,
@@ -279,43 +280,57 @@ function FindLawyer() {
               Connect instantly with verified lawyers who are online right now
             </Typography>
 
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
+            <Stack
+              direction="column"
+              spacing={2}
+              justifyContent="center"
+              alignItems={"center"}
             >
-              <FormControl sx={{ minWidth: 200 }}>
-                <Select
-                  value={specialization}
-                  onChange={(e) => setSpecialization(e.target.value)}
-                  displayEmpty
-                  size="medium"
-                >
-                  {SPECIALIZATIONS.map((spec) => (
-                    <MuiMenuItem key={spec.value} value={spec.value}>
-                      {spec.label}
-                    </MuiMenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl sx={{ minWidth: 200 }}>
-                <Select
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  displayEmpty
-                  size="medium"
-                >
-                  {STATES.map((st) => (
-                    <MuiMenuItem key={st.value} value={st.value}>
-                      {st.label}
-                    </MuiMenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
+                <FormControl sx={{ minWidth: 200 }}>
+                  <Select
+                    value={specialization}
+                    onChange={(e) => setSpecialization(e.target.value)}
+                    displayEmpty
+                    size="medium"
+                  >
+                    {SPECIALIZATIONS.map((spec) => (
+                      <MuiMenuItem key={spec.value} value={spec.value}>
+                        {spec.label}
+                      </MuiMenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl sx={{ minWidth: 200 }}>
+                  <Select
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    displayEmpty
+                    size="medium"
+                  >
+                    {STATES.map((st) => (
+                      <MuiMenuItem key={st.value} value={st.value}>
+                        {st.label}
+                      </MuiMenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate("/dashboard/messages")}
+              >
+                Connect with a Lawyer
+              </Button>
+            </Stack>
           </Container>
         </CardContent>
       </Card>

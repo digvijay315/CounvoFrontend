@@ -15,6 +15,8 @@ const DashboardNote = () => {
       setDashboardNote([
         "Please complete your account KYC to start using the platform",
       ]);
+    }else{
+      setDashboardNote([]);
     }
   }, [isKycSubmitted, kycStatus]);
   const handleOpenKycDialog = () => {
@@ -50,17 +52,22 @@ const DashboardNote = () => {
           </Button>
         </Stack>
       ))}
-      <Dialog maxWidth="md" open={openKycDialog} onClose={handleCloseKycDialog}>
+      <Dialog
+        maxWidth="md"
+        fullWidth
+        open={openKycDialog}
+        onClose={handleCloseKycDialog}
+      >
         <DialogTitle>
           <Typography variant="h4" fontWeight="600" gutterBottom>
             Lawyer KYC Verification
           </Typography>
-          <Typography variant="body2" color="text.secondary" >
+          <Typography variant="body2" color="text.secondary">
             Complete your KYC verification to start practicing on our platform
           </Typography>
         </DialogTitle>
         <DialogContent dividers sx={{ width: "100%" }}>
-          <LawyerKycWidget />
+          <LawyerKycWidget onSuccess={handleCloseKycDialog} />
         </DialogContent>
       </Dialog>
     </>

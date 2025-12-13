@@ -43,6 +43,23 @@ export const login = createAsyncThunk(
   }
 );
 
+// Get User Details Thunk
+export const getUserDetails = createAsyncThunk(
+  "auth/getUserDetails",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/api/v2/user/me");
+      if (response.data.success) {
+        return response.data.user;
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 // Register Thunk
 export const register = createAsyncThunk(
   "auth/register",
@@ -149,6 +166,22 @@ const authSlice = createSlice({
         state.userRole = null;
         state.isLoading = false;
         state.error = null;
+      })
+
+      // Get User Details
+      .addCase(getUserDetails.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getUserDetails.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.userRole = action.payload?.role;
+        state.error = null;
+      })
+      .addCase(getUserDetails.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });
