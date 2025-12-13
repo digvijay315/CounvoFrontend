@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Card,
   CardActions,
@@ -10,6 +11,7 @@ import {
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { NAVIGATION_CONSTANTS } from "../../_constants/navigationConstants";
+import { Chat, Circle, Person } from "@mui/icons-material";
 
 export const getLawyerFormattedData = (lawyer) => {
   let Data = lawyer?.lawyerKycId;
@@ -38,12 +40,41 @@ export const getLawyerFormattedData = (lawyer) => {
   };
 };
 
-const LawyerProfileCard = ({ lawyer }) => {
+const LawyerProfileCard = ({
+  lawyer,
+  isOnline,
+  isFavorite,
+  onToggleFavorite,
+  onStartChat,
+}) => {
   let lawyerData = useMemo(() => {
     return getLawyerFormattedData(lawyer);
   }, [lawyer?.lawyerKycId]);
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={{ position: "relative" }}>
+      {/* Online Indicator */}
+      {isOnline && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            bgcolor: "success.main",
+            color: "white",
+            px: 1,
+            py: 0.25,
+            borderRadius: 1,
+            fontSize: "0.7rem",
+            fontWeight: 600,
+          }}
+        >
+          <Circle sx={{ fontSize: 8 }} />
+          Online
+        </Box>
+      )}
       <CardHeader
         title={lawyer.fullName}
         subheader={lawyerData?.practiceType}
@@ -63,12 +94,25 @@ const LawyerProfileCard = ({ lawyer }) => {
       <CardActions>
         <Button
           LinkComponent={Link}
+          size="small"
+          startIcon={<Person />}
           to={`${NAVIGATION_CONSTANTS.LAWYER_PUBLIC_PROFILE_PATH}/${lawyerData.lawyerId}`}
           variant="contained"
           color="primary"
         >
-          View Profile
+          View&nbsp;Profile
         </Button>
+        {onStartChat && (
+          <Button
+            size="small"
+            startIcon={<Chat />}
+            variant="contained"
+            color="success"
+            onClick={onStartChat}
+          >
+            Start&nbsp;Chat
+          </Button>
+        )}
       </CardActions>
     </Card>
   );

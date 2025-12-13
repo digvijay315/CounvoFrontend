@@ -4,6 +4,7 @@ import { Box, useMediaQuery, useTheme } from "@mui/material";
 import NavigationSidebar from "../components/Layout/NavigationSidebar";
 import NavigationHeader from "../components/Layout/NavigationHeader";
 import DashboardNote from "../components/Layout/DashboardNote";
+import { SocketProvider } from "../context/SocketContext";
 
 const DashboardLayout = () => {
   const theme = useTheme();
@@ -29,45 +30,47 @@ const DashboardLayout = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      {/* Left Navigation Sidebar */}
-      <NavigationSidebar
-        ref={sidebarRef}
-        mobileOpen={mobileOpen}
-        onClose={handleMobileDrawerClose}
-      />
-      {/* Main Content Area */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "100vh",
-          backgroundColor: "#f8fafc",
-          overflow: "hidden",
-        }}
-      >
-        {/* Navigation Header */}
-        <NavigationHeader
-          ref={headerRef}
-          onMenuClick={handleDrawerToggle}
-          onNotificationClick={() => {}}
+    <SocketProvider>
+      <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+        {/* Left Navigation Sidebar */}
+        <NavigationSidebar
+          ref={sidebarRef}
+          mobileOpen={mobileOpen}
+          onClose={handleMobileDrawerClose}
         />
-        <DashboardNote />
-        {/* Page Content */}
+        {/* Main Content Area */}
         <Box
+          component="main"
           sx={{
             flexGrow: 1,
-            overflowY: "auto",
-            overflowX: "hidden",
-            p: 2,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "100vh",
+            backgroundColor: "#f8fafc",
+            overflow: "hidden",
           }}
         >
-          <Outlet />
+          {/* Navigation Header */}
+          <NavigationHeader
+            ref={headerRef}
+            onMenuClick={handleDrawerToggle}
+            onNotificationClick={() => {}}
+          />
+          <DashboardNote />
+          {/* Page Content */}
+          <Box
+            sx={{
+              flexGrow: 1,
+              overflowY: "auto",
+              overflowX: "hidden",
+              p: 2,
+            }}
+          >
+            <Outlet />
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </SocketProvider>
   );
 };
 
