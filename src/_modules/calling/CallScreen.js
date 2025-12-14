@@ -22,11 +22,10 @@ const CallScreen = ({
   callType = "video",
   callerId,
   userId,
+  userFullName = "",
   callerInfo,
-  callDirection = "incoming",
   callStatus = "ringing",
   onCallEnded,
-  screen = "lawyer",
 }) => {
   const [inCall, setInCall] = useState(false);
   const [channelName, setChannelName] = useState("");
@@ -576,15 +575,7 @@ const CallScreen = ({
   }, []);
 
   const getCallerName = () => {
-    console.log(callerInfo);
-    if (
-      screen === "customer" &&
-      callerInfo?.firstName &&
-      callerInfo?.lastName
-    ) {
-      return callerInfo?.firstName + " " + callerInfo?.lastName;
-    }
-    if (screen === "lawyer" && callerInfo?.fullName) {
+    if (callerInfo.fullName) {
       return callerInfo.fullName;
     }
     return callerId;
@@ -698,7 +689,7 @@ const CallScreen = ({
               {/* Local Video */}
               <div className="local-video-wrapper">
                 <div id="local-video" className="local-video"></div>
-                <span className="video-label">You ({userId})</span>
+                <span className="video-label">You ({userFullName})</span>
               </div>
             </>
           )}

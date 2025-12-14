@@ -16,6 +16,37 @@ import IncomingCallScreen from "../_modules/calling/IncomingCallScreen";
 import CallScreen from "../_modules/calling/CallScreen";
 import { Backdrop, CircularProgress, Paper, Typography } from "@mui/material";
 
+// Socket Event Constants
+export const SOCKET_EVENTS = {
+  // Connection events
+  CONNECT: "connect",
+  DISCONNECT: "disconnect",
+  CONNECT_ERROR: "connect_error",
+
+  // Online status events
+  LAWYER_ONLINE: "lawyerOnline",
+  CLIENT_ONLINE: "clientOnline",
+  GET_ONLINE_LAWYERS: "getOnlineLawyers",
+  ONLINE_LAWYERS_LIST: "onlineLawyersList",
+  ONLINE_CLIENTS_LIST: "onlineClientsList",
+  UPDATE_ONLINE_USERS: "updateOnlineUsers",
+
+  // Messaging events
+  PRIVATE_MESSAGE: "privateMessage",
+  RECEIVE_MESSAGE: "receiveMessage",
+
+  // Calling events
+  INITIATE_CALL: "initiateCall",
+  INCOMING_CALL: "incomingCall",
+  ACCEPT_CALL: "acceptCall",
+  REJECT_CALL: "rejectCall",
+  CALL_ACCEPTED: "callAccepted",
+  CALL_REJECTED: "callRejected",
+  END_CALL: "endCall",
+  CALL_ENDED: "callEnded",
+  MARK_MESSAGES_READ: "markMessagesRead",
+};
+
 // Create the context
 const SocketContext = createContext(null);
 
@@ -84,13 +115,13 @@ export const SocketProvider = ({ children }) => {
 
       // Emit online status based on user role
       if (userRole === "lawyer") {
-        socketIO.emit("lawyerOnline", userId);
+        socketIO.emit(SOCKET_EVENTS.LAWYER_ONLINE, userId);
       } else {
-        socketIO.emit("clientOnline", userId);
+        socketIO.emit(SOCKET_EVENTS.CLIENT_ONLINE, userId);
       }
 
       // Request online users list
-      socketIO.emit("getOnlineLawyers");
+      socketIO.emit(SOCKET_EVENTS.GET_ONLINE_LAWYERS);
     };
 
     const handleDisconnect = (reason) => {
@@ -133,12 +164,11 @@ export const SocketProvider = ({ children }) => {
       // Fetch caller info
       let callerInfo = null;
       try {
-        if (callerModel === "Lawyer") {
-          const res = await api.get(`/api/lawyer/getlawyer/${callerId}`);
-          callerInfo = res.data;
+        const res = await api.get(`/api/v2/user/byId/${callerId}`);
+        if(res.data.success){
+          callerInfo = res.data?.user;
         } else {
-          const res = await api.get(`/api/user/getuser/${callerId}`);
-          callerInfo = res.data;
+          callerInfo = null;
         }
       } catch (err) {
         console.error("Failed to fetch caller info:", err);
@@ -146,7 +176,7 @@ export const SocketProvider = ({ children }) => {
 
       setIncomingCall({
         callerId,
-        callerInfo: callerInfo || { fullName: "Unknown" },
+        callerInfo: callerInfo,
         callType,
         callerModel,
       });
@@ -199,31 +229,31 @@ export const SocketProvider = ({ children }) => {
     };
 
     // Register event listeners
-    socketIO.on("connect", handleConnect);
-    socketIO.on("disconnect", handleDisconnect);
-    socketIO.on("connect_error", handleConnectError);
-    socketIO.on("onlineLawyersList", handleOnlineLawyersList);
-    socketIO.on("updateOnlineUsers", handleUpdateOnlineUsers);
-    socketIO.on("onlineClientsList", handleOnlineClientsList);
-    socketIO.on("receiveMessage", handleReceiveMessage);
-    socketIO.on("incomingCall", handleIncomingCall);
-    socketIO.on("callRejected", handleCallRejected);
-    socketIO.on("callAccepted", handleCallAccepted);
-    socketIO.on("callEnded", handleCallEnded);
+    socketIO.on(SOCKET_EVENTS.CONNECT, handleConnect);
+    socketIO.on(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
+    socketIO.on(SOCKET_EVENTS.CONNECT_ERROR, handleConnectError);
+    socketIO.on(SOCKET_EVENTS.ONLINE_LAWYERS_LIST, handleOnlineLawyersList);
+    socketIO.on(SOCKET_EVENTS.UPDATE_ONLINE_USERS, handleUpdateOnlineUsers);
+    socketIO.on(SOCKET_EVENTS.ONLINE_CLIENTS_LIST, handleOnlineClientsList);
+    socketIO.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
+    socketIO.on(SOCKET_EVENTS.INCOMING_CALL, handleIncomingCall);
+    socketIO.on(SOCKET_EVENTS.CALL_REJECTED, handleCallRejected);
+    socketIO.on(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
+    socketIO.on(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
 
     // Cleanup on unmount or user change
     return () => {
-      socketIO.off("connect", handleConnect);
-      socketIO.off("disconnect", handleDisconnect);
-      socketIO.off("connect_error", handleConnectError);
-      socketIO.off("onlineLawyersList", handleOnlineLawyersList);
-      socketIO.off("updateOnlineUsers", handleUpdateOnlineUsers);
-      socketIO.off("onlineClientsList", handleOnlineClientsList);
-      socketIO.off("receiveMessage", handleReceiveMessage);
-      socketIO.off("incomingCall", handleIncomingCall);
-      socketIO.off("callRejected", handleCallRejected);
-      socketIO.off("callAccepted", handleCallAccepted);
-      socketIO.off("callEnded", handleCallEnded);
+      socketIO.off(SOCKET_EVENTS.CONNECT, handleConnect);
+      socketIO.off(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
+      socketIO.off(SOCKET_EVENTS.CONNECT_ERROR, handleConnectError);
+      socketIO.off(SOCKET_EVENTS.ONLINE_LAWYERS_LIST, handleOnlineLawyersList);
+      socketIO.off(SOCKET_EVENTS.UPDATE_ONLINE_USERS, handleUpdateOnlineUsers);
+      socketIO.off(SOCKET_EVENTS.ONLINE_CLIENTS_LIST, handleOnlineClientsList);
+      socketIO.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
+      socketIO.off(SOCKET_EVENTS.INCOMING_CALL, handleIncomingCall);
+      socketIO.off(SOCKET_EVENTS.CALL_REJECTED, handleCallRejected);
+      socketIO.off(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
+      socketIO.off(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
     };
   }, [userId, userRole]);
 
@@ -249,7 +279,7 @@ export const SocketProvider = ({ children }) => {
       const timestamp = new Date().toISOString();
       const fromUserType = userRole === "lawyer" ? "lawyer" : "client";
 
-      socket.emit("privateMessage", {
+      socket.emit(SOCKET_EVENTS.PRIVATE_MESSAGE, {
         toUserId,
         message: message || "",
         fileUrl,
@@ -284,7 +314,7 @@ export const SocketProvider = ({ children }) => {
       const callerModel = userRole === "lawyer" ? "Lawyer" : "User";
       const receiverModel = userRole === "lawyer" ? "User" : "Lawyer";
 
-      socket.emit("initiateCall", {
+      socket.emit(SOCKET_EVENTS.INITIATE_CALL, {
         callerId: userId,
         receiverId,
         callType,
@@ -312,7 +342,7 @@ export const SocketProvider = ({ children }) => {
   const acceptCall = useCallback(() => {
     if (!socket?.connected || !incomingCall) return false;
 
-    socket.emit("acceptCall", {
+    socket.emit(SOCKET_EVENTS.ACCEPT_CALL, {
       callerId: incomingCall.callerId,
       accepterId: userId,
     });
@@ -336,7 +366,7 @@ export const SocketProvider = ({ children }) => {
   const rejectCall = useCallback(() => {
     if (!socket?.connected || !incomingCall) return false;
 
-    socket.emit("rejectCall", {
+    socket.emit(SOCKET_EVENTS.REJECT_CALL, {
       callerId: incomingCall.callerId,
       rejecterId: userId,
       message: "Call was declined",
@@ -361,7 +391,7 @@ export const SocketProvider = ({ children }) => {
   const endCall = useCallback(() => {
     if (!socket?.connected || !activeCall.peerId) return false;
 
-    socket.emit("endCall", {
+    socket.emit(SOCKET_EVENTS.END_CALL, {
       callerId: userId,
       receiverId: activeCall.peerId,
     });
@@ -398,7 +428,7 @@ export const SocketProvider = ({ children }) => {
    */
   const refreshOnlineUsers = useCallback(() => {
     if (!socket?.connected) return;
-    socket.emit("getOnlineLawyers");
+    socket.emit(SOCKET_EVENTS.GET_ONLINE_LAWYERS);
   }, [socket]);
 
   /**
@@ -473,6 +503,7 @@ export const SocketProvider = ({ children }) => {
           callStatus={activeCall.callStatus}
           onCallEnded={endCall}
           screen={userRole}
+          userFullName={user?.fullName}
         />
       )}
 
@@ -489,7 +520,7 @@ export const SocketProvider = ({ children }) => {
 
       {/* Loading Backdrop */}
       <Backdrop
-        open={activeCall.isActive}
+        open={activeCall.isActive && activeCall.callStatus === "ringing"}
         sx={{
           zIndex: 9999,
           backgroundColor: "rgba(255, 255, 255, 0.8)",

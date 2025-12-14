@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   Box,
   Paper,
@@ -9,7 +9,9 @@ import {
 import {
   Send as SendIcon,
   AttachFile as AttachFileIcon,
+  CurrencyRupeeSharp,
 } from "@mui/icons-material";
+import LawyerPaymentDialog from "../../Client/LawyerPaymentDialog";
 
 const MessageInput = ({
   messageInput,
@@ -18,7 +20,10 @@ const MessageInput = ({
   fileInputRef,
   onFileUpload,
   isUploading,
+  lawyerPayId,
 }) => {
+  const paymentApiRef = useRef(null);
+  console.log(lawyerPayId, paymentApiRef.current);
   return (
     <Paper
       elevation={0}
@@ -42,12 +47,16 @@ const MessageInput = ({
           disabled={isUploading}
           color="primary"
         >
-          {isUploading ? (
-            <CircularProgress size={24} />
-          ) : (
-            <AttachFileIcon />
-          )}
+          {isUploading ? <CircularProgress size={24} /> : <AttachFileIcon />}
         </IconButton>
+        {lawyerPayId && paymentApiRef.current && (
+          <IconButton
+            onClick={() => paymentApiRef.current?.handleOpen()}
+            color="success"
+          >
+            <CurrencyRupeeSharp />
+          </IconButton>
+        )}
         <TextField
           fullWidth
           size="small"
@@ -70,9 +79,11 @@ const MessageInput = ({
           <SendIcon />
         </IconButton>
       </Box>
+      {lawyerPayId && (
+        <LawyerPaymentDialog ref={paymentApiRef} lawyerId={lawyerPayId} />
+      )}
     </Paper>
   );
 };
 
 export default MessageInput;
-

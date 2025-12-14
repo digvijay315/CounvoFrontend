@@ -11,6 +11,7 @@ import CallScreen from "../../_modules/calling/CallScreen";
 import IncomingCallScreen from "../../_modules/calling/IncomingCallScreen";
 import useAuth from "../../hooks/useAuth";
 import ChatPage from "../shared/ChatPage";
+import { SOCKET_EVENTS } from "../../context/SocketContext";
 
 function ClientChathistory() {
   const { user: userData, userId } = useAuth();
@@ -74,7 +75,7 @@ function ClientChathistory() {
   const markMessagesRead = async (clientId) => {
     try {
       const userid = userId;
-      socket.emit("markMessagesRead", {
+      socket.emit(SOCKET_EVENTS.MARK_MESSAGES_READ, {
         readerId: userid,
         senderId: clientId,
         readerModel: "User",

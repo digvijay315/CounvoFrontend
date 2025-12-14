@@ -48,6 +48,7 @@ const IncomingCallScreen = ({
                 height: 120,
                 border: "4px solid white",
                 boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                borderRadius: "50%",
               }}
             />
           </div>

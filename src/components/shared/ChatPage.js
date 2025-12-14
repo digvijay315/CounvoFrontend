@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
@@ -404,6 +410,19 @@ const ChatPage = ({ userType = "customer" }) => {
   });
 
   // ==================== RENDER ====================
+
+  const findLawyerPayId = (selectedChat) => {
+    let lawyerPayId = null;
+    if (selectedChat && selectedChat?.participantModel === "Lawyer") {
+      lawyerPayId = selectedChat.participant._id;
+    }
+    return lawyerPayId;
+  };
+
+  const lawyerPayId = useMemo(
+    () => findLawyerPayId(selectedChat),
+    [selectedChat]
+  );
   return (
     <Box
       sx={{
@@ -629,6 +648,7 @@ const ChatPage = ({ userType = "customer" }) => {
 
                 {/* Message Input */}
                 <MessageInput
+                  lawyerPayId={lawyerPayId}
                   messageInput={messageInput}
                   setMessageInput={setMessageInput}
                   onSendMessage={handleSendMessage}
@@ -664,4 +684,3 @@ const ChatPage = ({ userType = "customer" }) => {
 };
 
 export default ChatPage;
-
