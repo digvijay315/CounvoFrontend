@@ -183,9 +183,12 @@ const ChatPage = ({ userType = "customer" }) => {
   }, [searchParams, chatGroups, isLoadingGroups, selectedChat?._id]);
 
   // Scroll to bottom on new messages
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messagesEndRef]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, selectedChat?._id]);
 
   // ==================== REAL-TIME MESSAGE HANDLING ====================
   useEffect(() => {
