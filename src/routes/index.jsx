@@ -1,13 +1,11 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import SignInForm from "../components/Auth/SignInForm";
 import SignUpForm from "../components/Auth/SignUpForm";
 import DashboardContent from "../components/dashboard/DashboardContent";
 import { NAVIGATION_CONSTANTS } from "../_constants/navigationConstants";
 import Findalawyer from "../components/Client/FindLawyer";
-import Clients from "../components/Admin/clients";
 import ClientConsultationHistory from "../components/Client/ClientConsultationHistory";
-import ClientChathistory from "../components/Client/ClientChathistory";
 import Support from "../components/Support";
 import AdminPanel from "../components/AdminPanel";
 import LawyerDashboard from "../components/LawyerDashboard";
@@ -24,13 +22,13 @@ import useAuth from "../hooks/useAuth";
 import GuestRoute from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
-import LawyerChatHistory from "../components/LawyerChatHistory";
 import LawyerProfile from "../components/Lawyer/LawyerProfile";
 import ClientProfile from "../components/Client/ClientProfile";
 import LawyerProfilePage from "../components/Client/LawyerProfilePage";
 import ManageApprovals from "../components/Admin/ManageApprovals";
 import AdminManageUsers from "../components/Admin/AdminManageUsers";
 import ChatPage from "../components/shared/ChatPage";
+import LawyerClients from "../components/LawyerClients";
 
 const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
   const { user } = useAuth();
@@ -114,7 +112,7 @@ const router = createBrowserRouter([
           },
           {
             path: NAVIGATION_CONSTANTS.CLIENTS_PATH,
-            element: <RoleBasedRoutes LawyerElement={<LawyerChatHistory />} />,
+            element: <RoleBasedRoutes LawyerElement={<LawyerClients />} />,
           },
           {
             path: NAVIGATION_CONSTANTS.MESSAGES_PATH,

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
   Paper,
   Typography,
   Avatar,
-  TextField,
   IconButton,
   List,
   ListItem,
@@ -16,21 +16,20 @@ import {
   Chip,
   CircularProgress,
   Stack,
+  TextField,
 } from "@mui/material";
-import {
-  Send as SendIcon,
-  AttachFile as AttachFileIcon,
-  Search as SearchIcon,
-  Call as CallIcon,
-  VideoCall as VideoCallIcon,
-  MoreVert as MoreVertIcon,
-  Image as ImageIcon,
-  InsertDriveFile as FileIcon,
-} from "@mui/icons-material";
+import { Search as SearchIcon, Image as ImageIcon } from "@mui/icons-material";
 import { useSocket } from "../../context/SocketContext";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api";
 import Swal from "sweetalert2";
+
+// Import chat components
+import ChatHeader from "./chat/ChatHeader";
+import MessagesArea from "./chat/MessagesArea";
+import MessageInput from "./chat/MessageInput";
+import ChatPendingApproval from "./chat/ChatPendingApproval";
+import ChatApprovalButtons from "./chat/ChatApprovalButtons";
 
 // ==================== UTILITY FUNCTIONS ====================
 const formatTime = (timestamp) => {
@@ -68,6 +67,8 @@ const getAvatarSrc = (participant) => {
 // ==================== MAIN COMPONENT ====================
 const ChatPage = ({ userType = "customer" }) => {
   const { userId } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     onlineLawyers,
     onlineClients,
@@ -99,7 +100,9 @@ const ChatPage = ({ userType = "customer" }) => {
     if (!userId) return;
     setIsLoadingGroups(true);
     try {
-      const res = await api.get(`/api/v2/chat/groups/${userId}?userType=${userModel}`);
+      const res = await api.get(
+        `/api/v2/chat/groups/${userId}?userType=${userModel}`
+      );
       setChatGroups(res.data);
     } catch (error) {
       console.error("Error fetching chat groups:", error);
@@ -108,32 +111,35 @@ const ChatPage = ({ userType = "customer" }) => {
     }
   }, [userId, userModel]);
 
-  const fetchMessages = useCallback(async (chatGroupId) => {
-    if (!chatGroupId) return;
-    setIsLoadingMessages(true);
-    try {
-      const res = await api.get(`/api/v2/chat/messages/${chatGroupId}`);
-      setMessages(res.data.messages || []);
+  const fetchMessages = useCallback(
+    async (chatGroupId) => {
+      if (!chatGroupId) return;
+      setIsLoadingMessages(true);
+      try {
+        const res = await api.get(`/api/v2/chat/messages/${chatGroupId}`);
+        setMessages(res.data.messages || []);
 
-      // Mark messages as read
-      await api.post("/api/v2/chat/mark-read", {
-        chatGroupId,
-        readerId: userId,
-        readerModel: userModel,
-      });
+        // Mark messages as read
+        await api.post("/api/v2/chat/mark-read", {
+          chatGroupId,
+          readerId: userId,
+          readerModel: userModel,
+        });
 
-      // Update unread count locally
-      setChatGroups((prev) =>
-        prev.map((g) =>
-          g._id === chatGroupId ? { ...g, unreadCount: 0 } : g
-        )
-      );
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    } finally {
-      setIsLoadingMessages(false);
-    }
-  }, [userId, userModel]);
+        // Update unread count locally
+        setChatGroups((prev) =>
+          prev.map((g) =>
+            g._id === chatGroupId ? { ...g, unreadCount: 0 } : g
+          )
+        );
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    },
+    [userId, userModel]
+  );
 
   // Initial fetch
   useEffect(() => {
@@ -142,10 +148,33 @@ const ChatPage = ({ userType = "customer" }) => {
 
   // Fetch messages when chat is selected
   useEffect(() => {
-    if (selectedChat?._id) {
+    if (selectedChat?._id && selectedChat?.isAccepted) {
       fetchMessages(selectedChat._id);
     }
   }, [selectedChat?._id, fetchMessages]);
+
+  // Auto-select chat from query parameter
+  useEffect(() => {
+    const chatIdFromUrl = searchParams.get("chatId");
+
+    if (chatIdFromUrl && chatGroups.length > 0 && !isLoadingGroups) {
+      // Find the chat group matching the chatId in URL
+      const chatToSelect = chatGroups.find(
+        (group) => group._id === chatIdFromUrl
+      );
+
+      if (chatToSelect) {
+        // Only select if it's different from current selection to avoid infinite loop
+        if (selectedChat?._id !== chatIdFromUrl) {
+          setSelectedChat(chatToSelect);
+          setMessages([]);
+        }
+      } else {
+        // Chat not found, clear the invalid query param
+        console.warn(`Chat with ID ${chatIdFromUrl} not found`);
+      }
+    }
+  }, [searchParams, chatGroups, isLoadingGroups, selectedChat?._id]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -196,14 +225,24 @@ const ChatPage = ({ userType = "customer" }) => {
       }
     };
 
-    const unsubscribe = registerMessageHandler("chatPage", handleIncomingMessage);
+    const unsubscribe = registerMessageHandler(
+      "chatPage",
+      handleIncomingMessage
+    );
     return unsubscribe;
   }, [selectedChat, registerMessageHandler]);
 
   // ==================== ACTIONS ====================
   const handleSelectChat = (chatGroup) => {
-    setSelectedChat(chatGroup);
-    setMessages([]);
+    if (chatGroup?._id !== selectedChat?._id) {
+      setSelectedChat(chatGroup);
+      setMessages([]);
+
+      // Update URL with chatId query parameter
+      if (chatGroup?._id) {
+        setSearchParams({ chatId: chatGroup._id });
+      }
+    }
   };
 
   const handleSendMessage = async () => {
@@ -346,6 +385,17 @@ const ChatPage = ({ userType = "customer" }) => {
     });
   };
 
+  const handleChatUpdate = (chatGroupId, updates) => {
+    setChatGroups((prev) =>
+      prev.map((g) => (g._id === chatGroupId ? { ...g, ...updates } : g))
+    );
+
+    // Update selected chat if it's the one being modified
+    if (selectedChat?._id === chatGroupId) {
+      setSelectedChat((prev) => ({ ...prev, ...updates }));
+    }
+  };
+
   // ==================== FILTERED DATA ====================
   const filteredChatGroups = chatGroups.filter((group) => {
     if (!searchQuery) return true;
@@ -440,7 +490,10 @@ const ChatPage = ({ userType = "customer" }) => {
                     <ListItemAvatar>
                       <Badge
                         overlap="circular"
-                        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                        anchorOrigin={{
+                          vertical: "bottom",
+                          horizontal: "right",
+                        }}
                         variant="dot"
                         sx={{
                           "& .MuiBadge-badge": {
@@ -530,166 +583,61 @@ const ChatPage = ({ userType = "customer" }) => {
         {selectedChat ? (
           <>
             {/* Chat Header */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderBottom: 1,
-                borderColor: "divider",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Badge
-                  overlap="circular"
-                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                  variant="dot"
-                  sx={{
-                    "& .MuiBadge-badge": {
-                      bgcolor: onlineUsers.includes(selectedChat.participant?._id)
-                        ? "success.main"
-                        : "grey.400",
-                      border: "2px solid white",
-                    },
-                  }}
-                >
-                  <Avatar
-                    src={getAvatarSrc(selectedChat.participant)}
-                    alt={getParticipantName(
-                      selectedChat.participant,
-                      selectedChat.participantModel
-                    )}
-                    sx={{ width: 48, height: 48 }}
-                  />
-                </Badge>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight="600">
-                    {getParticipantName(
-                      selectedChat.participant,
-                      selectedChat.participantModel
-                    )}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {onlineUsers.includes(selectedChat.participant?._id)
-                      ? "Online"
-                      : "Offline"}
-                  </Typography>
-                </Box>
-              </Box>
-              <Stack direction="row" spacing={1}>
-                <IconButton onClick={() => handleCall("voice")} color="primary">
-                  <CallIcon />
-                </IconButton>
-                <IconButton onClick={() => handleCall("video")} color="primary">
-                  <VideoCallIcon />
-                </IconButton>
-                <IconButton>
-                  <MoreVertIcon />
-                </IconButton>
-              </Stack>
-            </Paper>
+            <ChatHeader
+              selectedChat={selectedChat}
+              onlineUsers={onlineUsers}
+              getAvatarSrc={getAvatarSrc}
+              getParticipantName={getParticipantName}
+              onCall={handleCall}
+            />
 
-            {/* Messages Area */}
-            <Box
-              sx={{
-                flex: 1,
-                overflow: "auto",
-                p: 2,
-                display: "flex",
-                flexDirection: "column",
-                gap: 1,
-              }}
-            >
-              {isLoadingMessages ? (
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    flex: 1,
-                  }}
-                >
-                  <CircularProgress />
-                </Box>
-              ) : messages.length === 0 ? (
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    flex: 1,
-                  }}
-                >
-                  <Typography color="text.secondary">
-                    No messages yet. Start the conversation!
-                  </Typography>
-                </Box>
-              ) : (
-                messages.map((msg) => (
-                  <MessageBubble
-                    key={msg._id}
-                    message={msg}
-                    isMe={msg.senderId === userId || msg.senderId?.toString() === userId}
-                  />
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </Box>
-
-            {/* Message Input */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                borderTop: 1,
-                borderColor: "divider",
-                bgcolor: "white",
-              }}
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                onChange={handleFileUpload}
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+            {/* Check if chat is accepted */}
+            {!selectedChat.isAccepted && userType === "lawyer" ? (
+              // Lawyer sees approval buttons
+              <ChatApprovalButtons
+                selectedChat={selectedChat}
+                onChatUpdate={handleChatUpdate}
+                getParticipantName={getParticipantName}
               />
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <IconButton
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  color="primary"
-                >
-                  {isUploading ? (
-                    <CircularProgress size={24} />
-                  ) : (
-                    <AttachFileIcon />
-                  )}
-                </IconButton>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Type a message..."
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
+            ) : !selectedChat.isAccepted && userType !== "lawyer" ? (
+              // Client sees pending message
+              <ChatPendingApproval
+                selectedChat={selectedChat}
+                getParticipantName={getParticipantName}
+              />
+            ) : (
+              // Chat is accepted - show normal chat interface
+              <>
+                {/* Messages Area */}
+                <Box
+                  sx={{
+                    flex: 1,
+                    overflow: "auto",
+                    p: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
                   }}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3 } }}
-                />
-                <IconButton
-                  onClick={handleSendMessage}
-                  color="primary"
-                  disabled={!messageInput.trim()}
                 >
-                  <SendIcon />
-                </IconButton>
-              </Box>
-            </Paper>
+                  <MessagesArea
+                    messages={messages}
+                    isLoadingMessages={isLoadingMessages}
+                    userId={userId}
+                    messagesEndRef={messagesEndRef}
+                  />
+                </Box>
+
+                {/* Message Input */}
+                <MessageInput
+                  messageInput={messageInput}
+                  setMessageInput={setMessageInput}
+                  onSendMessage={handleSendMessage}
+                  fileInputRef={fileInputRef}
+                  onFileUpload={handleFileUpload}
+                  isUploading={isUploading}
+                />
+              </>
+            )}
           </>
         ) : (
           <Box
@@ -711,95 +659,6 @@ const ChatPage = ({ userType = "customer" }) => {
           </Box>
         )}
       </Box>
-    </Box>
-  );
-};
-
-// ==================== MESSAGE BUBBLE COMPONENT ====================
-const MessageBubble = ({ message, isMe }) => {
-  const isImage = message.fileType?.startsWith("image/");
-  const hasFile = !!message.fileUrl;
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: isMe ? "flex-end" : "flex-start",
-        mb: 0.5,
-      }}
-    >
-      <Paper
-        elevation={0}
-        sx={{
-          maxWidth: "70%",
-          p: 1.5,
-          borderRadius: 2,
-          bgcolor: isMe ? "primary.main" : "white",
-          color: isMe ? "white" : "text.primary",
-          border: isMe ? "none" : 1,
-          borderColor: "divider",
-        }}
-      >
-        {/* Text Message */}
-        {message.message && (
-          <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
-            {message.message}
-          </Typography>
-        )}
-
-        {/* File Attachment */}
-        {hasFile && (
-          <Box sx={{ mt: message.message ? 1 : 0 }}>
-            {isImage ? (
-              <Box
-                component="img"
-                src={message.fileUrl}
-                alt={message.fileName}
-                sx={{
-                  maxWidth: 200,
-                  maxHeight: 200,
-                  borderRadius: 1,
-                  cursor: "pointer",
-                }}
-                onClick={() => window.open(message.fileUrl, "_blank")}
-              />
-            ) : (
-              <Box
-                component="a"
-                href={message.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  color: isMe ? "white" : "primary.main",
-                  textDecoration: "none",
-                  "&:hover": { textDecoration: "underline" },
-                }}
-              >
-                <FileIcon fontSize="small" />
-                <Typography variant="body2" noWrap sx={{ maxWidth: 150 }}>
-                  {message.fileName}
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        )}
-
-        {/* Timestamp */}
-        <Typography
-          variant="caption"
-          sx={{
-            display: "block",
-            mt: 0.5,
-            opacity: 0.7,
-            textAlign: isMe ? "right" : "left",
-          }}
-        >
-          {formatTime(message.timestamp)}
-        </Typography>
-      </Paper>
     </Box>
   );
 };

@@ -4,7 +4,6 @@ import LawyerEarnings from "./LawyerEarnings";
 const LawyerConsultationHistory = () => {
   return (
     <div>
-      LawyerConsultationHistory
       <LawyerEarnings />
     </div>
   );

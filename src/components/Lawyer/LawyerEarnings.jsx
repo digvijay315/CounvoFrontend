@@ -181,9 +181,6 @@ const LawyerEarnings = () => {
                 <strong>Your Earnings</strong>
               </TableCell>
               <TableCell>
-                <strong>Commission</strong>
-              </TableCell>
-              <TableCell>
                 <strong>Status</strong>
               </TableCell>
             </TableRow>

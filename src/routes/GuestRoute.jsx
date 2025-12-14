@@ -1,12 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-import { NAVIGATION_CONSTANTS } from "../_constants/navigationConstants";
+import { getRouteBasedOnUserType } from "../utils";
 
 const GuestRoute = () => {
-  const { token } = useAuth();
+  const { token, userRole } = useAuth();
 
   if (token) {
-    return <Navigate to={NAVIGATION_CONSTANTS.DASHBOARD_PATH} replace />;
+    return <Navigate to={getRouteBasedOnUserType(userRole)} replace />;
   }
 
   return <Outlet />;
