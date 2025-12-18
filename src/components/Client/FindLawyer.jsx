@@ -22,6 +22,8 @@ import {
   DialogActions,
   Chip,
   Divider,
+  LinearProgress,
+  Paper,
 } from "@mui/material";
 import {
   Chat as ChatIcon,
@@ -30,6 +32,7 @@ import {
   Circle as CircleIcon,
   Shuffle as ShuffleIcon,
   Close as CloseIcon,
+  Timer as TimerIcon,
 } from "@mui/icons-material";
 import useAuth from "../../hooks/useAuth";
 import { useSocket } from "../../context/SocketContext";
@@ -60,6 +63,30 @@ function FindLawyer() {
   const [usedLawyerIds, setUsedLawyerIds] = useState([]);
   const [isQuickSearch, setIsQuickSearch] = useState(false);
   const [rejectedByLawyers, setRejectedByLawyers] = useState([]);
+  const [requestTimer, setRequestTimer] = useState(60);
+
+  // Timer for pending chat request
+  const TIMEOUT_SECONDS = 60;
+  const isWaitingForResponse = isConnecting || pendingChatRequest?.status === "pending";
+
+  useEffect(() => {
+    if (!isWaitingForResponse) {
+      setRequestTimer(TIMEOUT_SECONDS);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setRequestTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isWaitingForResponse]);
 
   // ==================== DATA FETCHING ====================
   const fetchLawyers = useCallback(async () => {
@@ -138,12 +165,32 @@ function FindLawyer() {
       });
     };
 
+    const handleChatNotAccepted = (e) => {
+      const { message } = e.detail;
+      setIsConnecting(false);
+      // Show timeout message (lawyer not added to rejected list - can try again)
+      Swal.fire({
+        icon: "warning",
+        title: "Request Timed Out",
+        text: message || "The lawyer didn't respond in time. Would you like to try another lawyer?",
+        confirmButtonText: "Find Another Lawyer",
+        showCancelButton: true,
+        cancelButtonText: "Close",
+      }).then((result) => {
+        if (result.isConfirmed && showSuggestionDialog) {
+          handleFindAnotherLawyer();
+        }
+      });
+    };
+
     window.addEventListener("chatRequestAccepted", handleChatAccepted);
     window.addEventListener("chatRequestRejected", handleChatRejected);
+    window.addEventListener("chatRequestNotAccepted", handleChatNotAccepted);
 
     return () => {
       window.removeEventListener("chatRequestAccepted", handleChatAccepted);
       window.removeEventListener("chatRequestRejected", handleChatRejected);
+      window.removeEventListener("chatRequestNotAccepted", handleChatNotAccepted);
     };
   }, [navigate, showSuggestionDialog]);
 
@@ -345,6 +392,12 @@ function FindLawyer() {
     setShowSuggestionDialog(false);
     setSuggestedLawyer(null);
     setUsedLawyerIds([]);
+    // Reset filters if it was a quick search
+    if (isQuickSearch) {
+      setSpecialization("");
+      setState("");
+      setIsQuickSearch(false);
+    }
   };
 
   const handleConnectWithSuggested = () => {
@@ -359,29 +412,77 @@ function FindLawyer() {
     <>
       {/* Connecting Backdrop */}
       <Backdrop
-        open={isConnecting || pendingChatRequest?.status === "pending"}
+        open={isWaitingForResponse}
         sx={{
           zIndex: 9999,
           backgroundColor: "rgba(255, 255, 255, 0.9)",
           backdropFilter: "blur(8px)",
         }}
       >
-        <Box
+        <Paper
+          elevation={3}
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
+            p: 4,
+            borderRadius: 3,
+            maxWidth: 400,
+            width: "90%",
+            textAlign: "center",
           }}
         >
-          <CircularProgress size={60} thickness={4} color="primary" />
-          <Typography variant="h6" fontWeight="600" color="primary">
+          {/* Timer Bar */}
+          <Box sx={{ mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+                mb: 1,
+              }}
+            >
+              <TimerIcon
+                sx={{
+                  fontSize: 20,
+                  color: requestTimer <= 15 ? "error.main" : "text.secondary",
+                  animation: requestTimer <= 15 ? "pulse 1s infinite" : "none",
+                  "@keyframes pulse": {
+                    "0%, 100%": { opacity: 1 },
+                    "50%": { opacity: 0.5 },
+                  },
+                }}
+              />
+              <Typography
+                variant="body2"
+                fontWeight="600"
+                color={requestTimer <= 15 ? "error.main" : "text.secondary"}
+              >
+                {requestTimer}s remaining
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={(requestTimer / TIMEOUT_SECONDS) * 100}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                bgcolor: "grey.200",
+                "& .MuiLinearProgress-bar": {
+                  bgcolor: requestTimer <= 15 ? "error.main" : "primary.main",
+                  transition: "transform 1s linear",
+                },
+              }}
+            />
+          </Box>
+
+          <CircularProgress size={60} thickness={4} color="primary" sx={{ mb: 2 }} />
+          
+          <Typography variant="h6" fontWeight="600" color="primary" gutterBottom>
             Waiting for lawyer to accept...
           </Typography>
           <Typography variant="body2" color="text.secondary">
             The lawyer will respond to your request shortly
           </Typography>
-        </Box>
+        </Paper>
       </Backdrop>
 
       {/* Header & Filters */}

@@ -1,12 +1,37 @@
-import React from "react";
-import { Chat as ChatIcon, Close as CloseIcon } from "@mui/icons-material";
-import { IconButton, Avatar, Box, Typography, Button, Stack, Paper } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Chat as ChatIcon, Close as CloseIcon, Timer as TimerIcon } from "@mui/icons-material";
+import { Avatar, Box, Typography, Button, Stack, Paper, LinearProgress } from "@mui/material";
+
+const TIMEOUT_SECONDS = 60;
 
 const IncomingChatRequest = ({
   clientInfo,
   onAccept,
   onReject,
+  onTimeout, // Called when timer expires (different from reject)
 }) => {
+  const [timeLeft, setTimeLeft] = useState(TIMEOUT_SECONDS);
+
+  // Countdown timer
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      // Timer expired - dismiss without rejecting
+      if (onTimeout) {
+        onTimeout();
+      }
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, onTimeout]);
+
+  const progress = (timeLeft / TIMEOUT_SECONDS) * 100;
+  const isUrgent = timeLeft <= 15;
+
   return (
     <Box
       sx={{
@@ -43,6 +68,51 @@ const IncomingChatRequest = ({
           },
         }}
       >
+        {/* Timer Bar */}
+        <Box sx={{ mb: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              mb: 1,
+            }}
+          >
+            <TimerIcon
+              sx={{
+                fontSize: 20,
+                color: isUrgent ? "error.main" : "text.secondary",
+                animation: isUrgent ? "pulse 1s infinite" : "none",
+                "@keyframes pulse": {
+                  "0%, 100%": { opacity: 1 },
+                  "50%": { opacity: 0.5 },
+                },
+              }}
+            />
+            <Typography
+              variant="body2"
+              fontWeight="600"
+              color={isUrgent ? "error.main" : "text.secondary"}
+            >
+              {timeLeft}s remaining
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{
+              height: 6,
+              borderRadius: 3,
+              bgcolor: "grey.200",
+              "& .MuiLinearProgress-bar": {
+                bgcolor: isUrgent ? "error.main" : "primary.main",
+                transition: "transform 1s linear",
+              },
+            }}
+          />
+        </Box>
+
         {/* Chat Icon Header */}
         <Box
           sx={{

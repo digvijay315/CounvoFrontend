@@ -53,8 +53,10 @@ export const SOCKET_EVENTS = {
   INCOMING_CHAT_REQUEST: "incomingChatRequest",
   ACCEPT_CHAT_REQUEST: "acceptChatRequest",
   REJECT_CHAT_REQUEST: "rejectChatRequest",
+  CHAT_REQUEST_TIMEOUT: "chatRequestTimeout",
   CHAT_REQUEST_ACCEPTED: "chatRequestAccepted",
   CHAT_REQUEST_REJECTED: "chatRequestRejected",
+  CHAT_REQUEST_NOT_ACCEPTED: "chatRequestNotAccepted",
 };
 
 // Create the context
@@ -269,6 +271,14 @@ export const SocketProvider = ({ children }) => {
       );
     };
 
+    const handleChatRequestNotAccepted = ({ lawyerId, message }) => {
+      console.log("⏱️ Chat request not accepted:", message);
+      setPendingChatRequest(null);
+      window.dispatchEvent(
+        new CustomEvent("chatRequestNotAccepted", { detail: { lawyerId, message } })
+      );
+    };
+
     // Register event listeners
     socketIO.on(SOCKET_EVENTS.CONNECT, handleConnect);
     socketIO.on(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
@@ -284,6 +294,7 @@ export const SocketProvider = ({ children }) => {
     socketIO.on(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
     socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
     socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
+    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED, handleChatRequestNotAccepted);
 
     // Cleanup on unmount or user change
     return () => {
@@ -301,6 +312,7 @@ export const SocketProvider = ({ children }) => {
       socketIO.off(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
       socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
       socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
+      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED, handleChatRequestNotAccepted);
     };
   }, [userId, userRole]);
 
@@ -671,6 +683,15 @@ export const SocketProvider = ({ children }) => {
             }
           }}
           onReject={rejectChatRequest}
+          onTimeout={() => {
+            // Emit timeout event to notify client
+            if (socket?.connected && incomingChatRequest) {
+              socket.emit(SOCKET_EVENTS.CHAT_REQUEST_TIMEOUT, {
+                clientId: incomingChatRequest.clientId,
+              });
+            }
+            setIncomingChatRequest(null);
+          }}
         />
       )}
 
