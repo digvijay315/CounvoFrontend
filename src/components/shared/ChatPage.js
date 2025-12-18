@@ -23,8 +23,19 @@ import {
   CircularProgress,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
-import { Search as SearchIcon, Image as ImageIcon } from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  Image as ImageIcon,
+  Chat as ChatIcon,
+  Phone as PhoneIcon,
+  CallMade as CallMadeIcon,
+  CallReceived as CallReceivedIcon,
+  PhoneMissed as PhoneMissedIcon,
+  VideoCall as VideoCallIcon,
+} from "@mui/icons-material";
 import { useSocket } from "../../context/SocketContext";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api";
@@ -83,6 +94,9 @@ const ChatPage = ({ userType = "customer" }) => {
     initiateCall,
   } = useSocket();
 
+  // Tab state from query params
+  const currentTab = searchParams.get("tab") === "call" ? "call" : "messages";
+
   // State
   const [chatGroups, setChatGroups] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -93,6 +107,11 @@ const ChatPage = ({ userType = "customer" }) => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Call history state (placeholder for now)
+  const [callHistory, setCallHistory] = useState([]);
+  const [selectedCall, setSelectedCall] = useState(null);
+  const [isLoadingCallHistory, setIsLoadingCallHistory] = useState(false);
+
   // Refs
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -100,6 +119,67 @@ const ChatPage = ({ userType = "customer" }) => {
   // Computed
   const userModel = userType === "lawyer" ? "Lawyer" : "User";
   const onlineUsers = userType === "lawyer" ? onlineClients : onlineLawyers;
+
+  // Handle tab change
+  const handleTabChange = (event, newTab) => {
+    if (newTab !== null) {
+      const newParams = new URLSearchParams(searchParams);
+
+      if (newTab === "call") {
+        newParams.set("tab", "call");
+        newParams.delete("chatId");
+      } else {
+        newParams.delete("tab");
+        newParams.delete("chatId");
+      }
+
+      setSearchParams(newParams);
+      setSelectedChat(null);
+      setSelectedCall(null);
+      setMessages([]);
+    }
+  };
+
+  // Fetch call history from API
+  const fetchCallHistory = useCallback(async () => {
+    if (!userId) return;
+    setIsLoadingCallHistory(true);
+    try {
+      const res = await api.get(
+        `/api/v2/chat/call-history/${userId}?userType=${userModel}`
+      );
+      if (res.data.success) {
+        setCallHistory(res.data.data || []);
+      } else {
+        setCallHistory([]);
+      }
+    } catch (error) {
+      console.error("Error fetching call history:", error);
+      setCallHistory([]);
+    } finally {
+      setIsLoadingCallHistory(false);
+    }
+  }, [userId, userModel]);
+
+  // Fetch call history when on call tab
+  useEffect(() => {
+    if (currentTab === "call") {
+      fetchCallHistory();
+    }
+  }, [currentTab, fetchCallHistory]);
+
+  // Handle call selection
+  const handleSelectCall = (call) => {
+    if (call?._id !== selectedCall?._id) {
+      setSelectedCall(call);
+
+      if (call?._id) {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("callId", call._id);
+        setSearchParams(newParams);
+      }
+    }
+  };
 
   // ==================== DATA FETCHING ====================
   const fetchChatGroups = useCallback(async () => {
@@ -412,6 +492,12 @@ const ChatPage = ({ userType = "customer" }) => {
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  const filteredCallHistory = callHistory.filter((call) => {
+    if (!searchQuery) return true;
+    const name = getParticipantName(call.participant, call.participantModel);
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   // ==================== RENDER ====================
 
   const findLawyerPayId = (selectedChat) => {
@@ -426,6 +512,45 @@ const ChatPage = ({ userType = "customer" }) => {
     () => findLawyerPayId(selectedChat),
     [selectedChat]
   );
+
+  // Format call duration
+  const formatCallDuration = (seconds) => {
+    if (!seconds || seconds === 0) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Get call icon based on type and status
+  const getCallIcon = (call) => {
+    // Missed or rejected calls
+    if (call.status === "missed" || call.status === "rejected") {
+      return <PhoneMissedIcon sx={{ color: "error.main", fontSize: 18 }} />;
+    }
+    // Connected or ended calls (successful)
+    if (call.direction === "outgoing") {
+      return <CallMadeIcon sx={{ color: "success.main", fontSize: 18 }} />;
+    }
+    return <CallReceivedIcon sx={{ color: "primary.main", fontSize: 18 }} />;
+  };
+
+  // Get call status text for display
+  const getCallStatusText = (call) => {
+    const typeLabel = call.callType === "video" ? "Video call" : "Voice call";
+
+    switch (call.status) {
+      case "missed":
+        return "Missed";
+      case "rejected":
+        return "Declined";
+      case "connected":
+      case "ended":
+        return typeLabel;
+      default:
+        return typeLabel;
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -438,11 +563,11 @@ const ChatPage = ({ userType = "customer" }) => {
         overflow: "hidden",
       }}
     >
-      {/* Left Sidebar - Chat Groups */}
+      {/* Left Sidebar - Chat Groups or Call History */}
       <Paper
         elevation={0}
         sx={{
-          width: { xs: selectedChat ? 0 : "100%", md: 360 },
+          width: { xs: selectedChat || selectedCall ? 0 : "100%", md: 360 },
           minWidth: { md: 360 },
           borderRight: 1,
           borderColor: "divider",
@@ -452,15 +577,50 @@ const ChatPage = ({ userType = "customer" }) => {
           transition: "width 0.3s",
         }}
       >
-        {/* Header */}
+        {/* Tab Toggle in Sidebar Header */}
         <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-          <Typography variant="h6" fontWeight="700" gutterBottom>
-            Messages
-          </Typography>
+          <ToggleButtonGroup
+            value={currentTab}
+            exclusive
+            onChange={handleTabChange}
+            size="small"
+            sx={{
+              mb: 1.5,
+              "& .MuiToggleButton-root": {
+                px: 2,
+                py: 0.5,
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                border: "1px solid",
+                borderColor: "divider",
+                "&.Mui-selected": {
+                  bgcolor: "primary.main",
+                  color: "primary.contrastText",
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                  },
+                },
+              },
+            }}
+          >
+            <ToggleButton value="messages">
+              <ChatIcon sx={{ mr: 0.75, fontSize: 18 }} />
+              Messages
+            </ToggleButton>
+            <ToggleButton value="call">
+              <PhoneIcon sx={{ mr: 0.75, fontSize: 18 }} />
+              Calls
+            </ToggleButton>
+          </ToggleButtonGroup>
           <TextField
             fullWidth
             size="small"
-            placeholder="Search conversations..."
+            placeholder={
+              currentTab === "messages"
+                ? "Search conversations..."
+                : "Search calls..."
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
@@ -474,34 +634,170 @@ const ChatPage = ({ userType = "customer" }) => {
           />
         </Box>
 
-        {/* Chat List */}
+        {/* List Content */}
         <Box sx={{ flex: 1, overflow: "auto" }}>
-          {isLoadingGroups ? (
+          {currentTab === "messages" ? (
+            // Chat List
+            isLoadingGroups ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : filteredChatGroups.length === 0 ? (
+              <Box sx={{ p: 3, textAlign: "center" }}>
+                <Typography color="text.secondary">
+                  {searchQuery ? "No conversations found" : "No messages yet"}
+                </Typography>
+              </Box>
+            ) : (
+              <List disablePadding>
+                {filteredChatGroups.map((group) => {
+                  const participantName = getParticipantName(
+                    group.participant,
+                    group.participantModel
+                  );
+                  const avatarSrc = getAvatarSrc(group.participant);
+                  const isOnline = onlineUsers.includes(group.participant?._id);
+                  const isSelected = selectedChat?._id === group._id;
+
+                  return (
+                    <ListItem
+                      key={group._id}
+                      button
+                      onClick={() => handleSelectChat(group)}
+                      sx={{
+                        py: 1.5,
+                        px: 2,
+                        bgcolor: isSelected ? "action.selected" : "transparent",
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <ListItemAvatar>
+                        <Badge
+                          overlap="circular"
+                          anchorOrigin={{
+                            vertical: "bottom",
+                            horizontal: "right",
+                          }}
+                          variant="dot"
+                          sx={{
+                            "& .MuiBadge-badge": {
+                              bgcolor: isOnline ? "success.main" : "grey.400",
+                              border: "2px solid white",
+                            },
+                          }}
+                        >
+                          <Avatar src={avatarSrc} alt={participantName}>
+                            {participantName[0]}
+                          </Avatar>
+                        </Badge>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle2"
+                              fontWeight={group.unreadCount > 0 ? 700 : 500}
+                              noWrap
+                              sx={{ maxWidth: 150 }}
+                            >
+                              {participantName}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {formatTime(group.lastMessageAt)}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              noWrap
+                              sx={{
+                                maxWidth: 180,
+                                fontWeight: group.unreadCount > 0 ? 600 : 400,
+                              }}
+                            >
+                              {group.lastMessage || "Start a conversation"}
+                            </Typography>
+                            {group.unreadCount > 0 && (
+                              <Chip
+                                label={group.unreadCount}
+                                size="small"
+                                color="primary"
+                                sx={{
+                                  height: 20,
+                                  minWidth: 20,
+                                  fontSize: "0.7rem",
+                                }}
+                              />
+                            )}
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                  );
+                })}
+              </List>
+            )
+          ) : // Call History List
+          isLoadingCallHistory ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
             </Box>
-          ) : filteredChatGroups.length === 0 ? (
-            <Box sx={{ p: 3, textAlign: "center" }}>
+          ) : filteredCallHistory.length === 0 ? (
+            <Box
+              sx={{
+                p: 3,
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                gap: 2,
+              }}
+            >
+              <PhoneIcon sx={{ fontSize: 48, color: "text.disabled" }} />
               <Typography color="text.secondary">
-                {searchQuery ? "No conversations found" : "No messages yet"}
+                {searchQuery ? "No calls found" : "No call history yet"}
               </Typography>
+              {!searchQuery && (
+                <Typography variant="body2" color="text.disabled">
+                  Your call records will appear here
+                </Typography>
+              )}
             </Box>
           ) : (
             <List disablePadding>
-              {filteredChatGroups.map((group) => {
+              {filteredCallHistory.map((call) => {
                 const participantName = getParticipantName(
-                  group.participant,
-                  group.participantModel
+                  call.participant,
+                  call.participantModel
                 );
-                const avatarSrc = getAvatarSrc(group.participant);
-                const isOnline = onlineUsers.includes(group.participant?._id);
-                const isSelected = selectedChat?._id === group._id;
+                const avatarSrc = getAvatarSrc(call.participant);
+                const isSelected = selectedCall?._id === call._id;
 
                 return (
                   <ListItem
-                    key={group._id}
+                    key={call._id}
                     button
-                    onClick={() => handleSelectChat(group)}
+                    onClick={() => handleSelectCall(call)}
                     sx={{
                       py: 1.5,
                       px: 2,
@@ -510,24 +806,9 @@ const ChatPage = ({ userType = "customer" }) => {
                     }}
                   >
                     <ListItemAvatar>
-                      <Badge
-                        overlap="circular"
-                        anchorOrigin={{
-                          vertical: "bottom",
-                          horizontal: "right",
-                        }}
-                        variant="dot"
-                        sx={{
-                          "& .MuiBadge-badge": {
-                            bgcolor: isOnline ? "success.main" : "grey.400",
-                            border: "2px solid white",
-                          },
-                        }}
-                      >
-                        <Avatar src={avatarSrc} alt={participantName}>
-                          {participantName[0]}
-                        </Avatar>
-                      </Badge>
+                      <Avatar src={avatarSrc} alt={participantName}>
+                        {participantName?.[0] || "?"}
+                      </Avatar>
                     </ListItemAvatar>
                     <ListItemText
                       primary={
@@ -540,14 +821,14 @@ const ChatPage = ({ userType = "customer" }) => {
                         >
                           <Typography
                             variant="subtitle2"
-                            fontWeight={group.unreadCount > 0 ? 700 : 500}
+                            fontWeight={500}
                             noWrap
                             sx={{ maxWidth: 150 }}
                           >
                             {participantName}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {formatTime(group.lastMessageAt)}
+                            {formatTime(call.callTime)}
                           </Typography>
                         </Box>
                       }
@@ -555,32 +836,27 @@ const ChatPage = ({ userType = "customer" }) => {
                         <Box
                           sx={{
                             display: "flex",
-                            justifyContent: "space-between",
                             alignItems: "center",
+                            gap: 0.5,
+                            mt: 0.5,
                           }}
                         >
+                          {getCallIcon(call)}
                           <Typography
                             variant="body2"
-                            color="text.secondary"
-                            noWrap
-                            sx={{
-                              maxWidth: 180,
-                              fontWeight: group.unreadCount > 0 ? 600 : 400,
-                            }}
+                            color={
+                              call.status === "missed" ||
+                              call.status === "rejected"
+                                ? "error.main"
+                                : "text.secondary"
+                            }
                           >
-                            {group.lastMessage || "Start a conversation"}
+                            {getCallStatusText(call)}
                           </Typography>
-                          {group.unreadCount > 0 && (
-                            <Chip
-                              label={group.unreadCount}
-                              size="small"
-                              color="primary"
-                              sx={{
-                                height: 20,
-                                minWidth: 20,
-                                fontSize: "0.7rem",
-                              }}
-                            />
+                          {call.duration > 0 && (
+                            <Typography variant="body2" color="text.disabled">
+                              • {formatCallDuration(call.duration)}
+                            </Typography>
                           )}
                         </Box>
                       }
@@ -593,74 +869,215 @@ const ChatPage = ({ userType = "customer" }) => {
         </Box>
       </Paper>
 
-      {/* Right Side - Chat Messages */}
+      {/* Right Side - Chat Messages or Call Details */}
       <Box
         sx={{
           flex: 1,
-          display: { xs: selectedChat ? "flex" : "none", md: "flex" },
+          display: {
+            xs: selectedChat || selectedCall ? "flex" : "none",
+            md: "flex",
+          },
           flexDirection: "column",
           bgcolor: "grey.50",
         }}
       >
-        {selectedChat ? (
-          <>
-            {/* Chat Header */}
-            <ChatHeader
-              selectedChat={selectedChat}
-              onlineUsers={onlineUsers}
-              getAvatarSrc={getAvatarSrc}
-              getParticipantName={getParticipantName}
-              onCall={handleCall}
-            />
-
-            {/* Check if chat is accepted */}
-            {!selectedChat.isAccepted && userType === "lawyer" ? (
-              // Lawyer sees approval buttons
-              <ChatApprovalButtons
+        {currentTab === "messages" ? (
+          // Messages Tab Content
+          selectedChat ? (
+            <>
+              {/* Chat Header */}
+              <ChatHeader
                 selectedChat={selectedChat}
-                onChatUpdate={handleChatUpdate}
+                onlineUsers={onlineUsers}
+                getAvatarSrc={getAvatarSrc}
                 getParticipantName={getParticipantName}
+                onCall={handleCall}
               />
-            ) : !selectedChat.isAccepted && userType !== "lawyer" ? (
-              // Client sees pending message
-              <ChatPendingApproval
-                selectedChat={selectedChat}
-                getParticipantName={getParticipantName}
-              />
-            ) : (
-              // Chat is accepted - show normal chat interface
-              <>
-                {/* Messages Area */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    overflow: "auto",
-                    p: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                  }}
-                >
-                  <MessagesArea
-                    messages={messages}
-                    isLoadingMessages={isLoadingMessages}
-                    userId={userId}
-                    messagesEndRef={messagesEndRef}
-                  />
-                </Box>
 
-                {/* Message Input */}
-                <MessageInput
-                  lawyerPayId={lawyerPayId}
-                  messageInput={messageInput}
-                  setMessageInput={setMessageInput}
-                  onSendMessage={handleSendMessage}
-                  fileInputRef={fileInputRef}
-                  onFileUpload={handleFileUpload}
-                  isUploading={isUploading}
+              {/* Check if chat is accepted */}
+              {!selectedChat.isAccepted && userType === "lawyer" ? (
+                // Lawyer sees approval buttons
+                <ChatApprovalButtons
+                  selectedChat={selectedChat}
+                  onChatUpdate={handleChatUpdate}
+                  getParticipantName={getParticipantName}
                 />
-              </>
-            )}
+              ) : !selectedChat.isAccepted && userType !== "lawyer" ? (
+                // Client sees pending message
+                <ChatPendingApproval
+                  selectedChat={selectedChat}
+                  getParticipantName={getParticipantName}
+                />
+              ) : (
+                // Chat is accepted - show normal chat interface
+                <>
+                  {/* Messages Area */}
+                  <Box
+                    sx={{
+                      flex: 1,
+                      overflow: "auto",
+                      p: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                    }}
+                  >
+                    <MessagesArea
+                      messages={messages}
+                      isLoadingMessages={isLoadingMessages}
+                      userId={userId}
+                      messagesEndRef={messagesEndRef}
+                    />
+                  </Box>
+
+                  {/* Message Input */}
+                  <MessageInput
+                    lawyerPayId={lawyerPayId}
+                    messageInput={messageInput}
+                    setMessageInput={setMessageInput}
+                    onSendMessage={handleSendMessage}
+                    fileInputRef={fileInputRef}
+                    onFileUpload={handleFileUpload}
+                    isUploading={isUploading}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                p: 4,
+              }}
+            >
+              <ChatIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+              <Typography variant="h5" color="text.secondary" gutterBottom>
+                Select a conversation
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Choose a chat from the left to start messaging
+              </Typography>
+            </Box>
+          )
+        ) : // Calls Tab Content
+        selectedCall ? (
+          <>
+            {/* Call Details Header */}
+            <Box
+              sx={{
+                p: 2,
+                borderBottom: 1,
+                borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <IconButton
+                onClick={() => setSelectedCall(null)}
+                sx={{ display: { md: "none" } }}
+              >
+                <ChatIcon />
+              </IconButton>
+              <Avatar
+                src={getAvatarSrc(selectedCall.participant)}
+                alt={getParticipantName(
+                  selectedCall.participant,
+                  selectedCall.participantModel
+                )}
+                sx={{ width: 48, height: 48 }}
+              >
+                {
+                  getParticipantName(
+                    selectedCall.participant,
+                    selectedCall.participantModel
+                  )?.[0]
+                }
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  {getParticipantName(
+                    selectedCall.participant,
+                    selectedCall.participantModel
+                  )}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {getCallIcon(selectedCall)}
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedCall.callType === "video"
+                      ? "Video call"
+                      : "Voice call"}
+                    {selectedCall.duration &&
+                      ` • ${formatCallDuration(selectedCall.duration)}`}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Call Details Content */}
+            <Box
+              sx={{
+                flex: 1,
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
+              <Avatar
+                src={getAvatarSrc(selectedCall.participant)}
+                alt={getParticipantName(
+                  selectedCall.participant,
+                  selectedCall.participantModel
+                )}
+                sx={{ width: 120, height: 120, mb: 3 }}
+              >
+                {
+                  getParticipantName(
+                    selectedCall.participant,
+                    selectedCall.participantModel
+                  )?.[0]
+                }
+              </Avatar>
+              <Typography variant="h5" fontWeight={600} gutterBottom>
+                {getParticipantName(
+                  selectedCall.participant,
+                  selectedCall.participantModel
+                )}
+              </Typography>
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                {formatTime(selectedCall.callTime)}
+              </Typography>
+              <Chip
+                icon={getCallIcon(selectedCall)}
+                label={
+                  selectedCall.status === "missed" ||
+                  selectedCall.status === "rejected"
+                    ? `${getCallStatusText(selectedCall)} Call`
+                    : `${
+                        selectedCall.callType === "video" ? "Video" : "Voice"
+                      } Call${
+                        selectedCall.duration > 0
+                          ? ` • ${formatCallDuration(selectedCall.duration)}`
+                          : ""
+                      }`
+                }
+                variant="outlined"
+                color={
+                  selectedCall.status === "missed" ||
+                  selectedCall.status === "rejected"
+                    ? "error"
+                    : "default"
+                }
+                sx={{ mt: 1 }}
+              />
+            </Box>
           </>
         ) : (
           <Box
@@ -673,11 +1090,12 @@ const ChatPage = ({ userType = "customer" }) => {
               p: 4,
             }}
           >
+            <PhoneIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
             <Typography variant="h5" color="text.secondary" gutterBottom>
-              Select a conversation
+              Select a call
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Choose a chat from the left to start messaging
+              Choose a call from the history to view details
             </Typography>
           </Box>
         )}
