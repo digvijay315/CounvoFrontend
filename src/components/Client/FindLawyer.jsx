@@ -33,6 +33,8 @@ import {
 } from "@mui/icons-material";
 import useAuth from "../../hooks/useAuth";
 import { useSocket } from "../../context/SocketContext";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/slices/authSlice";
 import {
   LawyerSpecializations,
   LawyerStates,
@@ -43,7 +45,8 @@ import LawyerProfileCard from "../dashboard/LawyerProfileCard";
 function FindLawyer() {
   const navigate = useNavigate();
   const { userId } = useAuth();
-  const { onlineLawyers } = useSocket();
+  const user = useSelector(selectUser);
+  const { onlineLawyers, initiateChatRequest, pendingChatRequest } = useSocket();
 
   // State
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +59,7 @@ function FindLawyer() {
   const [suggestedLawyer, setSuggestedLawyer] = useState(null);
   const [usedLawyerIds, setUsedLawyerIds] = useState([]);
   const [isQuickSearch, setIsQuickSearch] = useState(false);
+  const [rejectedByLawyers, setRejectedByLawyers] = useState([]);
 
   // ==================== DATA FETCHING ====================
   const fetchLawyers = useCallback(async () => {
@@ -69,6 +73,18 @@ function FindLawyer() {
       setIsLoading(false);
     }
   }, []);
+
+  const fetchRejectedLawyers = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const res = await api.get(`/api/v2/user/byId/${userId}`);
+      if (res.data.success && res.data.user?.rejectedByLawyers) {
+        setRejectedByLawyers(res.data.user.rejectedByLawyers);
+      }
+    } catch (error) {
+      console.error("Error fetching rejected lawyers:", error);
+    }
+  }, [userId]);
 
   const fetchFavorites = useCallback(async () => {
     if (!userId) return;
@@ -89,6 +105,48 @@ function FindLawyer() {
     fetchFavorites();
   }, [fetchFavorites]);
 
+  useEffect(() => {
+    fetchRejectedLawyers();
+  }, [fetchRejectedLawyers]);
+
+  // Listen for chat request responses
+  useEffect(() => {
+    const handleChatAccepted = (e) => {
+      const { chatGroupId } = e.detail;
+      setIsConnecting(false);
+      setShowSuggestionDialog(false);
+      navigate(`/dashboard/messages?chatId=${chatGroupId}`);
+    };
+
+    const handleChatRejected = (e) => {
+      const { lawyerId, message } = e.detail;
+      setIsConnecting(false);
+      // Add to rejected list locally
+      setRejectedByLawyers((prev) => [...prev, lawyerId]);
+      // Show rejection and offer to find another lawyer
+      Swal.fire({
+        icon: "info",
+        title: "Lawyer Unavailable",
+        text: message || "The lawyer couldn't accept your request. Let's find you another lawyer!",
+        confirmButtonText: "Find Another Lawyer",
+        showCancelButton: true,
+        cancelButtonText: "Close",
+      }).then((result) => {
+        if (result.isConfirmed && showSuggestionDialog) {
+          handleFindAnotherLawyer();
+        }
+      });
+    };
+
+    window.addEventListener("chatRequestAccepted", handleChatAccepted);
+    window.addEventListener("chatRequestRejected", handleChatRejected);
+
+    return () => {
+      window.removeEventListener("chatRequestAccepted", handleChatAccepted);
+      window.removeEventListener("chatRequestRejected", handleChatRejected);
+    };
+  }, [navigate, showSuggestionDialog]);
+
   // ==================== ACTIONS ====================
   const handleStartChat = useCallback(
     async (lawyer) => {
@@ -102,35 +160,42 @@ function FindLawyer() {
         return;
       }
 
-      setIsConnecting(true);
-
-      try {
-        // Create or get chat group
-        const res = await api.post("/api/v2/chat/group", {
-          fromUserId: userId,
-          fromUserModel: "User",
-          toUserId: lawyer._id,
-          toUserModel: "Lawyer",
-        });
-
-        const chatGroupId = res.data._id;
-
-        // Navigate to chat page with the lawyer's chat selected
-        navigate(`/dashboard/messages?chatId=${chatGroupId}`);
-      } catch (error) {
-        console.error("Error creating chat:", error);
+      // Check if lawyer is online
+      if (!onlineLawyers.includes(lawyer._id)) {
         Swal.fire({
-          icon: "error",
-          title: "Connection Failed",
-          text: "Failed to connect with the lawyer. Please try again.",
+          icon: "info",
+          title: "Lawyer Offline",
+          text: "This lawyer is currently offline. Please try another lawyer.",
           timer: 3000,
           showConfirmButton: false,
         });
-      } finally {
-        setIsConnecting(false);
+        return;
       }
+
+      setIsConnecting(true);
+
+      // Send chat request via socket
+      const clientInfo = {
+        _id: userId,
+        fullName: user?.fullName || "User",
+        profilepic: user?.profilepic || [],
+      };
+
+      const success = initiateChatRequest(lawyer._id, clientInfo);
+
+      if (!success) {
+        setIsConnecting(false);
+        Swal.fire({
+          icon: "error",
+          title: "Connection Failed",
+          text: "Failed to send chat request. Please try again.",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+      // Note: isConnecting will be set to false by the event handlers
     },
-    [userId, navigate]
+    [userId, user, onlineLawyers, initiateChatRequest]
   );
 
   // ==================== FILTERED DATA ====================
@@ -138,6 +203,9 @@ function FindLawyer() {
     return lawyers.filter((lawyer) => {
       // Only show online lawyers
       if (!onlineLawyers.includes(lawyer._id)) return false;
+
+      // Exclude lawyers who have rejected this user
+      if (rejectedByLawyers.includes(lawyer._id)) return false;
 
       // Filter by specialization
       if (specialization) {
@@ -174,7 +242,7 @@ function FindLawyer() {
 
       return true;
     });
-  }, [lawyers, onlineLawyers, specialization, state, isQuickSearch]);
+  }, [lawyers, onlineLawyers, specialization, state, isQuickSearch, rejectedByLawyers]);
 
   // ==================== SUGGESTION LOGIC ====================
   const getRandomLawyer = useCallback(
@@ -291,7 +359,7 @@ function FindLawyer() {
     <>
       {/* Connecting Backdrop */}
       <Backdrop
-        open={isConnecting}
+        open={isConnecting || pendingChatRequest?.status === "pending"}
         sx={{
           zIndex: 9999,
           backgroundColor: "rgba(255, 255, 255, 0.9)",
@@ -308,7 +376,10 @@ function FindLawyer() {
         >
           <CircularProgress size={60} thickness={4} color="primary" />
           <Typography variant="h6" fontWeight="600" color="primary">
-            Connecting you to the lawyer...
+            Waiting for lawyer to accept...
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            The lawyer will respond to your request shortly
           </Typography>
         </Box>
       </Backdrop>

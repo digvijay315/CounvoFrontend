@@ -14,7 +14,9 @@ import Swal from "sweetalert2";
 import api from "../api";
 import IncomingCallScreen from "../_modules/calling/IncomingCallScreen";
 import CallScreen from "../_modules/calling/CallScreen";
+import IncomingChatRequest from "../_modules/chat/IncomingChatRequest";
 import { Backdrop, CircularProgress, Paper, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 // Socket Event Constants
 export const SOCKET_EVENTS = {
@@ -45,6 +47,14 @@ export const SOCKET_EVENTS = {
   END_CALL: "endCall",
   CALL_ENDED: "callEnded",
   MARK_MESSAGES_READ: "markMessagesRead",
+
+  // Chat Request events
+  INITIATE_CHAT_REQUEST: "initiateChatRequest",
+  INCOMING_CHAT_REQUEST: "incomingChatRequest",
+  ACCEPT_CHAT_REQUEST: "acceptChatRequest",
+  REJECT_CHAT_REQUEST: "rejectChatRequest",
+  CHAT_REQUEST_ACCEPTED: "chatRequestAccepted",
+  CHAT_REQUEST_REJECTED: "chatRequestRejected",
 };
 
 // Create the context
@@ -92,6 +102,11 @@ export const SocketProvider = ({ children }) => {
     callStatus: "idle", // idle, ringing, connected
     callDirection: null, // incoming, outgoing
   });
+
+  // Chat request state (for lawyers receiving requests)
+  const [incomingChatRequest, setIncomingChatRequest] = useState(null);
+  // Chat request state (for clients waiting for response)
+  const [pendingChatRequest, setPendingChatRequest] = useState(null);
 
   // Message handlers ref (for external components to register)
   const messageHandlersRef = useRef(new Map());
@@ -228,6 +243,32 @@ export const SocketProvider = ({ children }) => {
       });
     };
 
+    // Chat request handlers
+    const handleIncomingChatRequest = ({ clientId, clientInfo }) => {
+      console.log("💬 Incoming chat request from:", clientId);
+      setIncomingChatRequest({
+        clientId,
+        clientInfo,
+      });
+    };
+
+    const handleChatRequestAccepted = ({ lawyerId, chatGroupId }) => {
+      console.log("✅ Chat request accepted by lawyer:", lawyerId);
+      setPendingChatRequest(null);
+      // Navigate to chat - will be handled by the component
+      window.dispatchEvent(
+        new CustomEvent("chatRequestAccepted", { detail: { lawyerId, chatGroupId } })
+      );
+    };
+
+    const handleChatRequestRejected = ({ lawyerId, message }) => {
+      console.log("❌ Chat request rejected:", message);
+      setPendingChatRequest(null);
+      window.dispatchEvent(
+        new CustomEvent("chatRequestRejected", { detail: { lawyerId, message } })
+      );
+    };
+
     // Register event listeners
     socketIO.on(SOCKET_EVENTS.CONNECT, handleConnect);
     socketIO.on(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
@@ -240,6 +281,9 @@ export const SocketProvider = ({ children }) => {
     socketIO.on(SOCKET_EVENTS.CALL_REJECTED, handleCallRejected);
     socketIO.on(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
     socketIO.on(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
+    socketIO.on(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
+    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
+    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
 
     // Cleanup on unmount or user change
     return () => {
@@ -254,6 +298,9 @@ export const SocketProvider = ({ children }) => {
       socketIO.off(SOCKET_EVENTS.CALL_REJECTED, handleCallRejected);
       socketIO.off(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
       socketIO.off(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
+      socketIO.off(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
+      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
+      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
     };
   }, [userId, userRole]);
 
@@ -408,6 +455,75 @@ export const SocketProvider = ({ children }) => {
     return true;
   }, [socket, userId, activeCall.peerId]);
 
+  // ==================== CHAT REQUEST METHODS ====================
+
+  /**
+   * Initiate a chat request to a lawyer (for clients)
+   */
+  const initiateChatRequest = useCallback(
+    (lawyerId, clientInfo) => {
+      if (!socket?.connected || !lawyerId) return false;
+
+      socket.emit(SOCKET_EVENTS.INITIATE_CHAT_REQUEST, {
+        clientId: userId,
+        lawyerId,
+        clientInfo,
+      });
+
+      setPendingChatRequest({
+        lawyerId,
+        status: "pending",
+      });
+
+      return true;
+    },
+    [socket, userId]
+  );
+
+  /**
+   * Accept an incoming chat request (for lawyers)
+   */
+  const acceptChatRequest = useCallback(
+    async (chatGroupId) => {
+      if (!socket?.connected || !incomingChatRequest) return false;
+
+      socket.emit(SOCKET_EVENTS.ACCEPT_CHAT_REQUEST, {
+        clientId: incomingChatRequest.clientId,
+        chatGroupId,
+      });
+
+      const clientId = incomingChatRequest.clientId;
+      setIncomingChatRequest(null);
+
+      // Return clientId so the component can navigate
+      return clientId;
+    },
+    [socket, incomingChatRequest]
+  );
+
+  /**
+   * Reject an incoming chat request (for lawyers)
+   */
+  const rejectChatRequest = useCallback(() => {
+    if (!socket?.connected || !incomingChatRequest) return false;
+
+    socket.emit(SOCKET_EVENTS.REJECT_CHAT_REQUEST, {
+      clientId: incomingChatRequest.clientId,
+    });
+
+    setIncomingChatRequest(null);
+
+    Swal.fire({
+      icon: "info",
+      title: "Chat Declined",
+      text: "You declined the chat request.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+
+    return true;
+  }, [socket, incomingChatRequest]);
+
   // ==================== UTILITY METHODS ====================
 
   /**
@@ -479,6 +595,13 @@ export const SocketProvider = ({ children }) => {
     rejectCall,
     endCall,
 
+    // Chat Requests
+    incomingChatRequest,
+    pendingChatRequest,
+    initiateChatRequest,
+    acceptChatRequest,
+    rejectChatRequest,
+
     // Utilities
     emit,
     on,
@@ -515,6 +638,39 @@ export const SocketProvider = ({ children }) => {
           onAccept={acceptCall}
           onReject={rejectCall}
           userType={userRole}
+        />
+      )}
+
+      {/* Incoming Chat Request Screen (for lawyers) */}
+      {incomingChatRequest && (
+        <IncomingChatRequest
+          clientInfo={incomingChatRequest.clientInfo}
+          onAccept={async () => {
+            try {
+              // Create chat group first
+              const res = await api.post("/api/v2/chat/group", {
+                fromUserId: incomingChatRequest.clientId,
+                fromUserModel: "User",
+                toUserId: userId,
+                toUserModel: "Lawyer",
+              });
+              const chatGroupId = res.data._id;
+              
+              // Accept the chat request
+              await acceptChatRequest(chatGroupId);
+              
+              // Navigate to messages
+              window.location.href = `/dashboard/messages?chatId=${chatGroupId}`;
+            } catch (err) {
+              console.error("Error accepting chat:", err);
+              Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Failed to accept chat request.",
+              });
+            }
+          }}
+          onReject={rejectChatRequest}
         />
       )}
 
