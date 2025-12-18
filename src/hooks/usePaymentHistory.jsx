@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api";
+import { UserRoles } from "../_constants/dataConstants";
+import useAuth from "./useAuth";
 
 const usePaymentHistory = (page = 1, limit = 10, status = null) => {
   const [payments, setPayments] = useState([]);
@@ -7,6 +9,7 @@ const usePaymentHistory = (page = 1, limit = 10, status = null) => {
   const [statistics, setStatistics] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { userRole } = useAuth();
 
   const fetchPaymentHistory = async () => {
     setIsLoading(true);
@@ -23,7 +26,9 @@ const usePaymentHistory = (page = 1, limit = 10, status = null) => {
       if (response.data.success) {
         setPayments(response.data.data.payments);
         setPagination(response.data.data.pagination);
-        setStatistics(response.data.data.statistics);
+        if (userRole === UserRoles.LAWYER) {
+          setStatistics(response.data.data.statistics);
+        }
       }
     } catch (err) {
       console.error("Error fetching payment history:", err);

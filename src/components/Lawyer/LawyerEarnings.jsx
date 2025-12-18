@@ -175,13 +175,13 @@ const LawyerEarnings = () => {
                 <strong>Consultation Type</strong>
               </TableCell>
               <TableCell>
+                <strong>Consultation Fee</strong>
+              </TableCell>
+              <TableCell>
+                <strong>Platform Fee</strong>
+              </TableCell>
+              <TableCell>
                 <strong>Gross Amount</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Your Earnings</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Commission</strong>
               </TableCell>
               <TableCell>
                 <strong>Status</strong>
@@ -217,9 +217,6 @@ const LawyerEarnings = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography>{formatAmount(payment.totalAmount)}</Typography>
-                  </TableCell>
-                  <TableCell>
                     <Typography fontWeight="600" color="primary">
                       {formatAmount(payment.transferAmount)}
                     </Typography>
@@ -228,6 +225,9 @@ const LawyerEarnings = () => {
                     <Typography variant="body2" color="text.secondary">
                       {formatAmount(payment.platformCommission)}
                     </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography>{formatAmount(payment.totalAmount)}</Typography>
                   </TableCell>
                   <TableCell>
                     <Chip

@@ -5,8 +5,6 @@ import { Divider } from "@mui/material";
 const ClientConsultationHistory = () => {
   return (
     <div>
-      ClientConsultationHistory
-      <Divider />
       <PaymentHistory />
     </div>
   );

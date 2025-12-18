@@ -43,9 +43,8 @@ export const getLawyerFormattedData = (lawyer) => {
 const LawyerProfileCard = ({
   lawyer,
   isOnline,
-  isFavorite,
-  onToggleFavorite,
   onStartChat,
+  showActions = true,
 }) => {
   let lawyerData = useMemo(() => {
     return getLawyerFormattedData(lawyer);
@@ -91,29 +90,31 @@ const LawyerProfileCard = ({
         </Typography>
       </CardContent>
       <Divider />
-      <CardActions>
-        <Button
-          LinkComponent={Link}
-          size="small"
-          startIcon={<Person />}
-          to={`${NAVIGATION_CONSTANTS.LAWYER_PUBLIC_PROFILE_PATH}/${lawyerData.lawyerId}`}
-          variant="contained"
-          color="primary"
-        >
-          View&nbsp;Profile
-        </Button>
-        {onStartChat && (
+      {showActions && (
+        <CardActions>
           <Button
+            LinkComponent={Link}
             size="small"
-            startIcon={<Chat />}
+            startIcon={<Person />}
+            to={`${NAVIGATION_CONSTANTS.LAWYER_PUBLIC_PROFILE_PATH}/${lawyerData.lawyerId}`}
             variant="contained"
-            color="success"
-            onClick={onStartChat}
+            color="primary"
           >
-            Start&nbsp;Chat
+            View&nbsp;Profile
           </Button>
-        )}
-      </CardActions>
+          {onStartChat && (
+            <Button
+              size="small"
+              startIcon={<Chat />}
+              variant="contained"
+              color="success"
+              onClick={onStartChat}
+            >
+              Start&nbsp;Chat
+            </Button>
+          )}
+        </CardActions>
+      )}
     </Card>
   );
 };

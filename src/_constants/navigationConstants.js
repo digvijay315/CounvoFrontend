@@ -34,7 +34,7 @@ export const NAVIGATION_MENU_ITEMS = [
     label: "Dashboard",
     path: NAVIGATION_CONSTANTS.DASHBOARD_PATH,
     icon: <Dashboard />,
-    allowedRoles: ["customer", "lawyer", "admin"],
+    allowedRoles: ["lawyer", "admin"],
   },
   {
     label: "Find Lawyer",

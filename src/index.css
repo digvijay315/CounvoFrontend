@@ -17,3 +17,35 @@ code {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* SweetAlert2 Button Styles - Always Visible */
+.swal2-confirm.swal2-styled,
+.swal2-cancel.swal2-styled,
+.swal2-deny.swal2-styled {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.swal2-confirm.swal2-styled {
+  background-color: #F59E0B !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+}
+
+.swal2-confirm.swal2-styled:hover {
+  background-color: #D97706 !important;
+}
+
+.swal2-cancel.swal2-styled {
+  background-color: #6B7280 !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+
+.swal2-cancel.swal2-styled:hover {
+  background-color: #4B5563 !important;
+}
+
+.swal2-actions {
+  opacity: 1 !important;
+}

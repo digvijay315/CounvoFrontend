@@ -1,16 +1,15 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { NAVIGATION_CONSTANTS } from "../_constants/navigationConstants";
 import useAuth from "../hooks/useAuth";
+import { getRouteBasedOnUserType } from "../utils";
 
 const AdminRoute = () => {
   const { user } = useAuth();
 
   if (user?.role !== "admin") {
-    return <Navigate to={NAVIGATION_CONSTANTS.DASHBOARD_PATH} replace />;
+    return <Navigate to={getRouteBasedOnUserType(user?.role)} replace />;
   }
 
   return <Outlet />;
 };
 
 export default AdminRoute;
-

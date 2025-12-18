@@ -262,10 +262,6 @@ const theme = createTheme({
           borderRadius: 8,
           fontWeight: 500,
         },
-        filled: {
-          backgroundColor: "#FEF3C7",
-          color: "#92400E",
-        },
       },
     },
 

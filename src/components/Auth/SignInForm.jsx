@@ -18,9 +18,10 @@ import {
   selectIsLoading,
   selectError,
   selectIsAuthenticated,
+  selectUserRole,
 } from "../../redux/slices/authSlice";
 import "./authForms.css";
-import { NAVIGATION_CONSTANTS } from "../../_constants/navigationConstants";
+import { getRouteBasedOnUserType } from "../../utils";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const SignInForm = () => {
   const isLoading = useSelector(selectIsLoading);
   const error = useSelector(selectError);
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const userRole = useSelector(selectUserRole);
 
   const {
     register,
@@ -60,7 +62,7 @@ const SignInForm = () => {
         timer: 2000,
         showConfirmButton: false,
       }).then(() => {
-        navigate(NAVIGATION_CONSTANTS.DASHBOARD_PATH);
+        navigate(getRouteBasedOnUserType(userRole));
       });
     }
   }, [isAuthenticated, navigate]);

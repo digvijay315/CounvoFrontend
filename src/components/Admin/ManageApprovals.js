@@ -29,6 +29,7 @@ import {
 } from "@mui/icons-material";
 import api from "../../api";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 
 const statusFilters = [
   { value: "in_review", label: "In Review" },
@@ -59,7 +60,9 @@ const ManageApprovals = () => {
     try {
       setLoading(true);
       const resp = await api.get(
-        `/api/v2/admin/lawyer-kyc/submissions?status=${statusFilter}&page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}`
+        `/api/v2/admin/lawyerkyc/submissions?status=${statusFilter}&page=${
+          paginationModel.page + 1
+        }&limit=${paginationModel.pageSize}`
       );
       if (resp.data.success) {
         setSubmissions(resp.data.submissions || []);
@@ -92,7 +95,9 @@ const ManageApprovals = () => {
 
     const confirmResult = await Swal.fire({
       title: "Approve KYC?",
-      text: `Are you sure you want to approve KYC for ${selectedRow.lawyerName || selectedRow.lawyer?.fullName || "this lawyer"}?`,
+      text: `Are you sure you want to approve KYC for ${
+        selectedRow.lawyerName || selectedRow.lawyer?.fullName || "this lawyer"
+      }?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#059669",
@@ -103,24 +108,17 @@ const ManageApprovals = () => {
 
     if (confirmResult.isConfirmed) {
       try {
+        let lawyerId = selectedRow.lawyerId._id;
         const resp = await api.put(
-          `/api/v2/admin/lawyer-kyc/${selectedRow._id}/approve`
+          `/api/v2/admin/lawyerkyc/${lawyerId}/approve`
         );
         if (resp.data.success) {
-          Swal.fire({
-            icon: "success",
-            title: "Approved!",
-            text: "KYC has been approved successfully.",
-          });
+          toast.success("KYC has been approved successfully.");
           fetchSubmissions();
         }
       } catch (error) {
         console.error(error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.response?.data?.message || "Failed to approve KYC.",
-        });
+        toast.error(error.response?.data?.message || "Failed to approve KYC.");
       }
     }
   };
@@ -149,16 +147,13 @@ const ManageApprovals = () => {
 
     if (reason) {
       try {
+        let lawyerId = selectedRow.lawyerId._id;
         const resp = await api.put(
-          `/api/v2/admin/lawyer-kyc/${selectedRow._id}/reject`,
+          `/api/v2/admin/lawyerkyc/${lawyerId}/reject`,
           { reason }
         );
         if (resp.data.success) {
-          Swal.fire({
-            icon: "success",
-            title: "Rejected",
-            text: "KYC has been rejected.",
-          });
+          toast.success("KYC has been rejected successfully.");
           fetchSubmissions();
         }
       } catch (error) {
@@ -187,15 +182,12 @@ const ManageApprovals = () => {
 
     if (confirmResult.isConfirmed) {
       try {
+        let lawyerId = selectedRow.lawyerId._id;
         const resp = await api.put(
-          `/api/v2/admin/lawyer-kyc/${selectedRow._id}/verify-identity`
+          `/api/v2/admin/lawyerkyc/${lawyerId}/verify-identity`
         );
         if (resp.data.success) {
-          Swal.fire({
-            icon: "success",
-            title: "Verified!",
-            text: "Identity document has been verified.",
-          });
+          toast.success("Identity document has been verified successfully.");
           fetchSubmissions();
         }
       } catch (error) {
@@ -219,16 +211,12 @@ const ManageApprovals = () => {
     if (!selectedRow || !internalNote.trim()) return;
 
     try {
-      const resp = await api.post(
-        `/api/v2/admin/lawyer-kyc/${selectedRow._id}/notes`,
-        { note: internalNote }
-      );
+      let lawyerId = selectedRow.lawyerId._id;
+      const resp = await api.post(`/api/v2/admin/lawyerkyc/${lawyerId}/notes`, {
+        note: internalNote,
+      });
       if (resp.data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Note Added",
-          text: "Internal note has been added successfully.",
-        });
+        toast.success("Internal note has been added successfully.");
         setNoteDialogOpen(false);
         setInternalNote("");
         fetchSubmissions();

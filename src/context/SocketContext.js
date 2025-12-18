@@ -14,7 +14,50 @@ import Swal from "sweetalert2";
 import api from "../api";
 import IncomingCallScreen from "../_modules/calling/IncomingCallScreen";
 import CallScreen from "../_modules/calling/CallScreen";
+import IncomingChatRequest from "../_modules/chat/IncomingChatRequest";
 import { Backdrop, CircularProgress, Paper, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+
+// Socket Event Constants
+export const SOCKET_EVENTS = {
+  // Connection events
+  CONNECT: "connect",
+  DISCONNECT: "disconnect",
+  CONNECT_ERROR: "connect_error",
+
+  // Online status events
+  LAWYER_ONLINE: "lawyerOnline",
+  CLIENT_ONLINE: "clientOnline",
+  GET_ONLINE_LAWYERS: "getOnlineLawyers",
+  ONLINE_LAWYERS_LIST: "onlineLawyersList",
+  ONLINE_CLIENTS_LIST: "onlineClientsList",
+  UPDATE_ONLINE_USERS: "updateOnlineUsers",
+
+  // Messaging events
+  PRIVATE_MESSAGE: "privateMessage",
+  RECEIVE_MESSAGE: "receiveMessage",
+
+  // Calling events
+  INITIATE_CALL: "initiateCall",
+  INCOMING_CALL: "incomingCall",
+  ACCEPT_CALL: "acceptCall",
+  REJECT_CALL: "rejectCall",
+  CALL_ACCEPTED: "callAccepted",
+  CALL_REJECTED: "callRejected",
+  END_CALL: "endCall",
+  CALL_ENDED: "callEnded",
+  MARK_MESSAGES_READ: "markMessagesRead",
+
+  // Chat Request events
+  INITIATE_CHAT_REQUEST: "initiateChatRequest",
+  INCOMING_CHAT_REQUEST: "incomingChatRequest",
+  ACCEPT_CHAT_REQUEST: "acceptChatRequest",
+  REJECT_CHAT_REQUEST: "rejectChatRequest",
+  CHAT_REQUEST_TIMEOUT: "chatRequestTimeout",
+  CHAT_REQUEST_ACCEPTED: "chatRequestAccepted",
+  CHAT_REQUEST_REJECTED: "chatRequestRejected",
+  CHAT_REQUEST_NOT_ACCEPTED: "chatRequestNotAccepted",
+};
 
 // Create the context
 const SocketContext = createContext(null);
@@ -62,6 +105,11 @@ export const SocketProvider = ({ children }) => {
     callDirection: null, // incoming, outgoing
   });
 
+  // Chat request state (for lawyers receiving requests)
+  const [incomingChatRequest, setIncomingChatRequest] = useState(null);
+  // Chat request state (for clients waiting for response)
+  const [pendingChatRequest, setPendingChatRequest] = useState(null);
+
   // Message handlers ref (for external components to register)
   const messageHandlersRef = useRef(new Map());
 
@@ -84,13 +132,13 @@ export const SocketProvider = ({ children }) => {
 
       // Emit online status based on user role
       if (userRole === "lawyer") {
-        socketIO.emit("lawyerOnline", userId);
+        socketIO.emit(SOCKET_EVENTS.LAWYER_ONLINE, userId);
       } else {
-        socketIO.emit("clientOnline", userId);
+        socketIO.emit(SOCKET_EVENTS.CLIENT_ONLINE, userId);
       }
 
       // Request online users list
-      socketIO.emit("getOnlineLawyers");
+      socketIO.emit(SOCKET_EVENTS.GET_ONLINE_LAWYERS);
     };
 
     const handleDisconnect = (reason) => {
@@ -133,12 +181,11 @@ export const SocketProvider = ({ children }) => {
       // Fetch caller info
       let callerInfo = null;
       try {
-        if (callerModel === "Lawyer") {
-          const res = await api.get(`/api/lawyer/getlawyer/${callerId}`);
-          callerInfo = res.data;
+        const res = await api.get(`/api/v2/user/byId/${callerId}`);
+        if(res.data.success){
+          callerInfo = res.data?.user;
         } else {
-          const res = await api.get(`/api/user/getuser/${callerId}`);
-          callerInfo = res.data;
+          callerInfo = null;
         }
       } catch (err) {
         console.error("Failed to fetch caller info:", err);
@@ -146,7 +193,7 @@ export const SocketProvider = ({ children }) => {
 
       setIncomingCall({
         callerId,
-        callerInfo: callerInfo || { fullName: "Unknown" },
+        callerInfo: callerInfo,
         callType,
         callerModel,
       });
@@ -198,32 +245,74 @@ export const SocketProvider = ({ children }) => {
       });
     };
 
+    // Chat request handlers
+    const handleIncomingChatRequest = ({ clientId, clientInfo }) => {
+      console.log("💬 Incoming chat request from:", clientId);
+      setIncomingChatRequest({
+        clientId,
+        clientInfo,
+      });
+    };
+
+    const handleChatRequestAccepted = ({ lawyerId, chatGroupId }) => {
+      console.log("✅ Chat request accepted by lawyer:", lawyerId);
+      setPendingChatRequest(null);
+      // Navigate to chat - will be handled by the component
+      window.dispatchEvent(
+        new CustomEvent("chatRequestAccepted", { detail: { lawyerId, chatGroupId } })
+      );
+    };
+
+    const handleChatRequestRejected = ({ lawyerId, message }) => {
+      console.log("❌ Chat request rejected:", message);
+      setPendingChatRequest(null);
+      window.dispatchEvent(
+        new CustomEvent("chatRequestRejected", { detail: { lawyerId, message } })
+      );
+    };
+
+    const handleChatRequestNotAccepted = ({ lawyerId, message }) => {
+      console.log("⏱️ Chat request not accepted:", message);
+      setPendingChatRequest(null);
+      window.dispatchEvent(
+        new CustomEvent("chatRequestNotAccepted", { detail: { lawyerId, message } })
+      );
+    };
+
     // Register event listeners
-    socketIO.on("connect", handleConnect);
-    socketIO.on("disconnect", handleDisconnect);
-    socketIO.on("connect_error", handleConnectError);
-    socketIO.on("onlineLawyersList", handleOnlineLawyersList);
-    socketIO.on("updateOnlineUsers", handleUpdateOnlineUsers);
-    socketIO.on("onlineClientsList", handleOnlineClientsList);
-    socketIO.on("receiveMessage", handleReceiveMessage);
-    socketIO.on("incomingCall", handleIncomingCall);
-    socketIO.on("callRejected", handleCallRejected);
-    socketIO.on("callAccepted", handleCallAccepted);
-    socketIO.on("callEnded", handleCallEnded);
+    socketIO.on(SOCKET_EVENTS.CONNECT, handleConnect);
+    socketIO.on(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
+    socketIO.on(SOCKET_EVENTS.CONNECT_ERROR, handleConnectError);
+    socketIO.on(SOCKET_EVENTS.ONLINE_LAWYERS_LIST, handleOnlineLawyersList);
+    socketIO.on(SOCKET_EVENTS.UPDATE_ONLINE_USERS, handleUpdateOnlineUsers);
+    socketIO.on(SOCKET_EVENTS.ONLINE_CLIENTS_LIST, handleOnlineClientsList);
+    socketIO.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
+    socketIO.on(SOCKET_EVENTS.INCOMING_CALL, handleIncomingCall);
+    socketIO.on(SOCKET_EVENTS.CALL_REJECTED, handleCallRejected);
+    socketIO.on(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
+    socketIO.on(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
+    socketIO.on(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
+    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
+    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
+    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED, handleChatRequestNotAccepted);
 
     // Cleanup on unmount or user change
     return () => {
-      socketIO.off("connect", handleConnect);
-      socketIO.off("disconnect", handleDisconnect);
-      socketIO.off("connect_error", handleConnectError);
-      socketIO.off("onlineLawyersList", handleOnlineLawyersList);
-      socketIO.off("updateOnlineUsers", handleUpdateOnlineUsers);
-      socketIO.off("onlineClientsList", handleOnlineClientsList);
-      socketIO.off("receiveMessage", handleReceiveMessage);
-      socketIO.off("incomingCall", handleIncomingCall);
-      socketIO.off("callRejected", handleCallRejected);
-      socketIO.off("callAccepted", handleCallAccepted);
-      socketIO.off("callEnded", handleCallEnded);
+      socketIO.off(SOCKET_EVENTS.CONNECT, handleConnect);
+      socketIO.off(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
+      socketIO.off(SOCKET_EVENTS.CONNECT_ERROR, handleConnectError);
+      socketIO.off(SOCKET_EVENTS.ONLINE_LAWYERS_LIST, handleOnlineLawyersList);
+      socketIO.off(SOCKET_EVENTS.UPDATE_ONLINE_USERS, handleUpdateOnlineUsers);
+      socketIO.off(SOCKET_EVENTS.ONLINE_CLIENTS_LIST, handleOnlineClientsList);
+      socketIO.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
+      socketIO.off(SOCKET_EVENTS.INCOMING_CALL, handleIncomingCall);
+      socketIO.off(SOCKET_EVENTS.CALL_REJECTED, handleCallRejected);
+      socketIO.off(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
+      socketIO.off(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
+      socketIO.off(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
+      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
+      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
+      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED, handleChatRequestNotAccepted);
     };
   }, [userId, userRole]);
 
@@ -249,7 +338,7 @@ export const SocketProvider = ({ children }) => {
       const timestamp = new Date().toISOString();
       const fromUserType = userRole === "lawyer" ? "lawyer" : "client";
 
-      socket.emit("privateMessage", {
+      socket.emit(SOCKET_EVENTS.PRIVATE_MESSAGE, {
         toUserId,
         message: message || "",
         fileUrl,
@@ -284,7 +373,7 @@ export const SocketProvider = ({ children }) => {
       const callerModel = userRole === "lawyer" ? "Lawyer" : "User";
       const receiverModel = userRole === "lawyer" ? "User" : "Lawyer";
 
-      socket.emit("initiateCall", {
+      socket.emit(SOCKET_EVENTS.INITIATE_CALL, {
         callerId: userId,
         receiverId,
         callType,
@@ -312,7 +401,7 @@ export const SocketProvider = ({ children }) => {
   const acceptCall = useCallback(() => {
     if (!socket?.connected || !incomingCall) return false;
 
-    socket.emit("acceptCall", {
+    socket.emit(SOCKET_EVENTS.ACCEPT_CALL, {
       callerId: incomingCall.callerId,
       accepterId: userId,
     });
@@ -336,7 +425,7 @@ export const SocketProvider = ({ children }) => {
   const rejectCall = useCallback(() => {
     if (!socket?.connected || !incomingCall) return false;
 
-    socket.emit("rejectCall", {
+    socket.emit(SOCKET_EVENTS.REJECT_CALL, {
       callerId: incomingCall.callerId,
       rejecterId: userId,
       message: "Call was declined",
@@ -361,7 +450,7 @@ export const SocketProvider = ({ children }) => {
   const endCall = useCallback(() => {
     if (!socket?.connected || !activeCall.peerId) return false;
 
-    socket.emit("endCall", {
+    socket.emit(SOCKET_EVENTS.END_CALL, {
       callerId: userId,
       receiverId: activeCall.peerId,
     });
@@ -377,6 +466,75 @@ export const SocketProvider = ({ children }) => {
 
     return true;
   }, [socket, userId, activeCall.peerId]);
+
+  // ==================== CHAT REQUEST METHODS ====================
+
+  /**
+   * Initiate a chat request to a lawyer (for clients)
+   */
+  const initiateChatRequest = useCallback(
+    (lawyerId, clientInfo) => {
+      if (!socket?.connected || !lawyerId) return false;
+
+      socket.emit(SOCKET_EVENTS.INITIATE_CHAT_REQUEST, {
+        clientId: userId,
+        lawyerId,
+        clientInfo,
+      });
+
+      setPendingChatRequest({
+        lawyerId,
+        status: "pending",
+      });
+
+      return true;
+    },
+    [socket, userId]
+  );
+
+  /**
+   * Accept an incoming chat request (for lawyers)
+   */
+  const acceptChatRequest = useCallback(
+    async (chatGroupId) => {
+      if (!socket?.connected || !incomingChatRequest) return false;
+
+      socket.emit(SOCKET_EVENTS.ACCEPT_CHAT_REQUEST, {
+        clientId: incomingChatRequest.clientId,
+        chatGroupId,
+      });
+
+      const clientId = incomingChatRequest.clientId;
+      setIncomingChatRequest(null);
+
+      // Return clientId so the component can navigate
+      return clientId;
+    },
+    [socket, incomingChatRequest]
+  );
+
+  /**
+   * Reject an incoming chat request (for lawyers)
+   */
+  const rejectChatRequest = useCallback(() => {
+    if (!socket?.connected || !incomingChatRequest) return false;
+
+    socket.emit(SOCKET_EVENTS.REJECT_CHAT_REQUEST, {
+      clientId: incomingChatRequest.clientId,
+    });
+
+    setIncomingChatRequest(null);
+
+    Swal.fire({
+      icon: "info",
+      title: "Chat Declined",
+      text: "You declined the chat request.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+
+    return true;
+  }, [socket, incomingChatRequest]);
 
   // ==================== UTILITY METHODS ====================
 
@@ -398,7 +556,7 @@ export const SocketProvider = ({ children }) => {
    */
   const refreshOnlineUsers = useCallback(() => {
     if (!socket?.connected) return;
-    socket.emit("getOnlineLawyers");
+    socket.emit(SOCKET_EVENTS.GET_ONLINE_LAWYERS);
   }, [socket]);
 
   /**
@@ -449,6 +607,13 @@ export const SocketProvider = ({ children }) => {
     rejectCall,
     endCall,
 
+    // Chat Requests
+    incomingChatRequest,
+    pendingChatRequest,
+    initiateChatRequest,
+    acceptChatRequest,
+    rejectChatRequest,
+
     // Utilities
     emit,
     on,
@@ -473,6 +638,7 @@ export const SocketProvider = ({ children }) => {
           callStatus={activeCall.callStatus}
           onCallEnded={endCall}
           screen={userRole}
+          userFullName={user?.fullName}
         />
       )}
 
@@ -487,9 +653,51 @@ export const SocketProvider = ({ children }) => {
         />
       )}
 
+      {/* Incoming Chat Request Screen (for lawyers) */}
+      {incomingChatRequest && (
+        <IncomingChatRequest
+          clientInfo={incomingChatRequest.clientInfo}
+          onAccept={async () => {
+            try {
+              // Create chat group first
+              const res = await api.post("/api/v2/chat/group", {
+                fromUserId: incomingChatRequest.clientId,
+                fromUserModel: "User",
+                toUserId: userId,
+                toUserModel: "Lawyer",
+              });
+              const chatGroupId = res.data._id;
+              
+              // Accept the chat request
+              await acceptChatRequest(chatGroupId);
+              
+              // Navigate to messages
+              window.location.href = `/dashboard/messages?chatId=${chatGroupId}`;
+            } catch (err) {
+              console.error("Error accepting chat:", err);
+              Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Failed to accept chat request.",
+              });
+            }
+          }}
+          onReject={rejectChatRequest}
+          onTimeout={() => {
+            // Emit timeout event to notify client
+            if (socket?.connected && incomingChatRequest) {
+              socket.emit(SOCKET_EVENTS.CHAT_REQUEST_TIMEOUT, {
+                clientId: incomingChatRequest.clientId,
+              });
+            }
+            setIncomingChatRequest(null);
+          }}
+        />
+      )}
+
       {/* Loading Backdrop */}
       <Backdrop
-        open={activeCall.isActive}
+        open={activeCall.isActive && activeCall.callStatus === "ringing"}
         sx={{
           zIndex: 9999,
           backgroundColor: "rgba(255, 255, 255, 0.8)",

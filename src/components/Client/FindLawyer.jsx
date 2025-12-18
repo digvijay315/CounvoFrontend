@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import api from "../../api";
@@ -7,62 +7,49 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   Avatar,
   Button,
   MenuItem as MuiMenuItem,
   IconButton,
-  Chip,
   Backdrop,
   Select,
   FormControl,
   Container,
   CircularProgress,
-  Skeleton,
   Stack,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Divider,
+  LinearProgress,
+  Paper,
 } from "@mui/material";
 import {
   Chat as ChatIcon,
   Favorite,
   FavoriteBorder,
-  Search as SearchIcon,
   Circle as CircleIcon,
+  Shuffle as ShuffleIcon,
+  Close as CloseIcon,
+  Timer as TimerIcon,
 } from "@mui/icons-material";
 import useAuth from "../../hooks/useAuth";
 import { useSocket } from "../../context/SocketContext";
-import LawyerProfile from "../Lawyer/LawyerProfile";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/slices/authSlice";
+import {
+  LawyerSpecializations,
+  LawyerStates,
+} from "../../_constants/dataConstants";
 import LawyerProfileCard from "../dashboard/LawyerProfileCard";
-
-// ==================== CONSTANTS ====================
-const SPECIALIZATIONS = [
-  { value: "", label: "All Specializations" },
-  { value: "property lawyer", label: "Property Lawyer" },
-  { value: "family lawyer", label: "Family Lawyer" },
-  { value: "civil lawyer", label: "Civil Lawyer" },
-  { value: "cyber lawyer", label: "Cyber Lawyer" },
-  { value: "criminal lawyer", label: "Criminal Lawyer" },
-  { value: "consumer lawyer", label: "Consumer Lawyer" },
-  { value: "labour lawyer", label: "Labour Lawyer" },
-  { value: "legal notice drafting", label: "Legal Notice Drafting" },
-  {
-    value: "company law & corporate compliance",
-    label: "Company Law & Corporate Compliance",
-  },
-];
-
-const STATES = [
-  { value: "", label: "All States" },
-  { value: "maharashtra", label: "Maharashtra" },
-  { value: "karnataka", label: "Karnataka" },
-  { value: "delhi", label: "Delhi" },
-  { value: "tamilnadu", label: "Tamil Nadu" },
-];
 
 // ==================== MAIN COMPONENT ====================
 function FindLawyer() {
   const navigate = useNavigate();
   const { userId } = useAuth();
-  const { onlineLawyers } = useSocket();
+  const user = useSelector(selectUser);
+  const { onlineLawyers, initiateChatRequest, pendingChatRequest } = useSocket();
 
   // State
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +58,35 @@ function FindLawyer() {
   const [state, setState] = useState("");
   const [lawyers, setLawyers] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
+  const [suggestedLawyer, setSuggestedLawyer] = useState(null);
+  const [usedLawyerIds, setUsedLawyerIds] = useState([]);
+  const [isQuickSearch, setIsQuickSearch] = useState(false);
+  const [rejectedByLawyers, setRejectedByLawyers] = useState([]);
+  const [requestTimer, setRequestTimer] = useState(60);
+
+  // Timer for pending chat request
+  const TIMEOUT_SECONDS = 60;
+  const isWaitingForResponse = isConnecting || pendingChatRequest?.status === "pending";
+
+  useEffect(() => {
+    if (!isWaitingForResponse) {
+      setRequestTimer(TIMEOUT_SECONDS);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setRequestTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isWaitingForResponse]);
 
   // ==================== DATA FETCHING ====================
   const fetchLawyers = useCallback(async () => {
@@ -84,6 +100,18 @@ function FindLawyer() {
       setIsLoading(false);
     }
   }, []);
+
+  const fetchRejectedLawyers = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const res = await api.get(`/api/v2/user/byId/${userId}`);
+      if (res.data.success && res.data.user?.rejectedByLawyers) {
+        setRejectedByLawyers(res.data.user.rejectedByLawyers);
+      }
+    } catch (error) {
+      console.error("Error fetching rejected lawyers:", error);
+    }
+  }, [userId]);
 
   const fetchFavorites = useCallback(async () => {
     if (!userId) return;
@@ -104,6 +132,68 @@ function FindLawyer() {
     fetchFavorites();
   }, [fetchFavorites]);
 
+  useEffect(() => {
+    fetchRejectedLawyers();
+  }, [fetchRejectedLawyers]);
+
+  // Listen for chat request responses
+  useEffect(() => {
+    const handleChatAccepted = (e) => {
+      const { chatGroupId } = e.detail;
+      setIsConnecting(false);
+      setShowSuggestionDialog(false);
+      navigate(`/dashboard/messages?chatId=${chatGroupId}`);
+    };
+
+    const handleChatRejected = (e) => {
+      const { lawyerId, message } = e.detail;
+      setIsConnecting(false);
+      // Add to rejected list locally
+      setRejectedByLawyers((prev) => [...prev, lawyerId]);
+      // Show rejection and offer to find another lawyer
+      Swal.fire({
+        icon: "info",
+        title: "Lawyer Unavailable",
+        text: message || "The lawyer couldn't accept your request. Let's find you another lawyer!",
+        confirmButtonText: "Find Another Lawyer",
+        showCancelButton: true,
+        cancelButtonText: "Close",
+      }).then((result) => {
+        if (result.isConfirmed && showSuggestionDialog) {
+          handleFindAnotherLawyer();
+        }
+      });
+    };
+
+    const handleChatNotAccepted = (e) => {
+      const { message } = e.detail;
+      setIsConnecting(false);
+      // Show timeout message (lawyer not added to rejected list - can try again)
+      Swal.fire({
+        icon: "warning",
+        title: "Request Timed Out",
+        text: message || "The lawyer didn't respond in time. Would you like to try another lawyer?",
+        confirmButtonText: "Find Another Lawyer",
+        showCancelButton: true,
+        cancelButtonText: "Close",
+      }).then((result) => {
+        if (result.isConfirmed && showSuggestionDialog) {
+          handleFindAnotherLawyer();
+        }
+      });
+    };
+
+    window.addEventListener("chatRequestAccepted", handleChatAccepted);
+    window.addEventListener("chatRequestRejected", handleChatRejected);
+    window.addEventListener("chatRequestNotAccepted", handleChatNotAccepted);
+
+    return () => {
+      window.removeEventListener("chatRequestAccepted", handleChatAccepted);
+      window.removeEventListener("chatRequestRejected", handleChatRejected);
+      window.removeEventListener("chatRequestNotAccepted", handleChatNotAccepted);
+    };
+  }, [navigate, showSuggestionDialog]);
+
   // ==================== ACTIONS ====================
   const handleStartChat = useCallback(
     async (lawyer) => {
@@ -117,478 +207,642 @@ function FindLawyer() {
         return;
       }
 
-      setIsConnecting(true);
-
-      try {
-        // Create or get chat group
-        const res = await api.post("/api/v2/chat/group", {
-          fromUserId: userId,
-          fromUserModel: "User",
-          toUserId: lawyer._id,
-          toUserModel: "Lawyer",
-        });
-
-        const chatGroupId = res.data._id;
-
-        // Navigate to chat page with the lawyer's chat selected
-        navigate(
-          `/dashboard/messages?chatId=${chatGroupId}&lawyerId=${lawyer._id}`
-        );
-      } catch (error) {
-        console.error("Error creating chat:", error);
+      // Check if lawyer is online
+      if (!onlineLawyers.includes(lawyer._id)) {
         Swal.fire({
-          icon: "error",
-          title: "Connection Failed",
-          text: "Failed to connect with the lawyer. Please try again.",
+          icon: "info",
+          title: "Lawyer Offline",
+          text: "This lawyer is currently offline. Please try another lawyer.",
           timer: 3000,
           showConfirmButton: false,
-        });
-      } finally {
-        setIsConnecting(false);
-      }
-    },
-    [userId, navigate]
-  );
-
-  const handleToggleFavorite = useCallback(
-    async (lawyerId) => {
-      if (!userId) {
-        Swal.fire({
-          icon: "warning",
-          title: "Please Login",
-          text: "You need to login to add favorites.",
-          showConfirmButton: true,
         });
         return;
       }
 
-      try {
-        const res = await api.post("api/user/add-to-favorite", {
-          userId,
-          lawyerId,
-        });
+      setIsConnecting(true);
 
-        if (res.data.isFavorite) {
-          setFavorites((prev) => [...prev, lawyerId]);
-          Swal.fire({
-            icon: "success",
-            title: "Added to Favorites ❤️",
-            text: "This lawyer has been added to your favorites list.",
-            timer: 2000,
-            showConfirmButton: false,
-          });
-        } else {
-          setFavorites((prev) => prev.filter((id) => id !== lawyerId));
-          Swal.fire({
-            icon: "info",
-            title: "Removed from Favorites",
-            text: "This lawyer has been removed from your favorites list.",
-            timer: 2000,
-            showConfirmButton: false,
-          });
-        }
-      } catch (error) {
-        console.error("Error toggling favorite:", error);
+      // Send chat request via socket
+      const clientInfo = {
+        _id: userId,
+        fullName: user?.fullName || "User",
+        profilepic: user?.profilepic || [],
+      };
+
+      const success = initiateChatRequest(lawyer._id, clientInfo);
+
+      if (!success) {
+        setIsConnecting(false);
         Swal.fire({
           icon: "error",
-          title: "Something went wrong!",
-          text: "Unable to update favorite. Please try again later.",
-          confirmButtonColor: "#3b82f6",
+          title: "Connection Failed",
+          text: "Failed to send chat request. Please try again.",
+          timer: 3000,
+          showConfirmButton: false,
         });
       }
+      // Note: isConnecting will be set to false by the event handlers
     },
-    [userId]
+    [userId, user, onlineLawyers, initiateChatRequest]
   );
 
   // ==================== FILTERED DATA ====================
-  const filteredLawyers = lawyers.filter((lawyer) => {
-    // Only show online lawyers
-    if (!onlineLawyers.includes(lawyer._id)) return false;
+  const filteredLawyers = useMemo(() => {
+    return lawyers.filter((lawyer) => {
+      // Only show online lawyers
+      if (!onlineLawyers.includes(lawyer._id)) return false;
 
-    // Filter by specialization
-    if (specialization) {
-      const hasSpecialization = Array.isArray(lawyer.specializations)
-        ? lawyer.specializations.some((spec) =>
-            spec.label?.toLowerCase().includes(specialization.toLowerCase())
-          )
-        : (lawyer.specializations?.label || lawyer.specializations || "")
-            .toLowerCase()
-            .includes(specialization.toLowerCase());
-      if (!hasSpecialization) return false;
-    }
+      // Exclude lawyers who have rejected this user
+      if (rejectedByLawyers.includes(lawyer._id)) return false;
 
-    // Filter by state
-    if (state) {
-      if (!lawyer.state?.toLowerCase().includes(state.toLowerCase())) {
-        return false;
+      // Filter by specialization
+      if (specialization) {
+        const hasSpecialization = Array.isArray(lawyer.specializations)
+          ? lawyer.specializations.some((spec) => {
+              // Strict matching for quick search, fuzzy for manual search
+              if (isQuickSearch) {
+                return (
+                  spec.label?.toLowerCase() === specialization.toLowerCase()
+                );
+              }
+              return spec.label
+                ?.toLowerCase()
+                .includes(specialization.toLowerCase());
+            })
+          : isQuickSearch
+          ? (
+              lawyer.specializations?.label ||
+              lawyer.specializations ||
+              ""
+            ).toLowerCase() === specialization.toLowerCase()
+          : (lawyer.specializations?.label || lawyer.specializations || "")
+              .toLowerCase()
+              .includes(specialization.toLowerCase());
+        if (!hasSpecialization) return false;
       }
+
+      // Filter by state
+      if (state) {
+        if (!lawyer.state?.toLowerCase().includes(state.toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [lawyers, onlineLawyers, specialization, state, isQuickSearch, rejectedByLawyers]);
+
+  // ==================== SUGGESTION LOGIC ====================
+  const getRandomLawyer = useCallback(
+    (lawyerPool) => {
+      // Filter out already suggested lawyers in this session
+      const availableLawyers = lawyerPool.filter(
+        (l) => !usedLawyerIds.includes(l._id)
+      );
+
+      // If all lawyers have been suggested, reset the pool
+      if (availableLawyers.length === 0) {
+        setUsedLawyerIds([]);
+        return lawyerPool[Math.floor(Math.random() * lawyerPool.length)];
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableLawyers.length);
+      return availableLawyers[randomIndex];
+    },
+    [usedLawyerIds]
+  );
+
+  const findSuggestedLawyer = useCallback(() => {
+    // Priority 1: Lawyers matching user preferences (specialization + state)
+    const preferredLawyers = filteredLawyers.filter((lawyer) => {
+      if (specialization && state) {
+        // Both filters applied
+        return true; // Already filtered by filteredLawyers
+      }
+      return true;
+    });
+
+    // Priority 2: If preferences set and matches found
+    if (preferredLawyers.length > 0 && (specialization || state)) {
+      const lawyer = getRandomLawyer(preferredLawyers);
+      setSuggestedLawyer(lawyer);
+      setUsedLawyerIds((prev) => [...prev, lawyer._id]);
+      return;
     }
 
-    return true;
-  });
+    // Priority 3: Any available online lawyer
+    if (filteredLawyers.length > 0) {
+      const lawyer = getRandomLawyer(filteredLawyers);
+      setSuggestedLawyer(lawyer);
+      setUsedLawyerIds((prev) => [...prev, lawyer._id]);
+      return;
+    }
 
-  const offlineLawyers = lawyers.filter(
-    (lawyer) => !onlineLawyers.includes(lawyer._id)
-  );
+    // No lawyers available
+    Swal.fire({
+      icon: "info",
+      title: "No Lawyers Available",
+      text: "No lawyers are currently online matching your criteria. Please try adjusting your filters or check back later.",
+      showConfirmButton: true,
+    });
+  }, [filteredLawyers, specialization, state, getRandomLawyer]);
+
+  const handleFindLawyer = () => {
+    if (filteredLawyers.length === 0) {
+      const message =
+        isQuickSearch && specialization
+          ? `No lawyers with specialization "${specialization}" are currently online. Please try another category or check back later.`
+          : "No lawyers are currently online. Please check back later.";
+
+      Swal.fire({
+        icon: "info",
+        title: "No Lawyers Available",
+        text: message,
+        showConfirmButton: true,
+      });
+      return;
+    }
+
+    findSuggestedLawyer();
+    setShowSuggestionDialog(true);
+  };
+
+  const handleQuickSearch = (searchCard) => {
+    // Set filters from predefined card
+    const spec = searchCard.metadata.specialization[0] || "";
+    const st = searchCard.metadata.state[0] || "";
+
+    setSpecialization(spec);
+    setState(st);
+    setIsQuickSearch(true);
+
+    // Reset used lawyer IDs for new search
+    setUsedLawyerIds([]);
+
+    // Trigger search after a brief delay to allow state updates
+    setTimeout(() => {
+      handleFindLawyer();
+    }, 100);
+  };
+
+  const handleFindAnotherLawyer = () => {
+    findSuggestedLawyer();
+  };
+
+  const handleCloseSuggestion = () => {
+    setShowSuggestionDialog(false);
+    setSuggestedLawyer(null);
+    setUsedLawyerIds([]);
+    // Reset filters if it was a quick search
+    if (isQuickSearch) {
+      setSpecialization("");
+      setState("");
+      setIsQuickSearch(false);
+    }
+  };
+
+  const handleConnectWithSuggested = () => {
+    if (suggestedLawyer) {
+      handleStartChat(suggestedLawyer);
+      setShowSuggestionDialog(false);
+    }
+  };
 
   // ==================== RENDER ====================
   return (
     <>
       {/* Connecting Backdrop */}
       <Backdrop
-        open={isConnecting}
+        open={isWaitingForResponse}
         sx={{
           zIndex: 9999,
           backgroundColor: "rgba(255, 255, 255, 0.9)",
           backdropFilter: "blur(8px)",
         }}
       >
-        <Box
+        <Paper
+          elevation={3}
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
+            p: 4,
+            borderRadius: 3,
+            maxWidth: 400,
+            width: "90%",
+            textAlign: "center",
           }}
         >
-          <CircularProgress size={60} thickness={4} color="primary" />
-          <Typography variant="h6" fontWeight="600" color="primary">
-            Connecting you to the lawyer...
+          {/* Timer Bar */}
+          <Box sx={{ mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+                mb: 1,
+              }}
+            >
+              <TimerIcon
+                sx={{
+                  fontSize: 20,
+                  color: requestTimer <= 15 ? "error.main" : "text.secondary",
+                  animation: requestTimer <= 15 ? "pulse 1s infinite" : "none",
+                  "@keyframes pulse": {
+                    "0%, 100%": { opacity: 1 },
+                    "50%": { opacity: 0.5 },
+                  },
+                }}
+              />
+              <Typography
+                variant="body2"
+                fontWeight="600"
+                color={requestTimer <= 15 ? "error.main" : "text.secondary"}
+              >
+                {requestTimer}s remaining
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={(requestTimer / TIMEOUT_SECONDS) * 100}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                bgcolor: "grey.200",
+                "& .MuiLinearProgress-bar": {
+                  bgcolor: requestTimer <= 15 ? "error.main" : "primary.main",
+                  transition: "transform 1s linear",
+                },
+              }}
+            />
+          </Box>
+
+          <CircularProgress size={60} thickness={4} color="primary" sx={{ mb: 2 }} />
+          
+          <Typography variant="h6" fontWeight="600" color="primary" gutterBottom>
+            Waiting for lawyer to accept...
           </Typography>
-        </Box>
+          <Typography variant="body2" color="text.secondary">
+            The lawyer will respond to your request shortly
+          </Typography>
+        </Paper>
       </Backdrop>
 
       {/* Header & Filters */}
       <Card variant="outlined" sx={{ mb: 4 }}>
         <CardContent sx={{ py: 4 }}>
-          <Container maxWidth="md">
-            <Typography
-              variant="h3"
-              gutterBottom
-              fontWeight="700"
-              textAlign="center"
-              sx={{ mb: 1 }}
-            >
-              Find a Lawyer
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              textAlign="center"
-              sx={{ mb: 3 }}
-            >
-              Connect instantly with verified lawyers who are online right now
-            </Typography>
+          <Stack
+            direction="row"
+            spacing={2}
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Container maxWidth="md">
+              <Typography
+                variant="h3"
+                gutterBottom
+                fontWeight="700"
+                textAlign="center"
+                sx={{ mb: 1 }}
+              >
+                Find a Lawyer
+              </Typography>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                textAlign="center"
+                sx={{ mb: 3 }}
+              >
+                Connect instantly with verified lawyers who are online right now
+              </Typography>
 
+              <Stack
+                direction="column"
+                spacing={2}
+                justifyContent="center"
+                alignItems={"center"}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                  }}
+                >
+                  <FormControl sx={{ minWidth: 200 }}>
+                    <Select
+                      value={specialization}
+                      onChange={(e) => setSpecialization(e.target.value)}
+                      displayEmpty
+                      size="medium"
+                    >
+                      {LawyerSpecializations.map((spec) => (
+                        <MuiMenuItem key={spec.value} value={spec.value}>
+                          {spec.label}
+                        </MuiMenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl sx={{ minWidth: 200 }}>
+                    <Select
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      displayEmpty
+                      size="medium"
+                    >
+                      {LawyerStates.map((st) => (
+                        <MuiMenuItem key={st.value} value={st.value}>
+                          {st.label}
+                        </MuiMenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => {
+                    setIsQuickSearch(false);
+                    handleFindLawyer();
+                  }}
+                  disabled={isLoading}
+                  sx={{
+                    px: 4,
+                    py: 1.5,
+                    fontSize: "1.1rem",
+                    fontWeight: 600,
+                    boxShadow: 3,
+                    "&:hover": {
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  {isLoading ? "Loading..." : "Find a Lawyer"}
+                </Button>
+              </Stack>
+            </Container>
             <Stack
-              direction="column"
-              spacing={2}
+              direction={{ xs: "row", md: "column" }}
+              spacing={{ xs: 2, md: 4 }}
               justifyContent="center"
-              alignItems={"center"}
+              alignItems="center"
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                }}
-              >
-                <FormControl sx={{ minWidth: 200 }}>
-                  <Select
-                    value={specialization}
-                    onChange={(e) => setSpecialization(e.target.value)}
-                    displayEmpty
-                    size="medium"
-                  >
-                    {SPECIALIZATIONS.map((spec) => (
-                      <MuiMenuItem key={spec.value} value={spec.value}>
-                        {spec.label}
-                      </MuiMenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl sx={{ minWidth: 200 }}>
-                  <Select
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    displayEmpty
-                    size="medium"
-                  >
-                    {STATES.map((st) => (
-                      <MuiMenuItem key={st.value} value={st.value}>
-                        {st.label}
-                      </MuiMenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => navigate("/dashboard/messages")}
-              >
-                Connect with a Lawyer
-              </Button>
+              {[
+                { label: "Online<br/>Lawyers", value: filteredLawyers.length },
+                { label: "Total<br/>Lawyers", value: lawyers.length },
+              ]
+                .filter((item) => item.value > 0)
+                .map((item) => (
+                  <React.Fragment key={item.label}>
+                    <Box
+                      sx={{
+                        color: "primary.dark",
+                        border: "1px solid",
+                        borderColor: "primary.dark",
+                        px: { xs: 2, md: 5 },
+                        py: { xs: 1, md: 3 },
+                        borderRadius: 1,
+                        width: "100%",
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="h1" fontWeight="700">
+                        {item.value}
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{ textAlign: "start", lineHeight: 1.1 }}
+                        dangerouslySetInnerHTML={{ __html: item.label }}
+                      />
+                    </Box>
+                  </React.Fragment>
+                ))}
             </Stack>
-          </Container>
+          </Stack>
         </CardContent>
       </Card>
-
-      {/* Online Lawyers Section */}
+      {/* Quick Search Cards */}
       <Box sx={{ mb: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            mb: 3,
-          }}
+        <Typography variant="h4" fontWeight="600" sx={{ textAlign: "start" }}>
+          Quick Search Categories
+        </Typography>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ mb: 3, textAlign: "start" }}
         >
-          <CircleIcon sx={{ color: "success.main", fontSize: 12 }} />
-          <Typography variant="h5" fontWeight="600">
-            Live Lawyers ({filteredLawyers.length})
-          </Typography>
-        </Box>
+          Choose a category to find specialized lawyers instantly
+        </Typography>
 
-        {isLoading ? (
-          <Grid container spacing={3}>
-            {[1, 2, 3, 4].map((i) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
-                <LawyerCardSkeleton />
-              </Grid>
-            ))}
-          </Grid>
-        ) : filteredLawyers.length === 0 ? (
-          <Card variant="outlined" sx={{ p: 4, textAlign: "center" }}>
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              No lawyers are currently online
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {specialization || state
-                ? "Try adjusting your filters or check back later."
-                : "Please check back later when lawyers are available."}
-            </Typography>
-          </Card>
-        ) : (
-          <Grid container spacing={3}>
-            {filteredLawyers.map((lawyer) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={lawyer._id}>
-                <LawyerProfileCard
-                  lawyer={lawyer}
-                  isOnline={true}
-                  isFavorite={favorites.includes(lawyer._id)}
-                  onToggleFavorite={() => handleToggleFavorite(lawyer._id)}
-                  onStartChat={() => handleStartChat(lawyer)}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={3}
+          justifyContent="center"
+          alignItems="stretch"
+        >
+          {PREDEFINED_SEARCHES.map((searchCard, index) => (
+            <Card
+              key={index}
+              sx={{
+                flex: 1,
+                maxWidth: { xs: "100%", sm: 400 },
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                border: "2px solid transparent",
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                  boxShadow: 6,
+                  borderColor: "primary.main",
+                },
+              }}
+              onClick={() => handleQuickSearch(searchCard)}
+            >
+              <CardContent sx={{ p: 3, textAlign: "center" }}>
+                <Box
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: "50%",
+                    bgcolor: "primary.light",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    mx: "auto",
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="h4" color="primary.main">
+                    {searchCard.icon || "⚖️"}
+                  </Typography>
+                </Box>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  {searchCard.label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  {searchCard.description}
+                </Typography>
+                <Chip
+                  label={searchCard.metadata.specialization[0]}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
                 />
-              </Grid>
-            ))}
-          </Grid>
-        )}
+              </CardContent>
+            </Card>
+          ))}
+        </Stack>
       </Box>
 
-      {/* Offline Lawyers Section (Optional - Show a few) */}
-      {!isLoading && offlineLawyers.length > 0 && (
-        <Box sx={{ mb: 4, opacity: 0.7 }}>
-          <Typography
-            variant="h6"
-            fontWeight="600"
-            color="text.secondary"
-            sx={{ mb: 2 }}
-          >
-            Other Lawyers (Currently Offline)
+      {/* Suggestion Dialog */}
+      <Dialog
+        open={showSuggestionDialog}
+        onClose={handleCloseSuggestion}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxWidth: 500,
+          },
+        }}
+      >
+        <Box
+          sx={{
+            position: "relative",
+            bgcolor: "primary.main",
+            color: "white",
+            py: 2,
+            px: 3,
+          }}
+        >
+          <Typography variant="h5" fontWeight="600" textAlign="center">
+            {specialization || state
+              ? "Suggested Lawyer (Based on Your Preferences)"
+              : "Suggested Lawyer"}
           </Typography>
-          <Grid container spacing={3}>
-            {offlineLawyers.slice(0, 4).map((lawyer) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={lawyer._id}>
-                <LawyerProfileCard
-                  lawyer={lawyer}
-                  isOnline={false}
-                  isFavorite={favorites.includes(lawyer._id)}
-                  onToggleFavorite={() => handleToggleFavorite(lawyer._id)}
-                  onStartChat={() =>
-                    Swal.fire({
-                      icon: "info",
-                      title: "Lawyer Offline",
-                      text: "This lawyer is currently offline. Please try again later or choose an online lawyer.",
-                      showConfirmButton: true,
-                    })
-                  }
-                />
-              </Grid>
-            ))}
-          </Grid>
+          <IconButton
+            onClick={handleCloseSuggestion}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: "white",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
         </Box>
-      )}
+
+        <DialogContent sx={{ pt: 3, pb: 2 }}>
+          {suggestedLawyer ? (
+            <LawyerProfileCard
+              lawyer={suggestedLawyer}
+              isOnline={true}
+              showActions={false}
+            />
+          ) : (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            p: 3,
+            pt: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            size="large"
+            startIcon={<ChatIcon />}
+            onClick={handleConnectWithSuggested}
+            disabled={!suggestedLawyer}
+            sx={{
+              py: 1.5,
+              fontWeight: 600,
+              fontSize: "1rem",
+            }}
+          >
+            Connect with This Lawyer
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            fullWidth
+            size="large"
+            startIcon={<ShuffleIcon />}
+            onClick={handleFindAnotherLawyer}
+            disabled={!suggestedLawyer || filteredLawyers.length <= 1}
+            sx={{
+              py: 1.5,
+              fontWeight: 600,
+            }}
+          >
+            Find Another Lawyer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
 
-// ==================== SUB-COMPONENTS ====================
-
-const LawyerCard = ({
-  lawyer,
-  isOnline,
-  isFavorite,
-  onToggleFavorite,
-  onStartChat,
-}) => {
-  const getSpecializationText = () => {
-    if (Array.isArray(lawyer.specializations)) {
-      return lawyer.specializations.map((spec) => spec.label).join(", ");
-    }
-    return lawyer.specializations?.label || lawyer.specializations || "N/A";
-  };
-
-  return (
-    <Card
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        transition: "all 0.3s ease",
-        opacity: isOnline ? 1 : 0.6,
-        "&:hover": {
-          transform: isOnline ? "translateY(-4px)" : "none",
-          boxShadow: isOnline ? 6 : 1,
-        },
-      }}
-    >
-      {/* Online Indicator */}
-      {isOnline && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 12,
-            left: 12,
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            bgcolor: "success.main",
-            color: "white",
-            px: 1,
-            py: 0.25,
-            borderRadius: 1,
-            fontSize: "0.7rem",
-            fontWeight: 600,
-          }}
-        >
-          <CircleIcon sx={{ fontSize: 8 }} />
-          LIVE
-        </Box>
-      )}
-
-      {/* Favorite Button */}
-      <IconButton
-        onClick={onToggleFavorite}
-        sx={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          bgcolor: "background.paper",
-          boxShadow: 1,
-          "&:hover": { bgcolor: "background.paper" },
-        }}
-        size="small"
-      >
-        {isFavorite ? (
-          <Favorite color="error" fontSize="small" />
-        ) : (
-          <FavoriteBorder fontSize="small" />
-        )}
-      </IconButton>
-
-      <CardContent
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          textAlign: "center",
-          pt: 5,
-        }}
-      >
-        <Avatar
-          src={
-            Array.isArray(lawyer.profilepic)
-              ? lawyer.profilepic[0]
-              : lawyer.profilepic
-          }
-          alt={`${lawyer.firstName} ${lawyer.lastName}`}
-          sx={{
-            width: 80,
-            height: 80,
-            mx: "auto",
-            mb: 2,
-            border: 3,
-            borderColor: isOnline ? "success.main" : "grey.300",
-          }}
-        />
-
-        <Typography variant="h6" fontWeight="600" gutterBottom noWrap>
-          Adv. {lawyer.firstName} {lawyer.lastName}
-        </Typography>
-
-        <Box sx={{ mb: 2, flex: 1 }}>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mb: 0.5,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-            }}
-          >
-            {getSpecializationText()}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {lawyer.yearsOfExperience} years experience
-          </Typography>
-          {lawyer.state && (
-            <Typography variant="caption" color="text.secondary">
-              {lawyer.city ? `${lawyer.city}, ` : ""}
-              {lawyer.state}
-            </Typography>
-          )}
-        </Box>
-
-        <Button
-          variant={isOnline ? "contained" : "outlined"}
-          color="primary"
-          startIcon={<ChatIcon />}
-          onClick={onStartChat}
-          fullWidth
-          disabled={!isOnline}
-          sx={{
-            mt: "auto",
-            fontWeight: 600,
-          }}
-        >
-          {isOnline ? "Start Chat" : "Offline"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-};
-
-const LawyerCardSkeleton = () => (
-  <Card sx={{ height: "100%" }}>
-    <CardContent sx={{ textAlign: "center", pt: 5 }}>
-      <Skeleton
-        variant="circular"
-        width={80}
-        height={80}
-        sx={{ mx: "auto", mb: 2 }}
-      />
-      <Skeleton variant="text" width="70%" sx={{ mx: "auto", mb: 1 }} />
-      <Skeleton variant="text" width="90%" sx={{ mx: "auto", mb: 0.5 }} />
-      <Skeleton variant="text" width="60%" sx={{ mx: "auto", mb: 2 }} />
-      <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
-    </CardContent>
-  </Card>
-);
+// ==================== PREDEFINED SEARCHES ====================
+const PREDEFINED_SEARCHES = [
+  {
+    label: "Financial Advice",
+    description: "Get expert financial advice from a qualified lawyer",
+    icon: "💰",
+    metadata: {
+      specialization: ["civil lawyer"],
+      state: [],
+      practicingCourts: [],
+    },
+  },
+  {
+    label: "Challan Issue",
+    description: "Get expert help with your challan issue",
+    icon: "🚗",
+    metadata: {
+      specialization: ["civil lawyer"],
+      state: [],
+      practicingCourts: [],
+    },
+  },
+  {
+    label: "Property Disputes",
+    description: "Resolve property and real estate legal matters",
+    icon: "🏠",
+    metadata: {
+      specialization: ["civil lawyer"],
+      state: [],
+      practicingCourts: [],
+    },
+  },
+  {
+    label: "Family Law",
+    description: "Get assistance with family and matrimonial issues",
+    icon: "👨‍👩‍👧",
+    metadata: {
+      specialization: ["civil lawyer"],
+      state: [],
+      practicingCourts: [],
+    },
+  },
+];
 
 export default FindLawyer;
