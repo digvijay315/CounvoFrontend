@@ -75,7 +75,7 @@ export const getDownloadUrl = async (fileKey) => {
 
     return {
       success: true,
-      signedUrl: response.data.data.signedUrl,
+      signedUrl: response.data.data.accessUrl,
     };
   } catch (error) {
     console.error("Error getting download URL:", error);

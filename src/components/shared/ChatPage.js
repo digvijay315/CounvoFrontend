@@ -39,6 +39,7 @@ import {
 import { useSocket } from "../../context/SocketContext";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api";
+import { uploadResource } from "../../utils";
 import Swal from "sweetalert2";
 
 // Import chat components
@@ -394,14 +395,14 @@ const ChatPage = ({ userType = "customer" }) => {
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      // Upload file to S3 using presigned URL
+      const uploadResult = await uploadResource(file, file.name, "chat");
 
-      const res = await api.post("/api/v2/admin/document", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || "Upload failed");
+      }
 
-      const fileUrl = res.data.url;
+      const { fileKey, publicUrl } = uploadResult;
       const fileType = file.type;
       const fileName = file.name;
       const timestamp = new Date().toISOString();
@@ -410,7 +411,8 @@ const ChatPage = ({ userType = "customer" }) => {
       sendMessage({
         toUserId: participantId,
         message: "",
-        fileUrl,
+        fileUrl: publicUrl,
+        fileKey,
         fileName,
         fileType,
       });
@@ -421,7 +423,8 @@ const ChatPage = ({ userType = "customer" }) => {
         senderId: userId,
         senderModel: userModel,
         message: "",
-        fileUrl,
+        fileUrl: publicUrl,
+        fileKey,
         fileName,
         fileType,
         timestamp,
@@ -435,7 +438,8 @@ const ChatPage = ({ userType = "customer" }) => {
         senderId: userId,
         senderModel: userModel,
         message: "",
-        fileUrl,
+        fileUrl: publicUrl,
+        fileKey,
         fileName,
         fileType,
       });
@@ -453,7 +457,7 @@ const ChatPage = ({ userType = "customer" }) => {
       Swal.fire({
         icon: "error",
         title: "Upload Failed",
-        text: "Failed to upload file. Please try again.",
+        text: error.message || "Failed to upload file. Please try again.",
         timer: 3000,
         showConfirmButton: false,
       });

@@ -1,6 +1,7 @@
-import React from "react";
-import { Box, Paper, Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Paper, Typography, CircularProgress } from "@mui/material";
 import { InsertDriveFile as FileIcon } from "@mui/icons-material";
+import { getDownloadUrl } from "../../../utils";
 
 const formatTime = (timestamp) => {
   if (!timestamp) return "";
@@ -20,7 +21,36 @@ const formatTime = (timestamp) => {
 
 const MessageBubble = ({ message, isMe }) => {
   const isImage = message.fileType?.startsWith("image/");
-  const hasFile = !!message.fileUrl;
+  const hasFile = !!(message.fileUrl || message.fileKey);
+  const [signedUrl, setSignedUrl] = useState(message.fileUrl || null);
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+
+  // Fetch signed URL if fileKey exists but no fileUrl
+  useEffect(() => {
+    const fetchSignedUrl = async () => {
+      if (message.fileUrl) {
+        setIsLoadingUrl(true);
+        const result = await getDownloadUrl(message.fileUrl);
+        if (result.success) {
+          setSignedUrl(result.signedUrl);
+        }
+        setIsLoadingUrl(false);
+      }
+    };
+    fetchSignedUrl();
+  }, [message.fileKey, message.fileUrl]);
+
+  const handleFileClick = async () => {
+    // If we have a fileKey, get a fresh signed URL for opening
+    if (message.fileKey) {
+      const result = await getDownloadUrl(message.fileKey);
+      if (result.success) {
+        window.open(result.signedUrl, "_blank");
+      }
+    } else if (signedUrl) {
+      window.open(signedUrl, "_blank");
+    }
+  };
 
   return (
     <Box
@@ -52,10 +82,12 @@ const MessageBubble = ({ message, isMe }) => {
         {/* File Attachment */}
         {hasFile && (
           <Box sx={{ mt: message.message ? 1 : 0 }}>
-            {isImage ? (
+            {isLoadingUrl ? (
+              <CircularProgress size={20} />
+            ) : isImage ? (
               <Box
                 component="img"
-                src={message.fileUrl}
+                src={signedUrl}
                 alt={message.fileName}
                 sx={{
                   maxWidth: 200,
@@ -63,20 +95,19 @@ const MessageBubble = ({ message, isMe }) => {
                   borderRadius: 1,
                   cursor: "pointer",
                 }}
-                onClick={() => window.open(message.fileUrl, "_blank")}
+                onClick={handleFileClick}
               />
             ) : (
               <Box
-                component="a"
-                href={message.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                component="span"
+                onClick={handleFileClick}
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   gap: 1,
                   color: isMe ? "white" : "primary.main",
                   textDecoration: "none",
+                  cursor: "pointer",
                   "&:hover": { textDecoration: "underline" },
                 }}
               >
