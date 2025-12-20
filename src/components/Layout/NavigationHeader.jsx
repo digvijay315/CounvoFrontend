@@ -129,7 +129,7 @@ const NavigationHeader = forwardRef(
         {/* Right Section - Icons & Profile */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {/* Notifications */}
-          <Tooltip title="Notifications">
+          {/* <Tooltip title="Notifications">
             <IconButton
               color="inherit"
               onClick={handleOpenNotifications}
@@ -143,10 +143,10 @@ const NavigationHeader = forwardRef(
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
 
           {/* Notifications Menu */}
-          <Menu
+          {/*  <Menu
             anchorEl={anchorElNotifications}
             open={Boolean(anchorElNotifications)}
             onClose={handleCloseNotifications}
@@ -215,7 +215,7 @@ const NavigationHeader = forwardRef(
                 View All Notifications
               </Typography>
             </MenuItem>
-          </Menu>
+          </Menu> */}
 
           {/* User Avatar */}
           <Tooltip title="Account settings">
