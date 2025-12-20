@@ -6,7 +6,7 @@ import { getUserDetails } from "../redux/slices/authSlice";
 import { useDispatch } from "react-redux";
 
 const ProtectedRoute = () => {
-  const { token } = useAuth();
+  const { token, handleLogout } = useAuth();
   const dispatch = useDispatch();
   useEffect(() => {
     if (token) {
@@ -15,6 +15,7 @@ const ProtectedRoute = () => {
   }, [token]);
 
   if (!token) {
+    handleLogout();
     return <Navigate to={NAVIGATION_CONSTANTS.LOGIN_PATH} replace />;
   }
 

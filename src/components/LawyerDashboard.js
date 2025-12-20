@@ -17,12 +17,28 @@ import {
   TrendingDown as TrendingDownIcon,
 } from "@mui/icons-material";
 import useAuth from "../hooks/useAuth";
+import api from "../api";
+import { toast } from "react-toastify";
+import { useState, useEffect } from "react";
 
 const LawyerDashboard = () => {
   // Static data
   const { userFullName } = useAuth();
   const lawyerName = userFullName || "";
 
+  const [dashboardData, setDashboardData] = useState(null);
+  const fetchDashboardData = async () => {
+    const response = await api.get("/api/v2/lawyer/dashboard");
+    if (response.data.success) {
+      setDashboardData(response.data.data);
+    } else {
+      setDashboardData(null);
+      toast.error(response.data.message);
+    }
+  };
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
   const lastLogin = "2 hours ago";
   const sessionTime = "3.5 hours";
 
@@ -30,7 +46,7 @@ const LawyerDashboard = () => {
   const stats = [
     {
       label: "Total Clients",
-      value: 48,
+      value: dashboardData?.totalClients || 0,
       change: "+12%",
       isPositive: true,
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
@@ -38,23 +54,23 @@ const LawyerDashboard = () => {
     },
     {
       label: "Active Cases",
-      value: 12,
+      value: dashboardData?.consultations || 0,
       change: "+8%",
       isPositive: true,
       icon: <GavelIcon sx={{ fontSize: 40 }} />,
       color: "success.main",
     },
     {
-      label: "Pending Cases",
-      value: 5,
+      label: "Total Revenue",
+      value: dashboardData?.totalRevenue || 0,
       change: "-3%",
       isPositive: false,
       icon: <PendingIcon sx={{ fontSize: 40 }} />,
       color: "warning.main",
     },
     {
-      label: "Completed Cases",
-      value: 28,
+      label: "Total Calls",
+      value: dashboardData?.totalCalls || 0,
       change: "+15%",
       isPositive: true,
       icon: <CompletedIcon sx={{ fontSize: 40 }} />,
@@ -156,28 +172,6 @@ const LawyerDashboard = () => {
                       {stat.label}
                     </Typography>
                   </Box>
-
-                  <Stack direction="row" spacing={0.5} alignItems="center">
-                    {stat.isPositive ? (
-                      <TrendingUpIcon
-                        sx={{ fontSize: 16, color: "success.main" }}
-                      />
-                    ) : (
-                      <TrendingDownIcon
-                        sx={{ fontSize: 16, color: "error.main" }}
-                      />
-                    )}
-                    <Typography
-                      variant="caption"
-                      fontWeight="600"
-                      color={stat.isPositive ? "success.main" : "error.main"}
-                    >
-                      {stat.change}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {stat.isPositive ? "from last period" : "from last week"}
-                    </Typography>
-                  </Stack>
                 </Stack>
               </CardContent>
             </Card>
