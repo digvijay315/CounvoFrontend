@@ -36,7 +36,7 @@ const indianStates = [
 
 const membershipStatuses = ["Active", "Inactive", "Suspended", "Pending"];
 
-const BarCouncilInfoStep = ({ data, onChange }) => {
+const BarCouncilInfoStep = ({ data, onChange, onUploadingChange }) => {
   const handleChange = (field, value) => {
     onChange({
       ...data,
@@ -125,6 +125,7 @@ const BarCouncilInfoStep = ({ data, onChange }) => {
             multiple={true}
             value={data.barCertificateUrl || []}
             onChange={handleFileChange}
+            onUploadingChange={onUploadingChange}
             maxFiles={3}
           />
         </Grid>

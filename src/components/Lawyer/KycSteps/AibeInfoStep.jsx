@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import FileUpload from '../../shared/FileUpload';
 
-const AibeInfoStep = ({ data, onChange }) => {
+const AibeInfoStep = ({ data, onChange, onUploadingChange }) => {
   const handleChange = (field, value) => {
     onChange({
       ...data,
@@ -60,6 +60,7 @@ const AibeInfoStep = ({ data, onChange }) => {
             multiple={true}
             value={data.aibeCertificateUrl || []}
             onChange={handleFileChange}
+            onUploadingChange={onUploadingChange}
             maxFiles={2}
           />
         </Grid>

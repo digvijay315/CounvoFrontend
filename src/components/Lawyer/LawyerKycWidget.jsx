@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Stepper,
@@ -8,52 +8,52 @@ import {
   Button,
   Typography,
   Paper,
-  Card,
-  CardContent,
-} from '@mui/material';
+  CircularProgress,
+} from "@mui/material";
 import {
   Person as PersonIcon,
   School as SchoolIcon,
   Gavel as GavelIcon,
   VerifiedUser as VerifiedUserIcon,
   Work as WorkIcon,
-  Badge as BadgeIcon,
-  Home as HomeIcon,
+  // Badge as BadgeIcon,
+  // Home as HomeIcon,
   AccountBalance as AccountBalanceIcon,
   CheckCircle as CheckCircleIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
-import PersonalInfoStep from './KycSteps/PersonalInfoStep';
-import EducationStep from './KycSteps/EducationStep';
-import BarCouncilInfoStep from './KycSteps/BarCouncilInfoStep';
-import AibeInfoStep from './KycSteps/AibeInfoStep';
-import ProfessionalInfoStep from './KycSteps/ProfessionalInfoStep';
-import IdentityProofStep from './KycSteps/IdentityProofStep';
-import AddressProofStep from './KycSteps/AddressProofStep';
-import BankDetailsStep from './KycSteps/BankDetailsStep';
-import DeclarationsStep from './KycSteps/DeclarationsStep';
-import { toast } from 'react-toastify';
+import PersonalInfoStep from "./KycSteps/PersonalInfoStep";
+import EducationStep from "./KycSteps/EducationStep";
+import BarCouncilInfoStep from "./KycSteps/BarCouncilInfoStep";
+import AibeInfoStep from "./KycSteps/AibeInfoStep";
+import ProfessionalInfoStep from "./KycSteps/ProfessionalInfoStep";
+// import IdentityProofStep from "./KycSteps/IdentityProofStep";
+// import AddressProofStep from "./KycSteps/AddressProofStep";
+import BankDetailsStep from "./KycSteps/BankDetailsStep";
+import DeclarationsStep from "./KycSteps/DeclarationsStep";
+import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
 import api from "../../api";
 import { getUserDetails } from "../../redux/slices/authSlice";
 
 const steps = [
-  { label: "Personal Information", icon: PersonIcon },
-  { label: "Education", icon: SchoolIcon },
-  { label: "Bar Council Info", icon: GavelIcon },
-  { label: "AIBE Info", icon: VerifiedUserIcon },
-  { label: "Professional Info", icon: WorkIcon },
-  { label: "Identity Proof", icon: BadgeIcon },
-  { label: "Address Proof", icon: HomeIcon },
-  { label: "Bank Details", icon: AccountBalanceIcon },
-  { label: "Declarations", icon: CheckCircleIcon },
+  { label: "Personal Information", icon: PersonIcon, key: "personalInfo" },
+  { label: "Education", icon: SchoolIcon, key: "education" },
+  { label: "Bar Council Info", icon: GavelIcon, key: "barCouncilInfo" },
+  { label: "AIBE Info", icon: VerifiedUserIcon, key: "aibeInfo" },
+  { label: "Professional Info", icon: WorkIcon, key: "professionalInfo" },
+  // { label: "Identity Proof", icon: BadgeIcon, key: "identityProof" },
+  // { label: "Address Proof", icon: HomeIcon, key: "addressProof" },
+  { label: "Bank Details", icon: AccountBalanceIcon, key: "bankDetails" },
+  { label: "Declarations", icon: CheckCircleIcon, key: "declarations" },
 ];
 
 const LawyerKycWidget = ({ onSuccess }) => {
   const { userId } = useAuth();
   const dispatch = useDispatch();
   const [activeStep, setActiveStep] = useState(0);
+  const [uploading, setUploading] = useState(false);
   const [kycData, setKycData] = useState({
     personalInfo: {
       gender: "",
@@ -111,15 +111,15 @@ const LawyerKycWidget = ({ onSuccess }) => {
       proofOfPractice: [],
       professionalBio: "",
     },
-    identityProof: {
-      documentType: "",
-      documentNumber: "",
-      documentUrls: [],
-    },
-    addressProof: {
-      documentType: "",
-      documentUrls: [],
-    },
+    // identityProof: {
+    //   documentType: "",
+    //   documentNumber: "",
+    //   documentUrls: [],
+    // },
+    // addressProof: {
+    //   documentType: "",
+    //   documentUrls: [],
+    // },
     bankDetails: {
       accountHolderName: "",
       bankName: "",
@@ -137,7 +137,108 @@ const LawyerKycWidget = ({ onSuccess }) => {
     },
   });
 
+  // Validation function for each step
+  const validateStep = (stepKey) => {
+    switch (stepKey) {
+      case "personalInfo": {
+        const data = kycData.personalInfo;
+        return !!(
+          data.gender &&
+          data.dateOfBirth &&
+          data.residentialAddress?.street &&
+          data.residentialAddress?.city &&
+          data.residentialAddress?.state &&
+          data.residentialAddress?.pinCode
+        );
+      }
+      case "education": {
+        const data = kycData.education;
+        return (
+          data.length > 0 &&
+          data.every(
+            (edu) =>
+              edu.degree &&
+              edu.university &&
+              edu.yearOfGraduation &&
+              edu.certificateUrl
+          )
+        );
+      }
+      case "barCouncilInfo": {
+        const data = kycData.barCouncilInfo;
+        return !!(
+          data.barEnrollmentNumber &&
+          data.barState &&
+          data.enrollmentYear &&
+          data.barCertificateUrl?.length > 0
+        );
+      }
+      case "aibeInfo": {
+        const data = kycData.aibeInfo;
+        // AIBE info is optional, but if provided, certificate is required
+        if (data.aibeNumber || data.aibeYear) {
+          return !!(
+            data.aibeNumber &&
+            data.aibeYear &&
+            data.aibeCertificateUrl?.length > 0
+          );
+        }
+        return true; // Optional step
+      }
+      case "professionalInfo": {
+        const data = kycData.professionalInfo;
+        return !!(
+          data.practiceType &&
+          data.specializations?.length > 0 &&
+          data.languages?.length > 0
+        );
+      }
+      // case "identityProof": {
+      //   const data = kycData.identityProof;
+      //   return !!(
+      //     data.documentType &&
+      //     data.documentNumber &&
+      //     data.documentUrls?.length > 0
+      //   );
+      // }
+      // case "addressProof": {
+      //   const data = kycData.addressProof;
+      //   return !!(data.documentType && data.documentUrls?.length > 0);
+      // }
+      case "bankDetails": {
+        const data = kycData.bankDetails;
+        return !!(
+          data.accountHolderName &&
+          data.bankName &&
+          data.accountNumber &&
+          data.ifscCode &&
+          data.accountType &&
+          data.cancelledChequeUrl?.length > 0
+        );
+      }
+      case "declarations": {
+        const data = kycData.declarations;
+        return !!(
+          data.authenticityDeclaration &&
+          data.consentForVerification &&
+          data.termsAndConditionsAccepted
+        );
+      }
+      default:
+        return true;
+    }
+  };
+
+  const isCurrentStepValid = () => {
+    const currentStepKey = steps[activeStep]?.key;
+    return validateStep(currentStepKey);
+  };
+
   const handleNext = () => {
+    if (!isCurrentStepValid()) {
+      toast.warning("Please complete all required fields before continuing");
+      return;
+    }
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -157,6 +258,11 @@ const LawyerKycWidget = ({ onSuccess }) => {
   };
 
   const handleSubmit = async () => {
+    if (!isCurrentStepValid()) {
+      toast.warning("Please complete all required declarations");
+      return;
+    }
+
     console.log("Submitting KYC Data:", kycData);
     try {
       const response = await api.post(`/api/v2/lawyer-kyc/${userId}`, kycData);
@@ -190,6 +296,7 @@ const LawyerKycWidget = ({ onSuccess }) => {
           <EducationStep
             data={kycData.education}
             onChange={(data) => updateKycData("education", data)}
+            onUploadingChange={setUploading}
           />
         );
       case 2:
@@ -197,6 +304,7 @@ const LawyerKycWidget = ({ onSuccess }) => {
           <BarCouncilInfoStep
             data={kycData.barCouncilInfo}
             onChange={(data) => updateKycData("barCouncilInfo", data)}
+            onUploadingChange={setUploading}
           />
         );
       case 3:
@@ -204,6 +312,7 @@ const LawyerKycWidget = ({ onSuccess }) => {
           <AibeInfoStep
             data={kycData.aibeInfo}
             onChange={(data) => updateKycData("aibeInfo", data)}
+            onUploadingChange={setUploading}
           />
         );
       case 4:
@@ -211,30 +320,34 @@ const LawyerKycWidget = ({ onSuccess }) => {
           <ProfessionalInfoStep
             data={kycData.professionalInfo}
             onChange={(data) => updateKycData("professionalInfo", data)}
+            onUploadingChange={setUploading}
           />
         );
+      // case 5:
+      //   return (
+      //     <IdentityProofStep
+      //       data={kycData.identityProof}
+      //       onChange={(data) => updateKycData("identityProof", data)}
+      //       onUploadingChange={setUploading}
+      //     />
+      //   );
+      // case 6:
+      //   return (
+      //     <AddressProofStep
+      //       data={kycData.addressProof}
+      //       onChange={(data) => updateKycData("addressProof", data)}
+      //       onUploadingChange={setUploading}
+      //     />
+      //   );
       case 5:
-        return (
-          <IdentityProofStep
-            data={kycData.identityProof}
-            onChange={(data) => updateKycData("identityProof", data)}
-          />
-        );
-      case 6:
-        return (
-          <AddressProofStep
-            data={kycData.addressProof}
-            onChange={(data) => updateKycData("addressProof", data)}
-          />
-        );
-      case 7:
         return (
           <BankDetailsStep
             data={kycData.bankDetails}
             onChange={(data) => updateKycData("bankDetails", data)}
+            onUploadingChange={setUploading}
           />
         );
-      case 8:
+      case 6:
         return (
           <DeclarationsStep
             data={kycData.declarations}
@@ -245,6 +358,8 @@ const LawyerKycWidget = ({ onSuccess }) => {
         return null;
     }
   };
+
+  const canContinue = isCurrentStepValid() && !uploading;
 
   return (
     <Box>
@@ -289,22 +404,44 @@ const LawyerKycWidget = ({ onSuccess }) => {
               <StepContent>
                 <Box sx={{ py: 2 }}>
                   {renderStepContent(index)}
-                  <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+                  <Box
+                    sx={{
+                      mt: 3,
+                      display: "flex",
+                      gap: 2,
+                      alignItems: "center",
+                    }}
+                  >
                     <Button
                       variant="contained"
                       onClick={
                         index === steps.length - 1 ? handleSubmit : handleNext
                       }
+                      disabled={!canContinue}
+                      startIcon={
+                        uploading ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : null
+                      }
                     >
-                      {index === steps.length - 1 ? "Submit KYC" : "Continue"}
+                      {uploading
+                        ? "Uploading..."
+                        : index === steps.length - 1
+                        ? "Submit KYC"
+                        : "Continue"}
                     </Button>
                     <Button
-                      disabled={index === 0}
+                      disabled={index === 0 || uploading}
                       onClick={handleBack}
                       variant="outlined"
                     >
                       Back
                     </Button>
+                    {!isCurrentStepValid() && !uploading && (
+                      <Typography variant="caption" color="error">
+                        Please complete all required fields
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </StepContent>

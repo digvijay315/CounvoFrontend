@@ -62,7 +62,7 @@ const courtOptions = [
   'Revenue Court',
 ];
 
-const ProfessionalInfoStep = ({ data, onChange }) => {
+const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
   const handleChange = (field, value) => {
     onChange({
       ...data,
@@ -265,6 +265,7 @@ const ProfessionalInfoStep = ({ data, onChange }) => {
             multiple={true}
             value={data.proofOfPractice || []}
             onChange={handleFileChange}
+            onUploadingChange={onUploadingChange}
             maxFiles={5}
           />
         </Grid>

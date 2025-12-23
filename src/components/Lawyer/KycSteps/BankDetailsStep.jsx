@@ -13,7 +13,7 @@ const accountTypes = [
   { value: 'current', label: 'Current Account' },
 ];
 
-const BankDetailsStep = ({ data, onChange }) => {
+const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
   const handleChange = (field, value) => {
     onChange({
       ...data,
@@ -104,6 +104,7 @@ const BankDetailsStep = ({ data, onChange }) => {
             multiple={false}
             value={data.cancelledChequeUrl || []}
             onChange={handleFileChange}
+            onUploadingChange={onUploadingChange}
             maxFiles={2}
           />
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>

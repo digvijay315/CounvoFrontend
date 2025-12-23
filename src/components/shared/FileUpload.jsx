@@ -43,10 +43,16 @@ const FileUpload = ({
   multiple = false,
   value = [], // Array of URLs
   onChange, // (urls: string[]) => void
+  onUploadingChange, // (uploading: boolean) => void - notify parent of upload state
   maxFiles = 5,
   disabled = false,
 }) => {
   const [uploading, setUploading] = useState(false);
+
+  const updateUploading = (isUploading) => {
+    setUploading(isUploading);
+    onUploadingChange?.(isUploading);
+  };
 
   const handleFileSelect = async (event) => {
     const files = Array.from(event.target.files || []);
@@ -59,7 +65,7 @@ const FileUpload = ({
       return;
     }
 
-    setUploading(true);
+    updateUploading(true);
     const uploadedUrls = [];
 
     try {
@@ -83,7 +89,7 @@ const FileUpload = ({
       console.error("Upload error:", error);
       toast.error("Upload failed. Please try again.");
     } finally {
-      setUploading(false);
+      updateUploading(false);
       // Reset input
       event.target.value = "";
     }

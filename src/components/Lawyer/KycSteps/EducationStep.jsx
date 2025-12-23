@@ -19,8 +19,15 @@ import {
 import { uploadResource } from '../../../utils';
 import { toast } from 'react-toastify';
 
-const EducationStep = ({ data, onChange }) => {
+const EducationStep = ({ data, onChange, onUploadingChange }) => {
   const [uploading, setUploading] = useState({});
+
+  // Notify parent when any upload state changes
+  const updateUploading = (newUploading) => {
+    setUploading(newUploading);
+    const isAnyUploading = Object.values(newUploading).some(Boolean);
+    onUploadingChange?.(isAnyUploading);
+  };
 
   const handleEducationChange = (index, field, value) => {
     const updatedEducation = [...data];
@@ -52,7 +59,7 @@ const EducationStep = ({ data, onChange }) => {
 
   const handleFileUpload = async (index, files) => {
     if (files && files[0]) {
-      setUploading((prev) => ({ ...prev, [index]: true }));
+      updateUploading({ ...uploading, [index]: true });
       try {
         const file = files[0];
         const result = await uploadResource(file, file.name, 'kyc/education-certificates');
@@ -66,7 +73,7 @@ const EducationStep = ({ data, onChange }) => {
         console.error('Upload error:', error);
         toast.error('Upload failed. Please try again.');
       } finally {
-        setUploading((prev) => ({ ...prev, [index]: false }));
+        updateUploading({ ...uploading, [index]: false });
       }
     }
   };

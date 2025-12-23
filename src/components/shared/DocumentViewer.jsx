@@ -125,10 +125,20 @@ const DocumentItem = ({ url, index, showLabel = true }) => {
       >
         {getFileIcon(url)}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          {showLabel && (
+          {showLabel && !isImageUrl(url) && (
             <Typography variant="body2" noWrap title={fileName}>
-              {fileName.length > 25 ? fileName.substring(0, 25) + "..." : fileName}
+              {fileName.length > 25
+                ? fileName.substring(0, 25) + "..."
+                : fileName}
             </Typography>
+          )}
+          {isImageUrl(url) && signedUrl && (
+            <Box
+              component="img"
+              src={signedUrl}
+              alt={fileName}
+              sx={{ width: 100, height: 100 }}
+            />
           )}
         </Box>
 
@@ -175,7 +185,13 @@ const DocumentItem = ({ url, index, showLabel = true }) => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           {fileName}
           <IconButton onClick={() => setPreviewOpen(false)} size="small">
             <CloseIcon />
