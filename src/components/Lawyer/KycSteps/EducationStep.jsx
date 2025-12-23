@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
@@ -7,14 +7,21 @@ import {
   Button,
   IconButton,
   Paper,
+  CircularProgress,
+  Chip,
+  Stack,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   CloudUpload as CloudUploadIcon,
 } from '@mui/icons-material';
+import { uploadResource } from '../../../utils';
+import { toast } from 'react-toastify';
 
 const EducationStep = ({ data, onChange }) => {
+  const [uploading, setUploading] = useState({});
+
   const handleEducationChange = (index, field, value) => {
     const updatedEducation = [...data];
     updatedEducation[index] = {
@@ -43,12 +50,36 @@ const EducationStep = ({ data, onChange }) => {
     }
   };
 
-  const handleFileUpload = (index, files) => {
+  const handleFileUpload = async (index, files) => {
     if (files && files[0]) {
-      // In a real implementation, you would upload the file and get the URL
-      const fileName = files[0].name;
-      handleEducationChange(index, 'certificateUrl', fileName);
+      setUploading((prev) => ({ ...prev, [index]: true }));
+      try {
+        const file = files[0];
+        const result = await uploadResource(file, file.name, 'kyc/education-certificates');
+        if (result.success && result.publicUrl) {
+          handleEducationChange(index, 'certificateUrl', result.publicUrl);
+          toast.success('Certificate uploaded successfully');
+        } else {
+          toast.error('Failed to upload certificate');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast.error('Upload failed. Please try again.');
+      } finally {
+        setUploading((prev) => ({ ...prev, [index]: false }));
+      }
     }
+  };
+
+  const handleRemoveCertificate = (index) => {
+    handleEducationChange(index, 'certificateUrl', '');
+  };
+
+  const getFileName = (url) => {
+    if (!url) return '';
+    const urlWithoutParams = url.split('?')[0];
+    const parts = urlWithoutParams.split('/');
+    return parts[parts.length - 1] || 'Certificate';
   };
 
   return (
@@ -120,28 +151,49 @@ const EducationStep = ({ data, onChange }) => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <input
-                type="file"
-                id={`certificate-${index}`}
-                accept=".pdf,.jpg,.jpeg,.png"
-                style={{ display: 'none' }}
-                onChange={(e) => handleFileUpload(index, e.target.files)}
-              />
-              <label htmlFor={`certificate-${index}`}>
-                <Button
-                  component="span"
-                  variant="outlined"
-                  fullWidth
-                  startIcon={<CloudUploadIcon />}
-                  sx={{
-                    height: 40,
-                    borderStyle: 'dashed',
-                    textTransform: 'none',
-                  }}
-                >
-                  {education.certificateUrl || 'Upload Certificate'}
-                </Button>
-              </label>
+              {education.certificateUrl ? (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip
+                    label={getFileName(education.certificateUrl).substring(0, 20) + '...'}
+                    size="small"
+                    onDelete={() => handleRemoveCertificate(index)}
+                    sx={{ maxWidth: '100%' }}
+                  />
+                </Stack>
+              ) : (
+                <>
+                  <input
+                    type="file"
+                    id={`certificate-${index}`}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFileUpload(index, e.target.files)}
+                    disabled={uploading[index]}
+                  />
+                  <label htmlFor={`certificate-${index}`}>
+                    <Button
+                      component="span"
+                      variant="outlined"
+                      fullWidth
+                      disabled={uploading[index]}
+                      startIcon={
+                        uploading[index] ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          <CloudUploadIcon />
+                        )
+                      }
+                      sx={{
+                        height: 40,
+                        borderStyle: 'dashed',
+                        textTransform: 'none',
+                      }}
+                    >
+                      {uploading[index] ? 'Uploading...' : 'Upload Certificate'}
+                    </Button>
+                  </label>
+                </>
+              )}
             </Grid>
           </Grid>
         </Paper>
@@ -160,4 +212,3 @@ const EducationStep = ({ data, onChange }) => {
 };
 
 export default EducationStep;
-

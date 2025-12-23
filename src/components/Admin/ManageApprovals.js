@@ -30,6 +30,7 @@ import {
 import api from "../../api";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
+import KycDetailsView from "./KycDetailsView";
 
 const statusFilters = [
   { value: "in_review", label: "In Review" },
@@ -47,7 +48,8 @@ const ManageApprovals = () => {
     pageSize: 10,
   });
   const [totalRows, setTotalRows] = useState(0);
-
+  const [kycDetails, setKycDetails] = useState(null);
+  const [kycDetailsDialogOpen, setKycDetailsDialogOpen] = useState(false);
   // Menu state
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -231,11 +233,21 @@ const ManageApprovals = () => {
     }
   };
 
-  const handleViewDetails = () => {
+  const handleViewDetails = async () => {
     handleMenuClose();
     if (!selectedRow) return;
     // Navigate to details page or open modal
     console.log("View details:", selectedRow);
+    const resp = await api.get(
+      `/api/v2/admin/lawyerkyc/submissions/${selectedRow._id}`
+    );
+    if (resp.data.success) {
+      console.log("KYC details:", resp.data.kyc);
+      setKycDetails(resp.data.kyc);
+      setKycDetailsDialogOpen(true);
+    } else {
+      console.error("Error fetching KYC details:", resp.data.error);
+    }
   };
 
   const getStatusChip = (status) => {
@@ -274,7 +286,7 @@ const ManageApprovals = () => {
       field: "status",
       headerName: "Status",
       width: 120,
-      renderCell: (params) => getStatusChip(params.row.kycStatus),
+      renderCell: (params) => getStatusChip(params.row?.kycStatus),
     },
     {
       field: "submittedAt",
@@ -409,7 +421,7 @@ const ManageApprovals = () => {
           </ListItemIcon>
           <ListItemText>Reject KYC</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleVerifyIdentity}>
+        {/* <MenuItem onClick={handleVerifyIdentity}>
           <ListItemIcon>
             <VerifiedUser fontSize="small" color="primary" />
           </ListItemIcon>
@@ -420,7 +432,7 @@ const ManageApprovals = () => {
             <NoteAdd fontSize="small" />
           </ListItemIcon>
           <ListItemText>Add Internal Note</ListItemText>
-        </MenuItem>
+        </MenuItem> */}
       </Menu>
 
       {/* Add Note Dialog */}
@@ -454,6 +466,34 @@ const ManageApprovals = () => {
             disabled={!internalNote.trim()}
           >
             Add Note
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* KYC Details Dialog */}
+      <Dialog
+        open={kycDetailsDialogOpen}
+        onClose={() => setKycDetailsDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { maxHeight: "90vh" },
+        }}
+      >
+        <DialogTitle sx={{ borderBottom: 1, borderColor: "divider" }}>
+          KYC Details
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <KycDetailsView kycDetails={kycDetails} />
+        </DialogContent>
+        <DialogActions
+          sx={{ borderTop: 1, borderColor: "divider", px: 3, py: 2 }}
+        >
+          <Button
+            onClick={() => setKycDetailsDialogOpen(false)}
+            variant="outlined"
+          >
+            Close
           </Button>
         </DialogActions>
       </Dialog>

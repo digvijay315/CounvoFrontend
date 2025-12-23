@@ -5,11 +5,10 @@ import {
   TextField,
   MenuItem,
   Typography,
-  Button,
   Chip,
   Divider,
 } from '@mui/material';
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import FileUpload from '../../shared/FileUpload';
 
 const practiceTypes = [
   { value: 'individual', label: 'Individual Practice' },
@@ -89,14 +88,11 @@ const ProfessionalInfoStep = ({ data, onChange }) => {
     handleChange(field, newArray);
   };
 
-  const handleFileUpload = (files) => {
-    if (files && files.length > 0) {
-      const fileNames = Array.from(files).map((file) => file.name);
-      onChange({
-        ...data,
-        proofOfPractice: [...(data.proofOfPractice || []), ...fileNames],
-      });
-    }
+  const handleFileChange = (urls) => {
+    onChange({
+      ...data,
+      proofOfPractice: urls,
+    });
   };
 
   return (
@@ -262,34 +258,15 @@ const ProfessionalInfoStep = ({ data, onChange }) => {
         </Grid>
 
         <Grid item xs={12}>
-          <input
-            type="file"
-            id="proof-practice"
+          <FileUpload
+            label="Upload Proof of Practice"
+            folder="kyc/proof-of-practice"
             accept=".pdf,.jpg,.jpeg,.png"
-            multiple
-            style={{ display: 'none' }}
-            onChange={(e) => handleFileUpload(e.target.files)}
+            multiple={true}
+            value={data.proofOfPractice || []}
+            onChange={handleFileChange}
+            maxFiles={5}
           />
-          <label htmlFor="proof-practice">
-            <Button
-              component="span"
-              variant="outlined"
-              fullWidth
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                py: 1.5,
-                borderStyle: 'dashed',
-                textTransform: 'none',
-              }}
-            >
-              Upload Proof of Practice
-            </Button>
-          </label>
-          {data.proofOfPractice?.length > 0 && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Uploaded: {data.proofOfPractice.join(', ')}
-            </Typography>
-          )}
         </Grid>
       </Grid>
     </Box>
@@ -297,4 +274,3 @@ const ProfessionalInfoStep = ({ data, onChange }) => {
 };
 
 export default ProfessionalInfoStep;
-
