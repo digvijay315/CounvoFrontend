@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Avatar,
   Button,
   MenuItem as MuiMenuItem,
   IconButton,
@@ -21,15 +20,12 @@ import {
   DialogContent,
   DialogActions,
   Chip,
-  Divider,
   LinearProgress,
   Paper,
+  alpha,
 } from "@mui/material";
 import {
   Chat as ChatIcon,
-  Favorite,
-  FavoriteBorder,
-  Circle as CircleIcon,
   Shuffle as ShuffleIcon,
   Close as CloseIcon,
   Timer as TimerIcon,
@@ -39,23 +35,29 @@ import { useSocket } from "../../context/SocketContext";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/slices/authSlice";
 import {
+  LawyerLanguages,
+  LawyerPracticingCourts,
   LawyerSpecializations,
   LawyerStates,
 } from "../../_constants/dataConstants";
 import LawyerProfileCard from "../dashboard/LawyerProfileCard";
+import { CarFront, IndianRupee, ShieldAlert, WalletCards } from "lucide-react";
 
 // ==================== MAIN COMPONENT ====================
 function FindLawyer() {
   const navigate = useNavigate();
   const { userId } = useAuth();
   const user = useSelector(selectUser);
-  const { onlineLawyers, initiateChatRequest, pendingChatRequest } = useSocket();
+  const { onlineLawyers, initiateChatRequest, pendingChatRequest } =
+    useSocket();
 
   // State
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [specialization, setSpecialization] = useState("");
   const [state, setState] = useState("");
+  const [language, setLanguage] = useState("");
+  const [practicingCourt, setPracticingCourt] = useState("");
   const [lawyers, setLawyers] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
@@ -67,7 +69,8 @@ function FindLawyer() {
 
   // Timer for pending chat request
   const TIMEOUT_SECONDS = 60;
-  const isWaitingForResponse = isConnecting || pendingChatRequest?.status === "pending";
+  const isWaitingForResponse =
+    isConnecting || pendingChatRequest?.status === "pending";
 
   useEffect(() => {
     if (!isWaitingForResponse) {
@@ -154,7 +157,9 @@ function FindLawyer() {
       Swal.fire({
         icon: "info",
         title: "Lawyer Unavailable",
-        text: message || "The lawyer couldn't accept your request. Let's find you another lawyer!",
+        text:
+          message ||
+          "The lawyer couldn't accept your request. Let's find you another lawyer!",
         confirmButtonText: "Find Another Lawyer",
         showCancelButton: true,
         cancelButtonText: "Close",
@@ -172,7 +177,9 @@ function FindLawyer() {
       Swal.fire({
         icon: "warning",
         title: "Request Timed Out",
-        text: message || "The lawyer didn't respond in time. Would you like to try another lawyer?",
+        text:
+          message ||
+          "The lawyer didn't respond in time. Would you like to try another lawyer?",
         confirmButtonText: "Find Another Lawyer",
         showCancelButton: true,
         cancelButtonText: "Close",
@@ -190,7 +197,10 @@ function FindLawyer() {
     return () => {
       window.removeEventListener("chatRequestAccepted", handleChatAccepted);
       window.removeEventListener("chatRequestRejected", handleChatRejected);
-      window.removeEventListener("chatRequestNotAccepted", handleChatNotAccepted);
+      window.removeEventListener(
+        "chatRequestNotAccepted",
+        handleChatNotAccepted
+      );
     };
   }, [navigate, showSuggestionDialog]);
 
@@ -289,7 +299,14 @@ function FindLawyer() {
 
       return true;
     });
-  }, [lawyers, onlineLawyers, specialization, state, isQuickSearch, rejectedByLawyers]);
+  }, [
+    lawyers,
+    onlineLawyers,
+    specialization,
+    state,
+    isQuickSearch,
+    rejectedByLawyers,
+  ]);
 
   // ==================== SUGGESTION LOGIC ====================
   const getRandomLawyer = useCallback(
@@ -474,9 +491,19 @@ function FindLawyer() {
             />
           </Box>
 
-          <CircularProgress size={60} thickness={4} color="primary" sx={{ mb: 2 }} />
-          
-          <Typography variant="h6" fontWeight="600" color="primary" gutterBottom>
+          <CircularProgress
+            size={60}
+            thickness={4}
+            color="primary"
+            sx={{ mb: 2 }}
+          />
+
+          <Typography
+            variant="h6"
+            fontWeight="600"
+            color="primary"
+            gutterBottom
+          >
             Waiting for lawyer to accept...
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -489,10 +516,11 @@ function FindLawyer() {
       <Card variant="outlined" sx={{ mb: 4 }}>
         <CardContent sx={{ py: 4 }}>
           <Stack
-            direction="row"
-            spacing={2}
-            justifyContent="space-between"
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent={{ xs: "center", sm: "space-between" }}
             alignItems="center"
+            flexWrap={{ xs: "wrap", md: "nowrap" }}
+            gap={2}
           >
             <Container maxWidth="md">
               <Typography
@@ -543,14 +571,28 @@ function FindLawyer() {
                   </FormControl>
                   <FormControl sx={{ minWidth: 200 }}>
                     <Select
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
+                      value={language || ""}
+                      onChange={(e) => setLanguage(e.target.value)}
                       displayEmpty
                       size="medium"
                     >
-                      {LawyerStates.map((st) => (
-                        <MuiMenuItem key={st.value} value={st.value}>
-                          {st.label}
+                      {LawyerLanguages.map((lang) => (
+                        <MuiMenuItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </MuiMenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl sx={{ minWidth: 200 }}>
+                    <Select
+                      value={practicingCourt || ""}
+                      onChange={(e) => setPracticingCourt(e.target.value)}
+                      displayEmpty
+                      size="medium"
+                    >
+                      {LawyerPracticingCourts.map((court) => (
+                        <MuiMenuItem key={court.value} value={court.value}>
+                          {court.label}
                         </MuiMenuItem>
                       ))}
                     </Select>
@@ -664,10 +706,10 @@ function FindLawyer() {
               <CardContent sx={{ p: 3, textAlign: "center" }}>
                 <Box
                   sx={{
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     borderRadius: "50%",
-                    bgcolor: "primary.light",
+                    bgcolor: alpha("#ffcd01", 0.4),
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -675,7 +717,7 @@ function FindLawyer() {
                     mb: 2,
                   }}
                 >
-                  <Typography variant="h4" color="primary.main">
+                  <Typography variant="h1" color="primary.main">
                     {searchCard.icon || "⚖️"}
                   </Typography>
                 </Box>
@@ -804,19 +846,9 @@ function FindLawyer() {
 // ==================== PREDEFINED SEARCHES ====================
 const PREDEFINED_SEARCHES = [
   {
-    label: "Financial Advice",
-    description: "Get expert financial advice from a qualified lawyer",
-    icon: "💰",
-    metadata: {
-      specialization: ["civil lawyer"],
-      state: [],
-      practicingCourts: [],
-    },
-  },
-  {
-    label: "Challan Issue",
+    label: "Vehicle Challan",
     description: "Get expert help with your challan issue",
-    icon: "🚗",
+    icon: <CarFront />,
     metadata: {
       specialization: ["civil lawyer"],
       state: [],
@@ -824,21 +856,31 @@ const PREDEFINED_SEARCHES = [
     },
   },
   {
-    label: "Property Disputes",
-    description: "Resolve property and real estate legal matters",
-    icon: "🏠",
+    label: "Cheque Bounce",
+    description: "Get expert help with your cheque bounce issue",
+    icon: <IndianRupee />,
     metadata: {
-      specialization: ["civil lawyer"],
+      specialization: ["criminal lawyer"],
       state: [],
       practicingCourts: [],
     },
   },
   {
-    label: "Family Law",
-    description: "Get assistance with family and matrimonial issues",
-    icon: "👨‍👩‍👧",
+    label: "product/service default",
+    description: "Get expert help with your product/service default issue",
+    icon: <WalletCards />,
     metadata: {
-      specialization: ["civil lawyer"],
+      specialization: ["consumer lawyer"],
+      state: [],
+      practicingCourts: [],
+    },
+  },
+  {
+    label: "Online Fraud",
+    description: "Get expert help with your online fraud issue",
+    icon: <ShieldAlert />,
+    metadata: {
+      specialization: ["cyber lawyer"],
       state: [],
       practicingCourts: [],
     },
