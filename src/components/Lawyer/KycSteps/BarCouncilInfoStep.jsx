@@ -1,49 +1,42 @@
 import React from 'react';
-import {
-  Box,
-  Grid,
-  TextField,
-  MenuItem,
-  Typography,
-  Button,
-} from '@mui/material';
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { Box, Grid, TextField, MenuItem, Typography } from "@mui/material";
+import FileUpload from "../../shared/FileUpload";
 
 const indianStates = [
-  'Andhra Pradesh',
-  'Arunachal Pradesh',
-  'Assam',
-  'Bihar',
-  'Chhattisgarh',
-  'Delhi',
-  'Goa',
-  'Gujarat',
-  'Haryana',
-  'Himachal Pradesh',
-  'Jharkhand',
-  'Karnataka',
-  'Kerala',
-  'Madhya Pradesh',
-  'Maharashtra',
-  'Manipur',
-  'Meghalaya',
-  'Mizoram',
-  'Nagaland',
-  'Odisha',
-  'Punjab',
-  'Rajasthan',
-  'Sikkim',
-  'Tamil Nadu',
-  'Telangana',
-  'Tripura',
-  'Uttar Pradesh',
-  'Uttarakhand',
-  'West Bengal',
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
 ];
 
-const membershipStatuses = ['Active', 'Inactive', 'Suspended', 'Pending'];
+const membershipStatuses = ["Active", "Inactive", "Suspended", "Pending"];
 
-const BarCouncilInfoStep = ({ data, onChange }) => {
+const BarCouncilInfoStep = ({ data, onChange, onUploadingChange }) => {
   const handleChange = (field, value) => {
     onChange({
       ...data,
@@ -51,15 +44,11 @@ const BarCouncilInfoStep = ({ data, onChange }) => {
     });
   };
 
-  const handleFileUpload = (files) => {
-    if (files && files.length > 0) {
-      // In a real implementation, you would upload the files and get the URLs
-      const fileNames = Array.from(files).map((file) => file.name);
-      onChange({
-        ...data,
-        barCertificateUrl: [...(data.barCertificateUrl || []), ...fileNames],
-      });
-    }
+  const handleFileChange = (urls) => {
+    onChange({
+      ...data,
+      barCertificateUrl: urls,
+    });
   };
 
   return (
@@ -75,7 +64,9 @@ const BarCouncilInfoStep = ({ data, onChange }) => {
             fullWidth
             size="small"
             value={data.barEnrollmentNumber}
-            onChange={(e) => handleChange('barEnrollmentNumber', e.target.value)}
+            onChange={(e) =>
+              handleChange("barEnrollmentNumber", e.target.value)
+            }
             placeholder="e.g., MH/12345/2015"
           />
         </Grid>
@@ -87,7 +78,7 @@ const BarCouncilInfoStep = ({ data, onChange }) => {
             fullWidth
             size="small"
             value={data.barState}
-            onChange={(e) => handleChange('barState', e.target.value)}
+            onChange={(e) => handleChange("barState", e.target.value)}
           >
             {indianStates.map((state) => (
               <MenuItem key={state} value={state}>
@@ -104,7 +95,7 @@ const BarCouncilInfoStep = ({ data, onChange }) => {
             size="small"
             type="number"
             value={data.enrollmentYear}
-            onChange={(e) => handleChange('enrollmentYear', e.target.value)}
+            onChange={(e) => handleChange("enrollmentYear", e.target.value)}
             placeholder="e.g., 2015"
           />
         </Grid>
@@ -116,7 +107,7 @@ const BarCouncilInfoStep = ({ data, onChange }) => {
             fullWidth
             size="small"
             value={data.barMembership}
-            onChange={(e) => handleChange('barMembership', e.target.value)}
+            onChange={(e) => handleChange("barMembership", e.target.value)}
           >
             {membershipStatuses.map((status) => (
               <MenuItem key={status} value={status}>
@@ -126,39 +117,18 @@ const BarCouncilInfoStep = ({ data, onChange }) => {
           </TextField>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <input
-            type="file"
-            id="bar-certificate"
+        <Grid item xs={12}>
+          <FileUpload
+            label="Upload Bar Certificate"
+            folder="kyc/bar-certificates"
             accept=".pdf,.jpg,.jpeg,.png"
-            multiple
-            style={{ display: 'none' }}
-            onChange={(e) => handleFileUpload(e.target.files)}
+            multiple={true}
+            value={data.barCertificateUrl || []}
+            onChange={handleFileChange}
+            onUploadingChange={onUploadingChange}
+            maxFiles={3}
           />
-          <label htmlFor="bar-certificate">
-            <Button
-              component="span"
-              variant="outlined"
-              fullWidth
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                height: 40,
-                borderStyle: 'dashed',
-                textTransform: 'none',
-              }}
-            >
-              Upload Bar Certificate
-            </Button>
-          </label>
         </Grid>
-
-        {data.barCertificateUrl?.length > 0 && (
-          <Grid item xs={12}>
-            <Typography variant="caption" color="text.secondary">
-              Uploaded: {data.barCertificateUrl.join(', ')}
-            </Typography>
-          </Grid>
-        )}
       </Grid>
     </Box>
   );

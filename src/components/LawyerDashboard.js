@@ -52,14 +52,14 @@ const LawyerDashboard = () => {
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       color: "primary.main",
     },
-    {
-      label: "Active Cases",
-      value: dashboardData?.consultations || 0,
-      change: "+8%",
-      isPositive: true,
-      icon: <GavelIcon sx={{ fontSize: 40 }} />,
-      color: "success.main",
-    },
+    // {
+    //   label: "Active Cases",
+    //   value: dashboardData?.consultations || 0,
+    //   change: "+8%",
+    //   isPositive: true,
+    //   icon: <GavelIcon sx={{ fontSize: 40 }} />,
+    //   color: "success.main",
+    // },
     {
       label: "Total Revenue",
       value: dashboardData?.totalRevenue || 0,
@@ -126,7 +126,7 @@ const LawyerDashboard = () => {
       {/* Stats Grid */}
       <Grid container spacing={3}>
         {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
+          <Grid item xs={12} sm={6} md={4} key={index}>
             <Card
               sx={{
                 height: "100%",

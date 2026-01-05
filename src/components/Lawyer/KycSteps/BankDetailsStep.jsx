@@ -5,16 +5,15 @@ import {
   TextField,
   MenuItem,
   Typography,
-  Button,
 } from '@mui/material';
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import FileUpload from '../../shared/FileUpload';
 
 const accountTypes = [
   { value: 'savings', label: 'Savings Account' },
   { value: 'current', label: 'Current Account' },
 ];
 
-const BankDetailsStep = ({ data, onChange }) => {
+const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
   const handleChange = (field, value) => {
     onChange({
       ...data,
@@ -22,14 +21,11 @@ const BankDetailsStep = ({ data, onChange }) => {
     });
   };
 
-  const handleFileUpload = (files) => {
-    if (files && files.length > 0) {
-      const fileNames = Array.from(files).map((file) => file.name);
-      onChange({
-        ...data,
-        cancelledChequeUrl: [...(data.cancelledChequeUrl || []), ...fileNames],
-      });
-    }
+  const handleFileChange = (urls) => {
+    onChange({
+      ...data,
+      cancelledChequeUrl: urls,
+    });
   };
 
   return (
@@ -101,44 +97,23 @@ const BankDetailsStep = ({ data, onChange }) => {
         </Grid>
 
         <Grid item xs={12}>
-          <input
-            type="file"
-            id="cancelled-cheque"
+          <FileUpload
+            label="Upload Cancelled Cheque / Bank Statement"
+            folder="kyc/bank-documents"
             accept=".pdf,.jpg,.jpeg,.png"
-            style={{ display: 'none' }}
-            onChange={(e) => handleFileUpload(e.target.files)}
+            multiple={false}
+            value={data.cancelledChequeUrl || []}
+            onChange={handleFileChange}
+            onUploadingChange={onUploadingChange}
+            maxFiles={2}
           />
-          <label htmlFor="cancelled-cheque">
-            <Button
-              component="span"
-              variant="outlined"
-              fullWidth
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                py: 1.5,
-                borderStyle: 'dashed',
-                textTransform: 'none',
-              }}
-            >
-              Upload Cancelled Cheque / Bank Statement
-            </Button>
-          </label>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
             This helps us verify your bank account details
           </Typography>
         </Grid>
-
-        {data.cancelledChequeUrl?.length > 0 && (
-          <Grid item xs={12}>
-            <Typography variant="caption" color="text.secondary">
-              Uploaded: {data.cancelledChequeUrl.join(', ')}
-            </Typography>
-          </Grid>
-        )}
       </Grid>
     </Box>
   );
 };
 
 export default BankDetailsStep;
-

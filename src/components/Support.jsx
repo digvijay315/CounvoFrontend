@@ -132,12 +132,10 @@ function Support() {
         below and we will get back to you as soon as possible.
       </Typography>
       <form onSubmit={sendMail} autoComplete="off" width="100%">
-        <Stack direction="row" spacing={2}>
-          <Box sx={{ flex: 1 }}>
+        <Stack direction="row" flexWrap="wrap" gap={2}>
+          <Box sx={{ flex: 1, minWidth: 200 }}>
             {/* Recipient emails */}
-            <label style={{ fontWeight: 500, fontSize: 15 }}>
-              To
-            </label>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>To</label>
             <div
               style={{
                 display: "flex",
@@ -196,9 +194,7 @@ function Support() {
             </div>
 
             {/* Subject */}
-            <label style={{ fontWeight: 500, fontSize: 15 }}>
-              Subject
-            </label>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>Subject</label>
             <input
               type="text"
               value={subject}
@@ -216,9 +212,7 @@ function Support() {
               }}
             />
             {/* Attachments */}
-            <label style={{ fontWeight: 500, fontSize: 15 }}>
-              Attachments
-            </label>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>Attachments</label>
             <div
               {...getRootProps()}
               style={{
@@ -274,11 +268,9 @@ function Support() {
               ))}
             </div>
           </Box>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 200 }}>
             {/* Message */}
-            <label style={{ fontWeight: 500, fontSize: 15 }}>
-              Message
-            </label>
+            <label style={{ fontWeight: 500, fontSize: 15 }}>Message</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}

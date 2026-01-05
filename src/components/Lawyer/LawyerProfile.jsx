@@ -231,7 +231,7 @@ const LawyerProfile = () => {
                     justifyContent: "center",
                   }}
                 >
-                  <Button
+                  {/* <Button
                     size="small"
                     variant="contained"
                     color="primary"
@@ -239,8 +239,8 @@ const LawyerProfile = () => {
                     onClick={handleShow1}
                   >
                     Edit Profile
-                  </Button>
-                  <Button
+                  </Button> */}
+                  {/* <Button
                     size="small"
                     variant="outlined"
                     color="primary"
@@ -248,7 +248,7 @@ const LawyerProfile = () => {
                     onClick={handleShow}
                   >
                     Complete Profile
-                  </Button>
+                  </Button> */}
                 </Box>
               </Stack>
             </Box>

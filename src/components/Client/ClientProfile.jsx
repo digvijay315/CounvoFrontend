@@ -231,7 +231,7 @@ const ClientProfile = () => {
                     justifyContent: "center",
                   }}
                 >
-                  <Button
+                  {/* <Button
                     size="small"
                     variant="contained"
                     color="primary"
@@ -239,8 +239,8 @@ const ClientProfile = () => {
                     onClick={handleShow1}
                   >
                     Edit Profile
-                  </Button>
-                  <Button
+                  </Button> */}
+                  {/* <Button
                     size="small"
                     variant="outlined"
                     color="primary"
@@ -248,7 +248,7 @@ const ClientProfile = () => {
                     onClick={handleShow}
                   >
                     Complete Profile
-                  </Button>
+                  </Button> */}
                 </Box>
               </Stack>
             </Box>

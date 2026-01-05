@@ -5,9 +5,8 @@ import {
   TextField,
   MenuItem,
   Typography,
-  Button,
 } from '@mui/material';
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import FileUpload from '../../shared/FileUpload';
 
 const documentTypes = [
   { value: 'aadhaar', label: 'Aadhaar Card' },
@@ -25,14 +24,11 @@ const IdentityProofStep = ({ data, onChange }) => {
     });
   };
 
-  const handleFileUpload = (files) => {
-    if (files && files.length > 0) {
-      const fileNames = Array.from(files).map((file) => file.name);
-      onChange({
-        ...data,
-        documentUrls: [...(data.documentUrls || []), ...fileNames],
-      });
-    }
+  const handleFileChange = (urls) => {
+    onChange({
+      ...data,
+      documentUrls: urls,
+    });
   };
 
   const getPlaceholder = () => {
@@ -88,45 +84,22 @@ const IdentityProofStep = ({ data, onChange }) => {
         </Grid>
 
         <Grid item xs={12}>
-          <input
-            type="file"
-            id="identity-docs"
+          <FileUpload
+            label="Upload Document (Front & Back)"
+            folder="kyc/identity-proof"
             accept=".pdf,.jpg,.jpeg,.png"
-            multiple
-            style={{ display: 'none' }}
-            onChange={(e) => handleFileUpload(e.target.files)}
+            multiple={true}
+            value={data.documentUrls || []}
+            onChange={handleFileChange}
+            maxFiles={2}
           />
-          <label htmlFor="identity-docs">
-            <Button
-              component="span"
-              variant="outlined"
-              fullWidth
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                py: 1.5,
-                borderStyle: 'dashed',
-                textTransform: 'none',
-              }}
-            >
-              Upload Document (Front & Back)
-            </Button>
-          </label>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
             Please upload both front and back side of your document
           </Typography>
         </Grid>
-
-        {data.documentUrls?.length > 0 && (
-          <Grid item xs={12}>
-            <Typography variant="caption" color="text.secondary">
-              Uploaded: {data.documentUrls.join(', ')}
-            </Typography>
-          </Grid>
-        )}
       </Grid>
     </Box>
   );
 };
 
 export default IdentityProofStep;
-

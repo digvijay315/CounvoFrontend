@@ -2,27 +2,23 @@ import React, { useState, useImperativeHandle, forwardRef } from "react";
 import {
   Typography,
   IconButton,
-  Badge,
   Menu,
   MenuItem,
   Avatar,
-  Box, Divider,
+  Box,
+  Divider,
   ListItemIcon,
   ListItemText,
   Tooltip,
   useTheme,
   alpha,
-  Stack
+  Stack,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  Notifications as NotificationsIcon,
-  Settings as SettingsIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
   Email as EmailIcon,
-  Error,
-  CheckCircle,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { APP_CONFIG } from "../../_constants/config";

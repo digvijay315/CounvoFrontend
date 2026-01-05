@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Avatar,
   Button,
   MenuItem as MuiMenuItem,
   IconButton,
@@ -21,15 +20,12 @@ import {
   DialogContent,
   DialogActions,
   Chip,
-  Divider,
   LinearProgress,
   Paper,
+  alpha,
 } from "@mui/material";
 import {
   Chat as ChatIcon,
-  Favorite,
-  FavoriteBorder,
-  Circle as CircleIcon,
   Shuffle as ShuffleIcon,
   Close as CloseIcon,
   Timer as TimerIcon,
@@ -39,23 +35,29 @@ import { useSocket } from "../../context/SocketContext";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/slices/authSlice";
 import {
+  LawyerLanguages,
+  LawyerPracticingCourts,
   LawyerSpecializations,
   LawyerStates,
 } from "../../_constants/dataConstants";
 import LawyerProfileCard from "../dashboard/LawyerProfileCard";
+import { CarFront, IndianRupee, ShieldAlert, WalletCards } from "lucide-react";
 
 // ==================== MAIN COMPONENT ====================
 function FindLawyer() {
   const navigate = useNavigate();
   const { userId } = useAuth();
   const user = useSelector(selectUser);
-  const { onlineLawyers, initiateChatRequest, pendingChatRequest } = useSocket();
+  const { onlineLawyers, initiateChatRequest, pendingChatRequest } =
+    useSocket();
 
   // State
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [specialization, setSpecialization] = useState("");
   const [state, setState] = useState("");
+  const [language, setLanguage] = useState("");
+  const [practicingCourt, setPracticingCourt] = useState("");
   const [lawyers, setLawyers] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
@@ -67,7 +69,8 @@ function FindLawyer() {
 
   // Timer for pending chat request
   const TIMEOUT_SECONDS = 60;
-  const isWaitingForResponse = isConnecting || pendingChatRequest?.status === "pending";
+  const isWaitingForResponse =
+    isConnecting || pendingChatRequest?.status === "pending";
 
   useEffect(() => {
     if (!isWaitingForResponse) {
@@ -154,7 +157,9 @@ function FindLawyer() {
       Swal.fire({
         icon: "info",
         title: "Lawyer Unavailable",
-        text: message || "The lawyer couldn't accept your request. Let's find you another lawyer!",
+        text:
+          message ||
+          "The lawyer couldn't accept your request. Let's find you another lawyer!",
         confirmButtonText: "Find Another Lawyer",
         showCancelButton: true,
         cancelButtonText: "Close",
@@ -172,7 +177,9 @@ function FindLawyer() {
       Swal.fire({
         icon: "warning",
         title: "Request Timed Out",
-        text: message || "The lawyer didn't respond in time. Would you like to try another lawyer?",
+        text:
+          message ||
+          "The lawyer didn't respond in time. Would you like to try another lawyer?",
         confirmButtonText: "Find Another Lawyer",
         showCancelButton: true,
         cancelButtonText: "Close",
@@ -190,7 +197,10 @@ function FindLawyer() {
     return () => {
       window.removeEventListener("chatRequestAccepted", handleChatAccepted);
       window.removeEventListener("chatRequestRejected", handleChatRejected);
-      window.removeEventListener("chatRequestNotAccepted", handleChatNotAccepted);
+      window.removeEventListener(
+        "chatRequestNotAccepted",
+        handleChatNotAccepted
+      );
     };
   }, [navigate, showSuggestionDialog]);
 
@@ -254,42 +264,50 @@ function FindLawyer() {
       // Exclude lawyers who have rejected this user
       if (rejectedByLawyers.includes(lawyer._id)) return false;
 
+      let lawyerSpecializations =
+          lawyer?.lawyerKycId?.professionalInfo?.specializations || [],
+        lawyerLanguages =
+          lawyer?.lawyerKycId?.professionalInfo?.languages || [],
+        lawyerPracticingCourts =
+          lawyer?.lawyerKycId?.professionalInfo?.practicingCourts || [];
+
       // Filter by specialization
       if (specialization) {
-        const hasSpecialization = Array.isArray(lawyer.specializations)
-          ? lawyer.specializations.some((spec) => {
-              // Strict matching for quick search, fuzzy for manual search
-              if (isQuickSearch) {
-                return (
-                  spec.label?.toLowerCase() === specialization.toLowerCase()
-                );
-              }
-              return spec.label
-                ?.toLowerCase()
-                .includes(specialization.toLowerCase());
-            })
-          : isQuickSearch
-          ? (
-              lawyer.specializations?.label ||
-              lawyer.specializations ||
-              ""
-            ).toLowerCase() === specialization.toLowerCase()
-          : (lawyer.specializations?.label || lawyer.specializations || "")
-              .toLowerCase()
-              .includes(specialization.toLowerCase());
+        const hasSpecialization = lawyerSpecializations.includes(
+          specialization.toLowerCase()
+        );
         if (!hasSpecialization) return false;
       }
 
-      // Filter by state
-      if (state) {
-        if (!lawyer.state?.toLowerCase().includes(state.toLowerCase())) {
-          return false;
+      try {
+        // Filter by language
+        if (language) {
+          const hasLanguage = lawyerLanguages.includes(language.toLowerCase());
+          if (!hasLanguage) return false;
         }
+
+        // Filter by practicing court
+        if (practicingCourt) {
+          const hasPracticingCourt = lawyerPracticingCourts.includes(
+            practicingCourt.toLowerCase()
+          );
+          if (!hasPracticingCourt) return false;
+        }
+      } catch (error) {
+        console.error("Error filtering lawyers:", error);
+        return false;
       }
 
       return true;
     });
-  }, [lawyers, onlineLawyers, specialization, state, isQuickSearch, rejectedByLawyers]);
+  }, [
+    lawyers,
+    onlineLawyers,
+    specialization,
+    state,
+    isQuickSearch,
+    rejectedByLawyers,
+  ]);
 
   // ==================== SUGGESTION LOGIC ====================
   const getRandomLawyer = useCallback(
@@ -312,17 +330,14 @@ function FindLawyer() {
   );
 
   const findSuggestedLawyer = useCallback(() => {
-    // Priority 1: Lawyers matching user preferences (specialization + state)
-    const preferredLawyers = filteredLawyers.filter((lawyer) => {
-      if (specialization && state) {
-        // Both filters applied
-        return true; // Already filtered by filteredLawyers
-      }
-      return true;
-    });
+    // Priority 1: Lawyers matching user preferences (specialization + language + practicingCourt)
+    const preferredLawyers = filteredLawyers;
 
     // Priority 2: If preferences set and matches found
-    if (preferredLawyers.length > 0 && (specialization || state)) {
+    if (
+      preferredLawyers.length > 0 &&
+      (specialization || language || practicingCourt)
+    ) {
       const lawyer = getRandomLawyer(preferredLawyers);
       setSuggestedLawyer(lawyer);
       setUsedLawyerIds((prev) => [...prev, lawyer._id]);
@@ -344,7 +359,13 @@ function FindLawyer() {
       text: "No lawyers are currently online matching your criteria. Please try adjusting your filters or check back later.",
       showConfirmButton: true,
     });
-  }, [filteredLawyers, specialization, state, getRandomLawyer]);
+  }, [
+    filteredLawyers,
+    specialization,
+    language,
+    practicingCourt,
+    getRandomLawyer,
+  ]);
 
   const handleFindLawyer = () => {
     if (filteredLawyers.length === 0) {
@@ -369,10 +390,12 @@ function FindLawyer() {
   const handleQuickSearch = (searchCard) => {
     // Set filters from predefined card
     const spec = searchCard.metadata.specialization[0] || "";
-    const st = searchCard.metadata.state[0] || "";
+    const lng = searchCard.metadata.language[0] || "";
+    const pCourt = searchCard.metadata.practicingCourts[0] || "";
 
     setSpecialization(spec);
-    setState(st);
+    setLanguage(lng);
+    setPracticingCourt(pCourt);
     setIsQuickSearch(true);
 
     // Reset used lawyer IDs for new search
@@ -395,7 +418,8 @@ function FindLawyer() {
     // Reset filters if it was a quick search
     if (isQuickSearch) {
       setSpecialization("");
-      setState("");
+      setLanguage("");
+      setPracticingCourt("");
       setIsQuickSearch(false);
     }
   };
@@ -474,9 +498,19 @@ function FindLawyer() {
             />
           </Box>
 
-          <CircularProgress size={60} thickness={4} color="primary" sx={{ mb: 2 }} />
-          
-          <Typography variant="h6" fontWeight="600" color="primary" gutterBottom>
+          <CircularProgress
+            size={60}
+            thickness={4}
+            color="primary"
+            sx={{ mb: 2 }}
+          />
+
+          <Typography
+            variant="h6"
+            fontWeight="600"
+            color="primary"
+            gutterBottom
+          >
             Waiting for lawyer to accept...
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -489,10 +523,11 @@ function FindLawyer() {
       <Card variant="outlined" sx={{ mb: 4 }}>
         <CardContent sx={{ py: 4 }}>
           <Stack
-            direction="row"
-            spacing={2}
-            justifyContent="space-between"
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent={{ xs: "center", sm: "space-between" }}
             alignItems="center"
+            flexWrap={{ xs: "wrap", md: "nowrap" }}
+            gap={2}
           >
             <Container maxWidth="md">
               <Typography
@@ -543,14 +578,28 @@ function FindLawyer() {
                   </FormControl>
                   <FormControl sx={{ minWidth: 200 }}>
                     <Select
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
+                      value={language || ""}
+                      onChange={(e) => setLanguage(e.target.value)}
                       displayEmpty
                       size="medium"
                     >
-                      {LawyerStates.map((st) => (
-                        <MuiMenuItem key={st.value} value={st.value}>
-                          {st.label}
+                      {LawyerLanguages.map((lang) => (
+                        <MuiMenuItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </MuiMenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl sx={{ minWidth: 200 }}>
+                    <Select
+                      value={practicingCourt || ""}
+                      onChange={(e) => setPracticingCourt(e.target.value)}
+                      displayEmpty
+                      size="medium"
+                    >
+                      {LawyerPracticingCourts.map((court) => (
+                        <MuiMenuItem key={court.value} value={court.value}>
+                          {court.label}
                         </MuiMenuItem>
                       ))}
                     </Select>
@@ -664,10 +713,10 @@ function FindLawyer() {
               <CardContent sx={{ p: 3, textAlign: "center" }}>
                 <Box
                   sx={{
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     borderRadius: "50%",
-                    bgcolor: "primary.light",
+                    bgcolor: alpha("#ffcd01", 0.4),
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -675,7 +724,7 @@ function FindLawyer() {
                     mb: 2,
                   }}
                 >
-                  <Typography variant="h4" color="primary.main">
+                  <Typography variant="h1" color="primary.main">
                     {searchCard.icon || "⚖️"}
                   </Typography>
                 </Box>
@@ -724,7 +773,7 @@ function FindLawyer() {
           }}
         >
           <Typography variant="h5" fontWeight="600" textAlign="center">
-            {specialization || state
+            {specialization || practicingCourt || language
               ? "Suggested Lawyer (Based on Your Preferences)"
               : "Suggested Lawyer"}
           </Typography>
@@ -804,42 +853,42 @@ function FindLawyer() {
 // ==================== PREDEFINED SEARCHES ====================
 const PREDEFINED_SEARCHES = [
   {
-    label: "Financial Advice",
-    description: "Get expert financial advice from a qualified lawyer",
-    icon: "💰",
-    metadata: {
-      specialization: ["civil lawyer"],
-      state: [],
-      practicingCourts: [],
-    },
-  },
-  {
-    label: "Challan Issue",
+    label: "Vehicle Challan",
     description: "Get expert help with your challan issue",
-    icon: "🚗",
+    icon: <CarFront />,
     metadata: {
       specialization: ["civil lawyer"],
-      state: [],
+      language: [],
       practicingCourts: [],
     },
   },
   {
-    label: "Property Disputes",
-    description: "Resolve property and real estate legal matters",
-    icon: "🏠",
+    label: "Cheque Bounce",
+    description: "Get expert help with your cheque bounce issue",
+    icon: <IndianRupee />,
     metadata: {
-      specialization: ["civil lawyer"],
-      state: [],
+      specialization: ["criminal lawyer"],
+      language: [],
       practicingCourts: [],
     },
   },
   {
-    label: "Family Law",
-    description: "Get assistance with family and matrimonial issues",
-    icon: "👨‍👩‍👧",
+    label: "product/service default",
+    description: "Get expert help with your product/service default issue",
+    icon: <WalletCards />,
     metadata: {
-      specialization: ["civil lawyer"],
-      state: [],
+      specialization: ["consumer lawyer"],
+      language: [],
+      practicingCourts: [],
+    },
+  },
+  {
+    label: "Online Fraud",
+    description: "Get expert help with your online fraud issue",
+    icon: <ShieldAlert />,
+    metadata: {
+      specialization: ["cyber lawyer"],
+      language: [],
       practicingCourts: [],
     },
   },
