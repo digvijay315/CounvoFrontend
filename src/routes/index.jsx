@@ -29,6 +29,7 @@ import ManageApprovals from "../components/Admin/ManageApprovals";
 import AdminManageUsers from "../components/Admin/AdminManageUsers";
 import ChatPage from "../components/shared/ChatPage";
 import LawyerClients from "../components/LawyerClients";
+import TermsAndConditions from "../components/terms&condition";
 
 const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
   const { user } = useAuth();
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: "/aboutus", element: <AboutUs /> },
       { path: "/contactus", element: <ContactUs /> },
       { path: "/privacy-policy", element: <Privacyolicy /> },
+      { path: "/termsandconditions", element: <TermsAndConditions /> },
       { path: "/shipping-policy", element: <ShippingPolicy /> },
       { path: "/cancellation-policy", element: <CancelliationPolicy /> },
       {

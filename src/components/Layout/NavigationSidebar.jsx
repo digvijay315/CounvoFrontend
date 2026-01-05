@@ -16,24 +16,14 @@ import {
   useMediaQuery,
   useTheme,
   Avatar,
-  IconButton,
   Tooltip,
   Divider,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import {
-  ExitToApp as LogoutIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-  Menu as MenuIcon,
-} from "@mui/icons-material";
+import { ExitToApp as LogoutIcon } from "@mui/icons-material";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { APP_CONFIG } from "../../_constants/config";
-import {
-  GetNavigationMenuItems,
-  NAVIGATION_CONSTANTS,
-} from "../../_constants/navigationConstants";
-import { useSelector } from "react-redux";
+import { GetNavigationMenuItems } from "../../_constants/navigationConstants";
 import LogoHorizontal from "../../components/counvoImg/LogoHorizontal.png";
 import LogoIcon from "../../components/counvoImg/LogoIcon.jpg";
 import useAuth from "../../hooks/useAuth";

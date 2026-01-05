@@ -62,7 +62,7 @@ export const LawyerStates = [
 ];
 
 export const LawyerPracticingCourts = [
-  { value: "", label: "All Courts" },
+  { value: "", label: "Select Practicing Court" },
   { value: "other", label: "Other" },
   { value: "tis_hazari_court", label: "Tis Hazari Court" },
   { value: "saket_court", label: "Saket Court" },
