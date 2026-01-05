@@ -264,37 +264,38 @@ function FindLawyer() {
       // Exclude lawyers who have rejected this user
       if (rejectedByLawyers.includes(lawyer._id)) return false;
 
+      let lawyerSpecializations =
+          lawyer?.lawyerKycId?.professionalInfo?.specializations || [],
+        lawyerLanguages =
+          lawyer?.lawyerKycId?.professionalInfo?.languages || [],
+        lawyerPracticingCourts =
+          lawyer?.lawyerKycId?.professionalInfo?.practicingCourts || [];
+
       // Filter by specialization
       if (specialization) {
-        const hasSpecialization = Array.isArray(lawyer.specializations)
-          ? lawyer.specializations.some((spec) => {
-              // Strict matching for quick search, fuzzy for manual search
-              if (isQuickSearch) {
-                return (
-                  spec.label?.toLowerCase() === specialization.toLowerCase()
-                );
-              }
-              return spec.label
-                ?.toLowerCase()
-                .includes(specialization.toLowerCase());
-            })
-          : isQuickSearch
-          ? (
-              lawyer.specializations?.label ||
-              lawyer.specializations ||
-              ""
-            ).toLowerCase() === specialization.toLowerCase()
-          : (lawyer.specializations?.label || lawyer.specializations || "")
-              .toLowerCase()
-              .includes(specialization.toLowerCase());
+        const hasSpecialization = lawyerSpecializations.includes(
+          specialization.toLowerCase()
+        );
         if (!hasSpecialization) return false;
       }
 
-      // Filter by state
-      if (state) {
-        if (!lawyer.state?.toLowerCase().includes(state.toLowerCase())) {
-          return false;
+      try {
+        // Filter by language
+        if (language) {
+          const hasLanguage = lawyerLanguages.includes(language.toLowerCase());
+          if (!hasLanguage) return false;
         }
+
+        // Filter by practicing court
+        if (practicingCourt) {
+          const hasPracticingCourt = lawyerPracticingCourts.includes(
+            practicingCourt.toLowerCase()
+          );
+          if (!hasPracticingCourt) return false;
+        }
+      } catch (error) {
+        console.error("Error filtering lawyers:", error);
+        return false;
       }
 
       return true;
@@ -329,17 +330,14 @@ function FindLawyer() {
   );
 
   const findSuggestedLawyer = useCallback(() => {
-    // Priority 1: Lawyers matching user preferences (specialization + state)
-    const preferredLawyers = filteredLawyers.filter((lawyer) => {
-      if (specialization && state) {
-        // Both filters applied
-        return true; // Already filtered by filteredLawyers
-      }
-      return true;
-    });
+    // Priority 1: Lawyers matching user preferences (specialization + language + practicingCourt)
+    const preferredLawyers = filteredLawyers;
 
     // Priority 2: If preferences set and matches found
-    if (preferredLawyers.length > 0 && (specialization || state)) {
+    if (
+      preferredLawyers.length > 0 &&
+      (specialization || language || practicingCourt)
+    ) {
       const lawyer = getRandomLawyer(preferredLawyers);
       setSuggestedLawyer(lawyer);
       setUsedLawyerIds((prev) => [...prev, lawyer._id]);
@@ -361,7 +359,13 @@ function FindLawyer() {
       text: "No lawyers are currently online matching your criteria. Please try adjusting your filters or check back later.",
       showConfirmButton: true,
     });
-  }, [filteredLawyers, specialization, state, getRandomLawyer]);
+  }, [
+    filteredLawyers,
+    specialization,
+    language,
+    practicingCourt,
+    getRandomLawyer,
+  ]);
 
   const handleFindLawyer = () => {
     if (filteredLawyers.length === 0) {
@@ -386,10 +390,12 @@ function FindLawyer() {
   const handleQuickSearch = (searchCard) => {
     // Set filters from predefined card
     const spec = searchCard.metadata.specialization[0] || "";
-    const st = searchCard.metadata.state[0] || "";
+    const lng = searchCard.metadata.language[0] || "";
+    const pCourt = searchCard.metadata.practicingCourts[0] || "";
 
     setSpecialization(spec);
-    setState(st);
+    setLanguage(lng);
+    setPracticingCourt(pCourt);
     setIsQuickSearch(true);
 
     // Reset used lawyer IDs for new search
@@ -412,7 +418,8 @@ function FindLawyer() {
     // Reset filters if it was a quick search
     if (isQuickSearch) {
       setSpecialization("");
-      setState("");
+      setLanguage("");
+      setPracticingCourt("");
       setIsQuickSearch(false);
     }
   };
@@ -766,7 +773,7 @@ function FindLawyer() {
           }}
         >
           <Typography variant="h5" fontWeight="600" textAlign="center">
-            {specialization || state
+            {specialization || practicingCourt || language
               ? "Suggested Lawyer (Based on Your Preferences)"
               : "Suggested Lawyer"}
           </Typography>
@@ -851,7 +858,7 @@ const PREDEFINED_SEARCHES = [
     icon: <CarFront />,
     metadata: {
       specialization: ["civil lawyer"],
-      state: [],
+      language: [],
       practicingCourts: [],
     },
   },
@@ -861,7 +868,7 @@ const PREDEFINED_SEARCHES = [
     icon: <IndianRupee />,
     metadata: {
       specialization: ["criminal lawyer"],
-      state: [],
+      language: [],
       practicingCourts: [],
     },
   },
@@ -871,7 +878,7 @@ const PREDEFINED_SEARCHES = [
     icon: <WalletCards />,
     metadata: {
       specialization: ["consumer lawyer"],
-      state: [],
+      language: [],
       practicingCourts: [],
     },
   },
@@ -881,7 +888,7 @@ const PREDEFINED_SEARCHES = [
     icon: <ShieldAlert />,
     metadata: {
       specialization: ["cyber lawyer"],
-      state: [],
+      language: [],
       practicingCourts: [],
     },
   },
