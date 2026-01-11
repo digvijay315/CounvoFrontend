@@ -214,13 +214,17 @@ const ManageBlogs = () => {
   const [featureImagePreview, setFeaturedImagePreview] = useState(null);
   useEffect(() => {
     if (blogData?.featuredImage) {
-      getDownloadUrl(blogData?.featuredImage).then((data) => {
-        if (data?.success) {
-          setFeaturedImagePreview(data?.signedUrl);
-        } else {
-          setFeaturedImagePreview(null);
-        }
-      });
+      if (blogData?.featuredImage?.startsWith("https")) {
+        setFeaturedImagePreview(blogData?.featuredImage);
+      } else {
+        getDownloadUrl(blogData?.featuredImage).then((data) => {
+          if (data?.success) {
+            setFeaturedImagePreview(data?.signedUrl);
+          } else {
+            setFeaturedImagePreview(null);
+          }
+        });
+      }
     } else {
       setFeaturedImagePreview(null);
     }
