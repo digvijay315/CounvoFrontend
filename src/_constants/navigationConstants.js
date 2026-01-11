@@ -8,9 +8,11 @@ import {
   Checklist,
   Person,
 } from "@mui/icons-material";
+import { Files } from "lucide-react";
 
 export const NAVIGATION_CONSTANTS = {
   MANAGE_APPROVALS_PATH: "/dashboard/manageapprovals",
+  MANAGE_BLOGS_PATH: "/dashboard/manageblogs",
   MANAGE_USERS_PATH: "/dashboard/manageusers",
   LAWYER_PUBLIC_PROFILE_PATH: "/dashboard/lawyerprofile",
   PROFILE_PATH: "/dashboard/profile",
@@ -70,6 +72,12 @@ export const NAVIGATION_MENU_ITEMS = [
     label: "Manage Approvals",
     path: NAVIGATION_CONSTANTS.MANAGE_APPROVALS_PATH,
     icon: <Checklist />,
+    allowedRoles: ["admin"],
+  },
+  {
+    label: "Manage Blogs",
+    path: NAVIGATION_CONSTANTS.MANAGE_BLOGS_PATH,
+    icon: <Files />,
     allowedRoles: ["admin"],
   },
   {
