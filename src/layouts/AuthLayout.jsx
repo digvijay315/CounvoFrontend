@@ -29,9 +29,9 @@ const AuthLayout = () => {
           <div className="auth-footer">
             <p>&copy; 2025 Counvo. All rights reserved.</p>
             <div className="auth-footer-links">
-              <a href="/privacy-policy">Privacy Policy</a>
+              <a href="https://counvo.in/privacy-policy">Privacy Policy</a>
               <span>•</span>
-              <a href="/termsandconditions">Terms of Service</a>
+              <a href="https://counvo.in/terms-conditions">Terms of Service</a>
             </div>
           </div>
         </div>

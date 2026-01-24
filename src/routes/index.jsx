@@ -10,14 +10,7 @@ import Support from "../components/Support";
 import AdminPanel from "../components/AdminPanel";
 import LawyerDashboard from "../components/LawyerDashboard";
 import LawyerConsultationHistory from "../components/Lawyer/LawyerConsultationHistory";
-import Payment from "../components/Client/Payment";
 import AdminReport from "../components/Admin/AdminReport";
-import Home from "../components/home";
-import ShippingPolicy from "../components/shipping_policy";
-import CancelliationPolicy from "../components/cancellation_policy";
-import Privacyolicy from "../components/privacy_policy";
-import ContactUs from "../components/contactus";
-import AboutUs from "../components/aboutus";
 import useAuth from "../hooks/useAuth";
 import GuestRoute from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
@@ -29,7 +22,6 @@ import ManageApprovals from "../components/Admin/ManageApprovals";
 import AdminManageUsers from "../components/Admin/AdminManageUsers";
 import ChatPage from "../components/shared/ChatPage";
 import LawyerClients from "../components/LawyerClients";
-import TermsAndConditions from "../components/terms&condition";
 import ManageBlogs from "../components/Admin/ManageBlogs";
 
 const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
@@ -43,32 +35,11 @@ const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
       return UserElement ?? null;
   }
 };
-/* <Route path="/" element={<Home />}></Route>
-              <Route path="/aboutus" element={<AboutUs />}></Route>
-              <Route path="/contactus" element={<ContactUs />}></Route>
-              <Route path="/privacy-policy" element={<Privacyolicy />}></Route>
-              <Route
-                path="/shipping-policy"
-                element={<ShippingPolicy />}
-              ></Route>
-              <Route
-                path="/cancellation-policy"
-                element={<CancelliationPolicy />}
-              /> */
+
 const router = createBrowserRouter([
   {
     element: <GuestRoute />,
     children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-      { path: "/aboutus", element: <AboutUs /> },
-      { path: "/contactus", element: <ContactUs /> },
-      { path: "/privacy-policy", element: <Privacyolicy /> },
-      { path: "/termsandconditions", element: <TermsAndConditions /> },
-      { path: "/shipping-policy", element: <ShippingPolicy /> },
-      { path: "/cancellation-policy", element: <CancelliationPolicy /> },
       {
         path: "/auth",
         element: <AuthLayout />,
@@ -136,7 +107,6 @@ const router = createBrowserRouter([
             ),
           },
           { path: NAVIGATION_CONSTANTS.SUPPORT_PATH, element: <Support /> },
-          { path: NAVIGATION_CONSTANTS.PAYMENT_PATH, element: <Payment /> },
           { path: NAVIGATION_CONSTANTS.REPORT_PATH, element: <AdminReport /> },
           {
             path: NAVIGATION_CONSTANTS.MANAGE_APPROVALS_PATH,

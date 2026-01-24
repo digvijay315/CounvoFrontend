@@ -21,7 +21,6 @@ export const NAVIGATION_CONSTANTS = {
   HISTORY_PATH: "/dashboard/history",
   SUPPORT_PATH: "/dashboard/support",
   CLIENTS_PATH: "/dashboard/clients",
-  PAYMENT_PATH: "/dashboard/payment",
   REPORT_PATH: "/dashboard/report",
   FIND_LAWYER_PATH: "/dashboard/findlawyer",
   DASHBOARD_PATH: "/dashboard",
