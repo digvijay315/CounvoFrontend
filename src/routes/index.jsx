@@ -106,6 +106,7 @@ const router = createBrowserRouter([
               />
             ),
           },
+
           { path: NAVIGATION_CONSTANTS.SUPPORT_PATH, element: <Support /> },
           { path: NAVIGATION_CONSTANTS.REPORT_PATH, element: <AdminReport /> },
           {
