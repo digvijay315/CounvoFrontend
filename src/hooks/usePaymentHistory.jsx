@@ -18,8 +18,8 @@ const usePaymentHistory = (page = 1, limit = 10, status = null) => {
     try {
       const params = { page, limit };
       if (status) params.status = status;
-
-      const response = await api.get("/api/v2/payment/client/history", {
+      let url = userRole === UserRoles.CUSTOMER ? "/api/v2/payment/client/history" : "/api/v2/admin/payments";
+      const response = await api.get(url, {
         params,
       });
 

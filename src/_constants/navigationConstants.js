@@ -9,8 +9,10 @@ import {
   Person,
 } from "@mui/icons-material";
 import { Files } from "lucide-react";
+import { FaRupeeSign } from "react-icons/fa";
 
 export const NAVIGATION_CONSTANTS = {
+  MANAGE_PAYMENTS_PATH: "/dashboard/managepayments",
   MANAGE_APPROVALS_PATH: "/dashboard/manageapprovals",
   MANAGE_BLOGS_PATH: "/dashboard/manageblogs",
   MANAGE_USERS_PATH: "/dashboard/manageusers",
@@ -83,6 +85,12 @@ export const NAVIGATION_MENU_ITEMS = [
     label: "Manage Users",
     path: NAVIGATION_CONSTANTS.MANAGE_USERS_PATH,
     icon: <People />,
+    allowedRoles: ["admin"],
+  },
+  {
+    label: "Manage Payments",
+    path: NAVIGATION_CONSTANTS.MANAGE_PAYMENTS_PATH,
+    icon: <FaRupeeSign />,
     allowedRoles: ["admin"],
   },
 ];

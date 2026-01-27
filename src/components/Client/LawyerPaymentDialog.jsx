@@ -52,10 +52,13 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
   };
 
   const handlePaymentDetailsChange = (field) => (event) => {
-    setPaymentDetails((prev) => ({
-      ...prev,
-      [field]: event.target.value,
-    }));
+    let value = event.target.value;
+    if (value > 0) {
+      setPaymentDetails((prev) => ({
+        ...prev,
+        [field]: event.target.value,
+      }));
+    }
   };
 
   const handlePayment = async () => {
@@ -93,13 +96,14 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
     >
       <DialogTitle>Payment Details</DialogTitle>
       <DialogContent>
-        <Stack direction={{ xs: "column", lg: amountEntered ? "row" : "column" }} spacing={2}>
+        <Stack direction={{ xs: "column", md: amountEntered ? "row" : "column" }} spacing={2}>
           <Box sx={{ minWidth: "60%", pt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
             <TextField
               label="Amount"
               type="number"
               fullWidth
               required
+
               value={paymentDetails.amount}
               onChange={handlePaymentDetailsChange("amount")}
               InputProps={{
@@ -169,13 +173,13 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                         />
                       }
                       sx={{
-                        width: '100%',
                         justifyContent: 'space-between',
                         textTransform: 'none',
                         color: 'text.secondary',
-                        p: 1,
+                        p: 0,
                         '&:hover': {
-                          bgcolor: 'action.hover',
+                          bgcolor: 'transparent',
+                          boxShadow: 'none',
                         },
                       }}
                     >
@@ -185,7 +189,7 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                     </Button>
 
                     <Collapse in={showFeeBreakdown}>
-                      <Stack spacing={1.5} sx={{ mt: 1, pl: 2, pr: 1 }}>
+                      <Stack spacing={1.5} sx={{ mt: 1 }}>
                         {/* Platform Fee */}
                         <Stack
                           direction="row"
@@ -193,7 +197,7 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                           alignItems="center"
                         >
                           <Typography variant="body2" color="text.secondary">
-                            Platform Fee ({(PlatformFee * 100).toFixed(0)}%)
+                            Platform Fee
                           </Typography>
                           <Typography variant="body2" fontWeight="600">
                             +₹{(Number(paymentDetails.amount) * PlatformFee).toFixed(2)}
@@ -250,7 +254,7 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                       display: "flex",
                       alignItems: "center",
                       gap: 1,
-                      p: 1.5,
+                      mt: 1,
                       bgcolor: "info.lighter",
                       borderRadius: 1,
                     }}
@@ -260,6 +264,12 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                       Secure payment powered by Razorpay
                     </Typography>
                   </Box>
+                  <Typography variant="caption" color="text.secondary">
+                    <b>Note:</b> This amount is the professional fee charged by the lawyer. Counvo does not
+                    set or control lawyer fees.<br />
+                    Counvo charges a platform service fee for providing secure payments, communication tools,
+                    and lawyer discovery. This is separate from the lawyer’s fee.
+                  </Typography>
                 </Stack>
               </Box>
             </Paper>

@@ -26,6 +26,7 @@
     "country-state-city": "^3.2.1",
     "dayjs": "^1.11.11",
     "jquery": "^3.7.1",
+    "jspdf": "^4.0.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.523.0",
     "number-to-words": "^1.2.4",

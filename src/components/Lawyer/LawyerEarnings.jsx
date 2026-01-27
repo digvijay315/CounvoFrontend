@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Paper,
@@ -14,17 +14,18 @@ import {
   Pagination,
   Card,
   CardContent,
-  Grid,
-  Divider,
+  Grid, IconButton
 } from "@mui/material";
 import {
-  AttachMoney,
-  TrendingUp,
-  Receipt,
-  AccountBalance,
-  CurrencyRupee,
+  Receipt, CurrencyRupee,
+  FileDownload
 } from "@mui/icons-material";
 import useLawyerEarnings from "../../hooks/useLawyerEarnings";
+import { generateInvoicePDF } from "../../utils";
+
+
+let PlatformFee = parseFloat(process.env.REACT_APP_PLATFORM_FEE || 0.05);
+let GstPercent = parseFloat(process.env.REACT_APP_GST_PERCENT || 18);
 
 const LawyerEarnings = () => {
   const [page, setPage] = useState(1);
@@ -72,6 +73,35 @@ const LawyerEarnings = () => {
         <Typography color="error">{error}</Typography>
       </Box>
     );
+  }
+
+  const handleDownloadInvoice = (payment) => {
+    // Assuming payment.invoiceUrl contains the URL to download the invoice
+    let lawyerName = payment?.lawyerId?.fullName,
+      lawyerEmail = payment?.lawyerId?.email,
+      clientName = payment?.clientId?.fullName,
+      clientEmail = payment?.clientId?.email,
+      invoiceNo = payment?.orderId,
+      orderId = invoiceNo.replace("order_", "");
+    generateInvoicePDF({
+      invoiceNo: invoiceNo,
+      date: new Date(payment?.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      }),
+      billedTo: {
+        name: clientName,
+        email: clientEmail,
+      },
+      transactionId: orderId,
+      paymentMode: "Razorpay",
+      paymentStatus: "Successful",
+      consultationFee: payment.transferAmount,
+      recipientName: lawyerName,
+      platformFee: PlatformFee,
+      gstPercent: GstPercent
+    })
   }
 
   return (
@@ -129,12 +159,15 @@ const LawyerEarnings = () => {
       >
         <Table>
           <TableHead>
-            <TableRow>
+            <TableRow sx={{ '& .MuiTableCell-head': { minWidth: 200 } }}>
               <TableCell>
-                <strong>Date</strong>
+                <strong>Invoice No.</strong>
               </TableCell>
               <TableCell>
-                <strong>Client</strong>
+                <strong>Client Name</strong>
+              </TableCell>
+              <TableCell>
+                <strong>Client Email</strong>
               </TableCell>
               <TableCell>
                 <strong>Consultation Type</strong>
@@ -151,6 +184,12 @@ const LawyerEarnings = () => {
               <TableCell>
                 <strong>Status</strong>
               </TableCell>
+              <TableCell>
+                <strong>Date</strong>
+              </TableCell>
+              <TableCell>
+                <strong>Receipt</strong>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -165,11 +204,17 @@ const LawyerEarnings = () => {
             ) : (
               payments.map((payment) => (
                 <TableRow key={payment._id} hover>
-                  <TableCell>{formatDate(payment.createdAt)}</TableCell>
+                  <TableCell>
+                    <Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+                      {payment.orderId}
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     <Typography variant="body2">
                       {payment.clientId?.fullName || "N/A"}
                     </Typography>
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="caption" color="text.secondary">
                       {payment.clientId?.email || ""}
                     </Typography>
@@ -200,6 +245,12 @@ const LawyerEarnings = () => {
                       color={getStatusColor(payment.status)}
                       size="small"
                     />
+                  </TableCell>
+                  <TableCell>{formatDate(payment.createdAt)}</TableCell>
+                  <TableCell>
+                    <IconButton disabled={payment.status !== "paid"} onClick={() => { handleDownloadInvoice(payment) }}>
+                      <FileDownload />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
