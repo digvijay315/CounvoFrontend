@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -29,14 +28,13 @@ import {
   InputAdornment,
   Tabs,
   Tab,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Add as AddIcon,
-  Visibility as VisibilityIcon,
-  Search as SearchIcon,
-  FilterList as FilterListIcon,
+  Add as AddIcon, Search as SearchIcon
 } from "@mui/icons-material";
 
 // Rich text editor - You'll need to install this package
@@ -45,6 +43,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import api from "../../api";
 import { getDownloadUrl, uploadResource } from "../../utils";
+import { LawyerSpecializations } from "../../_constants/dataConstants";
 
 // Define the data structure for a blog
 const initialBlogData = {
@@ -57,6 +56,26 @@ const initialBlogData = {
   isPublished: false,
   slug: "",
   featuredImage: "",
+  metaDescription: "",
+  excerpt: "",
+  blogpostingSchema: JSON.stringify({
+    "@type": "BlogPosting",
+    "headline": "",
+    "description": "",
+    "author": {},
+    "datePublished": "",
+    "dateModified": "",
+    "image": "",
+    "mainEntityOfPage": ""
+  }
+    , null, "\t"),
+  breadcrumbSchema: JSON.stringify({
+    "@type": "BreadcrumbList",
+    "itemListElement": []
+  }
+    , null, "\t"),
+  blogCategory: "",
+  featuredImageAltText: "",
 };
 
 const ManageBlogs = () => {
@@ -126,14 +145,79 @@ const ManageBlogs = () => {
     setBlogData({ ...blogData, blogTags: e.target.value });
   };
 
+  const validateBlogData = (data) => {
+    const errors = {};
+
+    const isEmpty = (v) =>
+      v === undefined || v === null || String(v).trim() === "";
+
+    // Basic fields
+    if (isEmpty(data.blogTitle))
+      errors.blogTitle = "Blog title is required";
+
+    if (isEmpty(data.blogContent))
+      errors.blogContent = "Blog content cannot be empty";
+
+    if (isEmpty(data.excerpt))
+      errors.excerpt = "Excerpt is required";
+
+    if (isEmpty(data.metaDescription))
+      errors.metaDescription = "Meta description is required";
+
+    if (isEmpty(data.featuredImage))
+      errors.featuredImage = "Featured image is required";
+
+    if (isEmpty(data.featuredImageAltText))
+      errors.featuredImageAltText = "Featured image alt text is required";
+
+    if (isEmpty(data.blogCategory))
+      errors.blogCategory = "Blog category is required";
+
+    // Author fields
+    if (isEmpty(data.authorName))
+      errors.authorName = "Author name is required";
+
+    if (isEmpty(data.authorPosition))
+      errors.authorPosition = "Author position is required";
+
+    if (isEmpty(data.authorBio))
+      errors.authorBio = "Author bio is required";
+
+    // Schema validation
+    try {
+      const blogSchema = JSON.parse(data.blogpostingSchema);
+      if (blogSchema["@type"] !== "BlogPosting")
+        errors.blogpostingSchema = "Invalid BlogPosting schema type";
+    } catch {
+      errors.blogpostingSchema = "BlogPosting schema must be valid JSON";
+    }
+
+    try {
+      const breadcrumb = JSON.parse(data.breadcrumbSchema);
+      if (breadcrumb["@type"] !== "BreadcrumbList")
+        errors.breadcrumbSchema = "Invalid Breadcrumb schema type";
+    } catch {
+      errors.breadcrumbSchema = "Breadcrumb schema must be valid JSON";
+    }
+
+    return {
+      status: Object.keys(errors).length === 0,
+      errors
+    };
+  };
+
+  const [formErrors, setFormErrors] = useState({});
+  const getErrorField = (field) => formErrors[field] || "";
   const handleCreateOrUpdateBlog = () => {
     // Basic validation
-    if (!blogData.blogTitle || !blogData.blogContent) {
+    const validation = validateBlogData(blogData);
+    if (validation.status === false) {
       setNotification({
         open: true,
-        message: "Title and content are required!",
+        message: "Please correct the errors in the form.",
         severity: "error",
       });
+      setFormErrors(validation.errors);
       return;
     }
     const isUpdate = Boolean(blogData.slug);
@@ -203,8 +287,9 @@ const ManageBlogs = () => {
   // Filter blogs based on search term
   const filteredBlogs = blogs.filter(
     (blog) =>
-      blog.blogTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      blog.authorName.toLowerCase().includes(searchTerm.toLowerCase())
+      blog.status === (activeTab === 1 ? "published" : activeTab === 2 ? "draft" : blog.status) &&
+      (blog.blogTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.authorName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleTabChange = (event, newValue) => {
@@ -266,6 +351,7 @@ const ManageBlogs = () => {
               ),
             }}
             sx={{ mr: 2 }}
+
           />
         </Box>
       </Box>
@@ -387,6 +473,8 @@ const ManageBlogs = () => {
                 required
                 variant="outlined"
                 placeholder="Enter an engaging title for your blog"
+                error={!!getErrorField("blogTitle")}
+                helperText={getErrorField("blogTitle")}
               />
             </Grid>
             <Grid item xs={12}>
@@ -407,6 +495,7 @@ const ManageBlogs = () => {
                   ],
                 }}
               />
+              {!!getErrorField("blogContent") && (<Typography color="error" variant="body2">{getErrorField("blogContent")}</Typography>)}
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -417,6 +506,8 @@ const ManageBlogs = () => {
                 fullWidth
                 variant="outlined"
                 placeholder="tech, news, updates"
+                error={!!getErrorField("blogTags")}
+                helperText={getErrorField("blogTags")}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -429,6 +520,7 @@ const ManageBlogs = () => {
                 variant="outlined"
                 placeholder="my-blog-post"
                 helperText="Leave empty to auto-generate from title"
+
               />
             </Grid>
             <Grid item xs={12}>
@@ -445,6 +537,8 @@ const ManageBlogs = () => {
                 onChange={handleChange}
                 fullWidth
                 variant="outlined"
+                error={!!getErrorField("authorName")}
+                helperText={getErrorField("authorName")}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -455,6 +549,8 @@ const ManageBlogs = () => {
                 onChange={handleChange}
                 fullWidth
                 variant="outlined"
+                error={!!getErrorField("authorPosition")}
+                helperText={getErrorField("authorPosition")}
               />
             </Grid>
             <Grid item xs={12}>
@@ -467,7 +563,85 @@ const ManageBlogs = () => {
                 multiline
                 rows={2}
                 variant="outlined"
+                error={!!getErrorField("authorBio")}
+                helperText={getErrorField("authorBio")}
               />
+            </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 1 }} />
+              <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
+                SEO Information
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="metaDescription"
+                label="Meta Description"
+                value={blogData.metaDescription}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                error={!!getErrorField("metaDescription")}
+                helperText={getErrorField("metaDescription")}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="excerpt"
+                label="Excerpt"
+                value={blogData.excerpt}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                error={!!getErrorField("excerpt")}
+                helperText={getErrorField("excerpt")}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                multiline
+                maxRows={12}
+                name="blogpostingSchema"
+                label="Blog Posting Schema"
+                value={blogData.blogpostingSchema}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                error={!!getErrorField("blogpostingSchema")}
+                helperText={getErrorField("blogpostingSchema")}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                multiline
+                maxRows={4}
+                name="breadcrumbSchema"
+                label="Breadcrumb Schema"
+                value={blogData.breadcrumbSchema}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                error={!!getErrorField("breadcrumbSchema")}
+                helperText={getErrorField("breadcrumbSchema")}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>Select Blog Category</Typography>
+              <Select
+                name="blogCategory"
+                value={blogData.blogCategory ?? ""}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                error={!!getErrorField("blogCategory")}
+                helperText={getErrorField("blogCategory")}
+              >
+                {LawyerSpecializations.filter(item => Boolean(item.value)).map((category) => (
+                  <MenuItem key={category.value} value={category.value}>
+                    {category.label}
+                  </MenuItem>
+                ))}
+              </Select>
             </Grid>
             <Grid item xs={12}>
               <Divider sx={{ my: 1 }} />
@@ -475,7 +649,6 @@ const ManageBlogs = () => {
                 Image & Publication Settings
               </Typography>
             </Grid>
-            {console.log(blogData)}
             <Grid item xs={12} sm={6}>
               <TextField
                 name="featuredImage"
@@ -503,10 +676,24 @@ const ManageBlogs = () => {
                 variant="outlined"
                 type="file"
                 placeholder="https://example.com/image.jpg"
+                error={!!getErrorField("featuredImage")}
+                helperText={getErrorField("featuredImage")}
               />
               {featureImagePreview && (
                 <img height={200} width={200} src={featureImagePreview}></img>
               )}
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="featuredImageAltText"
+                label="Image Alt Text"
+                value={blogData.featuredImageAltText}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                error={!!getErrorField("featuredImageAltText")}
+                helperText={getErrorField("featuredImageAltText")}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControlLabel
@@ -571,7 +758,7 @@ const ManageBlogs = () => {
           {notification.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </Box >
   );
 };
 
