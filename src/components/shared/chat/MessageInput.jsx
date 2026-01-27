@@ -5,6 +5,7 @@ import {
   TextField,
   IconButton,
   CircularProgress,
+  InputAdornment,
 } from "@mui/material";
 import {
   Send as SendIcon,
@@ -42,21 +43,7 @@ const MessageInput = ({
         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
       />
       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-        <IconButton
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          color="primary"
-        >
-          {isUploading ? <CircularProgress size={24} /> : <AttachFileIcon />}
-        </IconButton>
-        {lawyerPayId && paymentApiRef.current && (
-          <IconButton
-            onClick={() => paymentApiRef.current?.handleOpen()}
-            color="success"
-          >
-            <CurrencyRupeeSharp />
-          </IconButton>
-        )}
+
         <TextField
           fullWidth
           size="small"
@@ -69,6 +56,30 @@ const MessageInput = ({
               onSendMessage();
             }
           }}
+          InputProps={{
+            startAdornment:
+              <InputAdornment>
+                <IconButton
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  color="primary"
+                >
+                  {isUploading ? <CircularProgress size={24} /> : <AttachFileIcon />}
+                </IconButton>
+              </InputAdornment>,
+            endAdornment: lawyerPayId && paymentApiRef.current && (
+              <InputAdornment>
+                <IconButton
+                  onClick={() => paymentApiRef.current?.handleOpen()}
+                  color="success"
+                >
+                  <CurrencyRupeeSharp />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          multiline
+          maxRows={4}
           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3 } }}
         />
         <IconButton

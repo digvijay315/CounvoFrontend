@@ -16,18 +16,21 @@ import {
   Paper,
   Divider,
   Chip,
+  Collapse,
 } from "@mui/material";
 import {
   Receipt as ReceiptIcon,
   AccountBalance as AccountBalanceIcon,
   Payment as PaymentIcon,
+  ExpandMore,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 
 let PlatformFee = parseFloat(process.env.REACT_APP_PLATFORM_FEE || 0.15);
+let GstPercent = parseFloat(process.env.REACT_APP_GST_PERCENT || 18);
 const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
   const { initializePayment, isLoading: paymentLoading } = usePayment();
-
+  const [showFeeBreakdown, setShowFeeBreakdown] = useState(false);
   const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState({
     amount: "",
@@ -90,8 +93,8 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
     >
       <DialogTitle>Payment Details</DialogTitle>
       <DialogContent>
-        <Stack direction={amountEntered ? "row" : "column"} spacing={2}>
-          <Box sx={{minWidth: "60%", pt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
+        <Stack direction={{ xs: "column", lg: amountEntered ? "row" : "column" }} spacing={2}>
+          <Box sx={{ minWidth: "60%", pt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
             <TextField
               label="Amount"
               type="number"
@@ -105,30 +108,6 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                 ),
               }}
               helperText="Enter consultation fee amount"
-            />
-            <TextField
-              label="Consultation Type"
-              select
-              fullWidth
-              required
-              value={paymentDetails.consultationType}
-              onChange={handlePaymentDetailsChange("consultationType")}
-              SelectProps={{
-                native: true,
-              }}
-            >
-              <option value="online">Online</option>
-              <option value="in-person">In-Person</option>
-              <option value="phone">Phone</option>
-            </TextField>
-            <TextField
-              label="Additional Notes"
-              multiline
-              rows={4}
-              fullWidth
-              value={paymentDetails.notes}
-              onChange={handlePaymentDetailsChange("notes")}
-              placeholder="Add any additional information about your consultation..."
             />
           </Box>
           {amountEntered && (
@@ -177,42 +156,68 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                     </Typography>
                   </Stack>
 
-                  {/* Platform Fee */}
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Platform Fee ({(PlatformFee * 100).toFixed(0)}%)
-                    </Typography>
-                    <Typography variant="body2" fontWeight="600">
-                      +₹{(Number(paymentDetails.amount) * PlatformFee).toFixed(2)}
-                    </Typography>
-                  </Stack>
-
-                  {/* Consultation Type */}
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Type
-                    </Typography>
-                    <Chip
-                      label={
-                        paymentDetails.consultationType === "online"
-                          ? "Online"
-                          : paymentDetails.consultationType === "in-person"
-                          ? "In-Person"
-                          : "Phone"
+                  {/* Collapsible Fee Breakdown */}
+                  <Box>
+                    <Button
+                      onClick={() => setShowFeeBreakdown(!showFeeBreakdown)}
+                      endIcon={
+                        <ExpandMore
+                          sx={{
+                            transform: showFeeBreakdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.3s',
+                          }}
+                        />
                       }
-                      color="primary"
-                      size="small"
-                      sx={{ height: 24, fontSize: "0.75rem" }}
-                    />
-                  </Stack>
+                      sx={{
+                        width: '100%',
+                        justifyContent: 'space-between',
+                        textTransform: 'none',
+                        color: 'text.secondary',
+                        p: 1,
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        Fee Breakdown
+                      </Typography>
+                    </Button>
+
+                    <Collapse in={showFeeBreakdown}>
+                      <Stack spacing={1.5} sx={{ mt: 1, pl: 2, pr: 1 }}>
+                        {/* Platform Fee */}
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            Platform Fee ({(PlatformFee * 100).toFixed(0)}%)
+                          </Typography>
+                          <Typography variant="body2" fontWeight="600">
+                            +₹{(Number(paymentDetails.amount) * PlatformFee).toFixed(2)}
+                          </Typography>
+                        </Stack>
+
+                        {/* GST */}
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            GST ({GstPercent.toFixed(0)}%)
+                          </Typography>
+                          <Typography variant="body2" fontWeight="600">
+                            +₹{((Number(paymentDetails.amount) * PlatformFee) * (GstPercent / 100)).toFixed(2)}
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                    </Collapse>
+                  </Box>
+
+                  <Divider sx={{ my: 1 }} />
 
                   {/* Total Amount */}
                   <Stack
@@ -224,7 +229,6 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                       color: "white",
                       p: 1.5,
                       borderRadius: 1,
-                      mt: 0.5,
                     }}
                   >
                     <Typography variant="body1" fontWeight="600">
@@ -234,7 +238,8 @@ const LawyerPaymentDialog = forwardRef(({ lawyerId }, ref) => {
                       ₹
                       {(
                         Number(paymentDetails.amount) +
-                        Number(paymentDetails.amount) * PlatformFee
+                        Number(paymentDetails.amount) * PlatformFee +
+                        (Number(paymentDetails.amount) * PlatformFee) * (GstPercent / 100)
                       ).toFixed(2)}
                     </Typography>
                   </Stack>

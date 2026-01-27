@@ -737,7 +737,7 @@ export const SocketProvider = ({ children }) => {
         >
           <CircularProgress size={60} thickness={4} color="primary" />
           <Typography variant="h6" fontWeight="600" color="primary">
-            Connecting you to a lawyer...
+            Connecting, Please wait
           </Typography>
         </Paper>
       </Backdrop>
