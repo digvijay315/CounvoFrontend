@@ -110,7 +110,17 @@ const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
             size="small"
             value={data.officeAddress?.street}
             onChange={(e) => handleAddressChange("street", e.target.value)}
-            placeholder="Enter office street address"
+            placeholder="Enter office address line 1"
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Street Address Line 2"
+            fullWidth
+            size="small"
+            value={data.officeAddress?.street}
+            onChange={(e) => handleAddressChange("street2", e.target.value)}
+            placeholder="Enter office address line 2"
           />
         </Grid>
 

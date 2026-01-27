@@ -27,6 +27,12 @@ function Support() {
       setEmails(emails.slice(0, -1));
     }
   };
+  const handleEmailBlur = () => {
+    if (emailInput.trim() && !emails.includes(emailInput.trim())) {
+      setEmails([...emails, emailInput.trim()]);
+      setEmailInput("");
+    }
+  }
   const removeEmail = (idx) => setEmails(emails.filter((_, i) => i !== idx));
 
   // Dropzone for attachments
@@ -62,7 +68,7 @@ function Support() {
     emails.forEach((email) => formData.append("emails", email));
     attachments.forEach((file) => formData.append("attachments", file));
     try {
-      const resp = await api.post("contact/sendmail", formData);
+      const resp = await api.post("/contact/sendmail", formData);
       if (resp.status === 200) {
         Swal.fire({
           title: "Success!",
@@ -161,6 +167,7 @@ function Support() {
                 type="email"
                 value={emailInput}
                 onChange={handleEmailInput}
+                onBlur={handleEmailBlur}
                 onKeyDown={handleEmailKeyDown}
                 placeholder="support@gmail.com"
                 style={{

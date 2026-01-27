@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../api";
-import { Box, Chip, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Chip, IconButton, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { Cancel, CheckCircle, MoreVert } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
+import { Delete, Trash } from "lucide-react";
+import Swal from "sweetalert2";
 
 const AdminManageUsers = () => {
   const [userRole, setUserRole] = useState('lawyer');
@@ -19,6 +21,21 @@ const AdminManageUsers = () => {
       }
     } catch (error) {
       console.error("Error fetching users list:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleDeleteUser = async (userId) => {
+    try {
+      setLoading(true);
+      const resp = await api.delete(
+        `/api/v2/admin/users/${userId}`
+      );
+      if (resp.data.success) {
+        fetchUsersList();
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
     } finally {
       setLoading(false);
     }
@@ -80,6 +97,31 @@ const AdminManageUsers = () => {
         ) : (
           <Cancel color="disabled" fontSize="small" />
         ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 100,
+      renderCell: (params) => (
+        <IconButton title="Delete User" color="error" onClick={() => {
+          Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action will permanently delete the user.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              handleDeleteUser(params.row._id);
+            } else {
+              // User cancelled the deletion
+            }
+          });
+        }}>
+          <Trash />
+        </IconButton>
+      ),
     }
   ];
   return (

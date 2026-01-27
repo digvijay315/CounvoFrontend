@@ -100,6 +100,7 @@ const LawyerKycWidget = ({ onSuccess }) => {
       lawFirmName: "",
       officeAddress: {
         street: "",
+        street2: "",
         city: "",
         state: "",
         pinCode: "",
@@ -188,6 +189,8 @@ const LawyerKycWidget = ({ onSuccess }) => {
       case "professionalInfo": {
         const data = kycData.professionalInfo;
         return !!(
+          data.officeAddress.street &&
+          data.officeAddress.street2 &&
           data.practiceType &&
           data.specializations?.length > 0 &&
           data.languages?.length > 0
@@ -262,14 +265,19 @@ const LawyerKycWidget = ({ onSuccess }) => {
       toast.warning("Please complete all required declarations");
       return;
     }
-
-    console.log("Submitting KYC Data:", kycData);
     try {
-      const response = await api.post(`/api/v2/lawyer-kyc/${userId}`, kycData);
-      console.log("KYC Submission Response:", response.data);
+      let kycDataToSubmit = { ...kycData };
+      try {
+        let officeAddLine1 = kycData.professionalInfo.officeAddress.street.trim(),
+          officeAddLine2 = kycData.professionalInfo.officeAddress.street2.trim();
+        kycDataToSubmit.professionalInfo.officeAddress.street = `${officeAddLine1}, ${officeAddLine2}`;
+        delete kycDataToSubmit.professionalInfo.officeAddress.street2;
+      } catch (error) {
+        console.error("Error formatting office address:", error);
+      }
+      const response = await api.post(`/api/v2/lawyer-kyc/${userId}`, kycDataToSubmit);
       if (response.data.success) {
         toast.success("KYC Submission Successful");
-        // Refresh user state to get updated KYC status
         dispatch(getUserDetails());
         handleReset();
         onSuccess();
@@ -382,8 +390,8 @@ const LawyerKycWidget = ({ onSuccess }) => {
                         activeStep === index
                           ? "primary.main"
                           : activeStep > index
-                          ? "success.main"
-                          : "grey.300",
+                            ? "success.main"
+                            : "grey.300",
                       color: activeStep >= index ? "white" : "text.secondary",
                     }}
                   >
@@ -427,8 +435,8 @@ const LawyerKycWidget = ({ onSuccess }) => {
                       {uploading
                         ? "Uploading..."
                         : index === steps.length - 1
-                        ? "Submit KYC"
-                        : "Continue"}
+                          ? "Submit KYC"
+                          : "Continue"}
                     </Button>
                     <Button
                       disabled={index === 0 || uploading}

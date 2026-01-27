@@ -120,6 +120,7 @@ const ManageApprovals = () => {
         console.error(error);
         toast.error(error.response?.data?.message || "Failed to approve KYC.");
       }
+      fetchSubmissions();
     }
   };
 
@@ -154,7 +155,6 @@ const ManageApprovals = () => {
         );
         if (resp.data.success) {
           toast.success("KYC has been rejected successfully.");
-          fetchSubmissions();
         }
       } catch (error) {
         console.error(error);
@@ -164,6 +164,7 @@ const ManageApprovals = () => {
           text: error.response?.data?.message || "Failed to reject KYC.",
         });
       }
+      fetchSubmissions();
     }
   };
 
@@ -255,6 +256,7 @@ const ManageApprovals = () => {
       approved: { color: "success", label: "Approved" },
       rejected: { color: "error", label: "Rejected" },
       verified: { color: "success", label: "Verified" },
+      activated: { color: "success", label: "Activated" },
     };
 
     const config = statusConfig[status] || { color: "default", label: status };
@@ -284,7 +286,19 @@ const ManageApprovals = () => {
       field: "status",
       headerName: "Status",
       width: 120,
-      renderCell: (params) => getStatusChip(params.row?.kycStatus),
+      renderCell: (params) => getStatusChip(params.row?.kycStatus, params.row),
+    },
+    {
+      field: "rstatus",
+      headerName: "Razorpay Kyc Status",
+      width: 120,
+      renderCell: (params) => getStatusChip(params.row?.razorpayKyc?.kycStatus),
+    },
+    {
+      field: "kycId",
+      headerName: "Razorpay Kyc Account",
+      width: 200,
+      renderCell: (params) => params.row?.razorpayKyc?.accountId || "N/A",
     },
     {
       field: "submittedAt",
