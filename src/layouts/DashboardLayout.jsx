@@ -1,17 +1,21 @@
-import React, { useRef, useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import NavigationSidebar from "../components/Layout/NavigationSidebar";
 import NavigationHeader from "../components/Layout/NavigationHeader";
 import DashboardNote from "../components/Layout/DashboardNote";
 import { SocketProvider } from "../context/SocketContext";
+import useNotification from "../hooks/useNotification";
+import NotificationRequestWindow from "../components/shared/NotificationRequestWindow";
 
 const DashboardLayout = () => {
   const theme = useTheme();
+  const { pathname } = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef(null);
   const headerRef = useRef(null);
+  const { verifyPermission, requestNotificationPermission, createNotification } = useNotification();
 
   const handleDrawerToggle = () => {
     if (isMobile) {
@@ -29,6 +33,33 @@ const DashboardLayout = () => {
     setMobileOpen(false);
   };
 
+  const [showNotificationPermission, setShowNotificationPermission] = useState(false);
+
+  const handleDeclineRequestPermission = () => {
+    setShowNotificationPermission(false);
+    // Set to local storage to avoid repeated prompts
+    localStorage.setItem("notification-permission-declined", "true");
+  }
+  const handleAcceptRequestPermission = async () => {
+    const permission = await requestNotificationPermission();
+    if (permission === "granted") {
+      setShowNotificationPermission(false);
+    }
+  };
+  useEffect(() => {
+    const checkAndRequestNotificationPermission = async () => {
+      // check if user has previously declined
+      const declined = localStorage.getItem("notification-permission-declined");
+      if (declined === "true") return;
+      const permission = await verifyPermission();
+      if (permission !== "granted" && permission !== "denied") {
+        setShowNotificationPermission(true);
+      }
+    };
+    checkAndRequestNotificationPermission();
+  }, []);
+
+  const hidePadding = pathname === "/dashboard/messages";
   return (
     <SocketProvider>
       <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
@@ -54,16 +85,18 @@ const DashboardLayout = () => {
           <NavigationHeader
             ref={headerRef}
             onMenuClick={handleDrawerToggle}
-            onNotificationClick={() => {}}
+            onNotificationClick={() => { }}
           />
           <DashboardNote />
+          <NotificationRequestWindow open={showNotificationPermission} onClose={() => setShowNotificationPermission(false)} onAccept={handleAcceptRequestPermission} onDecline={handleDeclineRequestPermission} />
           {/* Page Content */}
           <Box
+            id="dashboard-content-area"
             sx={{
               flexGrow: 1,
               overflowY: "auto",
               overflowX: "hidden",
-              p: 2,
+              p: hidePadding ? 0 : 2,
             }}
           >
             <Outlet />

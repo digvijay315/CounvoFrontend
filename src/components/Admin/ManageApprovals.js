@@ -62,8 +62,7 @@ const ManageApprovals = () => {
     try {
       setLoading(true);
       const resp = await api.get(
-        `/api/v2/admin/lawyerkyc/submissions?status=${statusFilter}&page=${
-          paginationModel.page + 1
+        `/api/v2/admin/lawyerkyc/submissions?status=${statusFilter}&page=${paginationModel.page + 1
         }&limit=${paginationModel.pageSize}`
       );
       if (resp.data.success) {
@@ -97,9 +96,8 @@ const ManageApprovals = () => {
 
     const confirmResult = await Swal.fire({
       title: "Approve KYC?",
-      text: `Are you sure you want to approve KYC for ${
-        selectedRow.lawyerName || selectedRow.lawyer?.fullName || "this lawyer"
-      }?`,
+      text: `Are you sure you want to approve KYC for ${selectedRow.lawyerName || selectedRow.lawyer?.fullName || "this lawyer"
+        }?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#059669",
@@ -321,6 +319,8 @@ const ManageApprovals = () => {
     },
   ];
 
+  const isReviewTabs = ["in_review", "pending"].includes(statusFilter);
+
   return (
     <Box sx={{ height: "100%", width: "100%", p: 2 }}>
       <Typography variant="h5" fontWeight="600" gutterBottom>
@@ -409,30 +409,20 @@ const ManageApprovals = () => {
           </ListItemIcon>
           <ListItemText>View Details</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleApproveKyc}>
-          <ListItemIcon>
-            <CheckCircle fontSize="small" color="success" />
-          </ListItemIcon>
-          <ListItemText>Approve KYC</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleRejectKyc}>
+        {isReviewTabs || statusFilter == "approved" ? (
+          <MenuItem onClick={handleApproveKyc}>
+            <ListItemIcon>
+              <CheckCircle fontSize="small" color="success" />
+            </ListItemIcon>
+            <ListItemText>{isReviewTabs ? "Approve" : "Reverify Approve"} KYC</ListItemText>
+          </MenuItem>
+        ) : null}
+        {isReviewTabs && <MenuItem onClick={handleRejectKyc}>
           <ListItemIcon>
             <Cancel fontSize="small" color="error" />
           </ListItemIcon>
           <ListItemText>Reject KYC</ListItemText>
-        </MenuItem>
-        {/* <MenuItem onClick={handleVerifyIdentity}>
-          <ListItemIcon>
-            <VerifiedUser fontSize="small" color="primary" />
-          </ListItemIcon>
-          <ListItemText>Verify Identity Document</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleAddNoteClick}>
-          <ListItemIcon>
-            <NoteAdd fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Add Internal Note</ListItemText>
-        </MenuItem> */}
+        </MenuItem>}
       </Menu>
 
       {/* Add Note Dialog */}

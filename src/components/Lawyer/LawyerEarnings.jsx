@@ -121,41 +121,6 @@ const LawyerEarnings = () => {
         </Grid>
       )}
 
-      {/* Earnings by Type */}
-      {statistics?.earningsByType && statistics.earningsByType.length > 0 && (
-        <Card elevation={0} variant="outlined" sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" fontWeight="600" gutterBottom>
-              Earnings by Consultation Type
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Grid container spacing={2}>
-              {statistics.earningsByType.map((type) => (
-                <Grid item xs={12} md={4} key={type._id}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      border: "1px solid #e0e0e0",
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      {type._id.charAt(0).toUpperCase() + type._id.slice(1)}
-                    </Typography>
-                    <Typography variant="h6" fontWeight="600">
-                      {formatAmount(type.amount)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {type.count} consultations
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Payments Table */}
       <TableContainer
         component={Paper}

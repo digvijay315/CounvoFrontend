@@ -265,7 +265,7 @@ function FindLawyer() {
       if (rejectedByLawyers.includes(lawyer._id)) return false;
 
       let lawyerSpecializations =
-          lawyer?.lawyerKycId?.professionalInfo?.specializations || [],
+        lawyer?.lawyerKycId?.professionalInfo?.specializations || [],
         lawyerLanguages =
           lawyer?.lawyerKycId?.professionalInfo?.languages || [],
         lawyerPracticingCourts =
@@ -401,10 +401,7 @@ function FindLawyer() {
     // Reset used lawyer IDs for new search
     setUsedLawyerIds([]);
 
-    // Trigger search after a brief delay to allow state updates
-    setTimeout(() => {
-      handleFindLawyer();
-    }, 100);
+    document.getElementById("dashboard-content-area")?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleFindAnotherLawyer = () => {
@@ -523,7 +520,7 @@ function FindLawyer() {
       <Card variant="outlined" sx={{ mb: 4 }}>
         <CardContent sx={{ py: 4 }}>
           <Stack
-            direction={{ xs: "column", sm: "row" }}
+            direction={{ xs: "column" }}
             justifyContent={{ xs: "center", sm: "space-between" }}
             alignItems="center"
             flexWrap={{ xs: "wrap", md: "nowrap" }}

@@ -1,30 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import api from "../api";
 import Swal from "sweetalert2";
-// import { Support } from '@mui/icons-material';
-import socket from "./socket";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { Send } from "lucide-react";
 
 function Support() {
-  const lawyerdetails = JSON.parse(localStorage.getItem("lawyerDetails"));
-
-  useEffect(() => {
-    if (!lawyerdetails?.lawyer?._id) return;
-
-    if (!socket.connected) socket.connect();
-
-    socket.on("connect", () => {
-      const lawyerId = lawyerdetails.lawyer._id;
-      socket.emit("lawyerOnline", lawyerId);
-      socket.emit("getOnlineClients");
-    });
-    socket.on("onlineClientsList", (ids) => {
-      // setOnlineClients(ids);
-    });
-  });
-
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [emails, setEmails] = useState([]);
@@ -108,7 +89,7 @@ function Support() {
     <Box
       style={{
         background: "rgba(255,255,255,0.96)",
-        padding: "32px 28px",
+        padding: 0.5,
         position: "relative",
       }}
     >

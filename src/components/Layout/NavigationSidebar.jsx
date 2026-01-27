@@ -40,8 +40,8 @@ const NavigationSidebar = forwardRef(({ mobileOpen, onClose }, ref) => {
   const drawerWidth = isMobile
     ? APP_CONFIG.NAVIGATION_SIDEBAR_WIDTH
     : isCollapsed
-    ? APP_CONFIG.SIDE_PANEL_COLLAPSED_WIDTH
-    : APP_CONFIG.NAVIGATION_SIDEBAR_WIDTH;
+      ? APP_CONFIG.SIDE_PANEL_COLLAPSED_WIDTH
+      : APP_CONFIG.NAVIGATION_SIDEBAR_WIDTH;
 
   const userFullName = userData?.fullName || "User";
   const menuItems = useMemo(() => GetNavigationMenuItems(userRole), [userRole]);
@@ -49,7 +49,7 @@ const NavigationSidebar = forwardRef(({ mobileOpen, onClose }, ref) => {
   const handleToggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
-  
+
   const isActivePath = (path) => {
     return (
       location.pathname === path ||
@@ -272,6 +272,7 @@ const NavigationSidebar = forwardRef(({ mobileOpen, onClose }, ref) => {
             borderRight: "1px solid",
             borderColor: "divider",
             backgroundColor: "background.paper",
+            zIndex: 1002,
           },
         }}
       >

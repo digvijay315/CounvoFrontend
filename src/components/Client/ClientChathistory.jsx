@@ -282,15 +282,13 @@ function ClientChathistory() {
 
       if (formatted.length === 0) {
         const systemMessage = {
-          text: `You are now connected to Advocate ${lawyer.firstName} ${
-            lawyer.lastName
-          } who practices in ${lawyer.practicingcourts
-            .map((item) => item.label)
-            .join(",")} Courts and specializes in ${lawyer.specializations
-            .map((item) => item.label)
-            .join(",")}, With ${
-            lawyer.yearsOfExperience
-          } of experience. Feel free to share your concern or upload documents securely`,
+          text: `You are now connected to Advocate ${lawyer.firstName} ${lawyer.lastName
+            } who practices in ${lawyer.practicingcourts
+              .map((item) => item.label)
+              .join(",")} Courts and specializes in ${lawyer.specializations
+                .map((item) => item.label)
+                .join(",")}, With ${lawyer.yearsOfExperience
+            } of experience. Feel free to share your concern or upload documents securely`,
           isSystem: true,
           isMe: false,
         };
@@ -571,11 +569,11 @@ function ClientChathistory() {
                       <strong>Specialization:</strong>{" "}
                       {Array.isArray(lawyer.specializations)
                         ? lawyer.specializations
-                            .map((spec) => spec.label)
-                            .join(", ")
+                          .map((spec) => spec.label)
+                          .join(", ")
                         : lawyer.specializations?.label ||
-                          lawyer.specializations ||
-                          ""}
+                        lawyer.specializations ||
+                        ""}
                     </div>
                     <div>
                       <strong>Experience:</strong> {lawyer.yearsOfExperience}{" "}
@@ -683,9 +681,8 @@ function ClientChathistory() {
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`message ${
-                  msg.isMe ? "sent" : msg.isSystem ? "system" : "received"
-                }`}
+                className={`message ${msg.isMe ? "sent" : msg.isSystem ? "system" : "received"
+                  }`}
               >
                 {msg.text}
                 <div style={{ fontSize: "10px", marginTop: 2 }}>

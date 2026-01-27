@@ -276,19 +276,7 @@ const NavigationHeader = forwardRef(
                     Verified
                   </Typography>
                 ) : (
-                  <Typography
-                    display="inline-block"
-                    sx={{
-                      backgroundColor: theme.palette.error.main,
-                      color: theme.palette.error.contrastText,
-                      padding: "2px 8px",
-                      borderRadius: "15px",
-                      fontSize: 12,
-                    }}
-                    variant="body2"
-                  >
-                    Unverified
-                  </Typography>
+                  null
                 )}
               </Stack>
 

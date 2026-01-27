@@ -79,7 +79,7 @@ const PaymentHistory = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 0.5 }}>
       <Typography variant="h5" fontWeight="600" gutterBottom>
         Payment History
       </Typography>
@@ -168,7 +168,7 @@ const PaymentHistory = () => {
                   <TableCell>
                     <Chip
                       icon={getStatusIcon(payment.status)}
-                      label={payment.status}
+                      label={payment.status === "created" ? "Cancelled" : payment.status}
                       color={getStatusColor(payment.status)}
                       size="small"
                     />

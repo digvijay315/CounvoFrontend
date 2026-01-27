@@ -17,6 +17,8 @@ import CallScreen from "../_modules/calling/CallScreen";
 import IncomingChatRequest from "../_modules/chat/IncomingChatRequest";
 import { Backdrop, CircularProgress, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import useNotification from "../hooks/useNotification";
+import { set } from "react-hook-form";
 
 // Socket Event Constants
 export const SOCKET_EVENTS = {
@@ -84,6 +86,7 @@ const getSocket = () => {
 export const SocketProvider = ({ children }) => {
   const user = useSelector(selectUser);
   const userRole = useSelector(selectUserRole);
+  const { isBrowserMinimized, verifyPermission, createNotification } = useNotification();
   const userId = user?._id;
 
   // Connection state
@@ -113,6 +116,22 @@ export const SocketProvider = ({ children }) => {
   // Message handlers ref (for external components to register)
   const messageHandlersRef = useRef(new Map());
 
+
+  const [isGranted, setIsGranted] = useState(false);
+  const handleNotificationIfMimimized = (title, body) => {
+    if (isBrowserMinimized()) {
+      if (!isGranted) {
+        verifyPermission().then((permission) => {
+          if (permission === "granted") {
+            createNotification(title, body);
+            setIsGranted(true);
+          }
+        });
+      } else {
+        createNotification(title, body);
+      }
+    }
+  };
   // Initialize socket connection
   useEffect(() => {
     if (!userId) return;
@@ -174,15 +193,16 @@ export const SocketProvider = ({ children }) => {
       });
     };
 
+
+
     // Call handlers
     const handleIncomingCall = async ({ callerId, callType, callerModel }) => {
-      console.log("📞 Incoming call from:", callerId, callType, callerModel);
-
+      handleNotificationIfMimimized("Incoming Call", "You have an incoming call.");
       // Fetch caller info
       let callerInfo = null;
       try {
         const res = await api.get(`/api/v2/user/byId/${callerId}`);
-        if(res.data.success){
+        if (res.data.success) {
           callerInfo = res.data?.user;
         } else {
           callerInfo = null;
@@ -200,7 +220,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleCallRejected = ({ message }) => {
-      console.log("📞 Call rejected:", message);
+      handleNotificationIfMimimized("Call rejected", "Your call is rejected.");
       setActiveCall({
         isActive: false,
         callType: "voice",
@@ -219,7 +239,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleCallAccepted = ({ accepterId }) => {
-      console.log("📞 Call accepted by:", accepterId);
+      handleNotificationIfMimimized("Call Accepted", "Your call has been accepted.");
       setActiveCall((prev) => ({
         ...prev,
         callStatus: "connected",
@@ -227,7 +247,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleCallEnded = ({ enderId }) => {
-      console.log("📞 Call ended by:", enderId);
+      handleNotificationIfMimimized("Call Ended", "Your call has ended.");
       setActiveCall({
         isActive: false,
         callType: "voice",
@@ -247,7 +267,7 @@ export const SocketProvider = ({ children }) => {
 
     // Chat request handlers
     const handleIncomingChatRequest = ({ clientId, clientInfo }) => {
-      console.log("💬 Incoming chat request from:", clientId);
+      handleNotificationIfMimimized("New chat request", "You have a new chat request.");
       setIncomingChatRequest({
         clientId,
         clientInfo,
@@ -255,7 +275,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleChatRequestAccepted = ({ lawyerId, chatGroupId }) => {
-      console.log("✅ Chat request accepted by lawyer:", lawyerId);
+      handleNotificationIfMimimized("Chat Request Accepted", "Your chat request has been accepted.");
       setPendingChatRequest(null);
       // Navigate to chat - will be handled by the component
       window.dispatchEvent(
@@ -264,7 +284,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleChatRequestRejected = ({ lawyerId, message }) => {
-      console.log("❌ Chat request rejected:", message);
+      handleNotificationIfMimimized("Call request declined", "Your chat request was declined.");
       setPendingChatRequest(null);
       window.dispatchEvent(
         new CustomEvent("chatRequestRejected", { detail: { lawyerId, message } })
@@ -272,7 +292,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleChatRequestNotAccepted = ({ lawyerId, message }) => {
-      console.log("⏱️ Chat request not accepted:", message);
+      handleNotificationIfMimimized("Call request timout", "Chat request was aborted due to timeout.");
       setPendingChatRequest(null);
       window.dispatchEvent(
         new CustomEvent("chatRequestNotAccepted", { detail: { lawyerId, message } })
@@ -576,7 +596,7 @@ export const SocketProvider = ({ children }) => {
    */
   const on = useCallback(
     (event, handler) => {
-      if (!socket) return () => {};
+      if (!socket) return () => { };
       socket.on(event, handler);
       return () => socket.off(event, handler);
     },
@@ -667,10 +687,10 @@ export const SocketProvider = ({ children }) => {
                 toUserModel: "Lawyer",
               });
               const chatGroupId = res.data._id;
-              
+
               // Accept the chat request
               await acceptChatRequest(chatGroupId);
-              
+
               // Navigate to messages
               window.location.href = `/dashboard/messages?chatId=${chatGroupId}`;
             } catch (err) {
