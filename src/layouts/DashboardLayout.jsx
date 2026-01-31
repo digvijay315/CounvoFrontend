@@ -56,13 +56,16 @@ const DashboardLayout = () => {
         setShowNotificationPermission(true);
       }
     };
-    checkAndRequestNotificationPermission();
+    //  Good timeout for Js to be loaded correctly
+    setTimeout(() => {
+      checkAndRequestNotificationPermission();
+    }, 1500);
   }, []);
 
   const hidePadding = pathname === "/dashboard/messages";
   return (
     <SocketProvider>
-      <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+      <Box sx={{ display: "flex", height: "100dvh", overflow: "hidden" }}>
         {/* Left Navigation Sidebar */}
         <NavigationSidebar
           ref={sidebarRef}
@@ -76,7 +79,7 @@ const DashboardLayout = () => {
             flexGrow: 1,
             display: "flex",
             flexDirection: "column",
-            minHeight: "100vh",
+            minHeight: "100dvh",
             backgroundColor: "#f8fafc",
             overflow: "hidden",
           }}

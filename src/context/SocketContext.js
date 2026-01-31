@@ -639,7 +639,7 @@ export const SocketProvider = ({ children }) => {
     on,
   };
 
-  console.log("socket", value);
+  // If activeCall is active then restrict user from Refreshing or going back show an Alert
 
   return (
     <SocketContext.Provider value={value}>

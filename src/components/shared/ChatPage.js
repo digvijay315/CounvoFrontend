@@ -35,6 +35,8 @@ import {
   CallReceived as CallReceivedIcon,
   PhoneMissed as PhoneMissedIcon,
   VideoCall as VideoCallIcon,
+  ArrowBackIos,
+  ArrowBackIosNew,
 } from "@mui/icons-material";
 import { useSocket } from "../../context/SocketContext";
 import useAuth from "../../hooks/useAuth";
@@ -570,6 +572,12 @@ const ChatPage = ({ userType = "customer" }) => {
     }
   };
 
+
+  const handleResetCurrentId = ()=> {
+    setSelectedCall(null);
+    setSelectedChat(null)
+  }
+
   return (
     <Box
       sx={{
@@ -669,7 +677,7 @@ const ChatPage = ({ userType = "customer" }) => {
                 {filteredChatGroups.map((group) => {
                   const participantName = getParticipantName(
                     group.participant,
-                    group.participantModel
+                    group.participantModel,
                   );
                   const avatarSrc = getAvatarSrc(group.participant);
                   const isOnline = onlineUsers.includes(group.participant?._id);
@@ -772,116 +780,116 @@ const ChatPage = ({ userType = "customer" }) => {
               </List>
             )
           ) : // Call History List
-            isLoadingCallHistory ? (
-              <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : filteredCallHistory.length === 0 ? (
-              <Box
-                sx={{
-                  p: 3,
-                  textAlign: "center",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                  gap: 2,
-                }}
-              >
-                <PhoneIcon sx={{ fontSize: 48, color: "text.disabled" }} />
-                <Typography color="text.secondary">
-                  {searchQuery ? "No calls found" : "No call history yet"}
+          isLoadingCallHistory ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : filteredCallHistory.length === 0 ? (
+            <Box
+              sx={{
+                p: 3,
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                gap: 2,
+              }}
+            >
+              <PhoneIcon sx={{ fontSize: 48, color: "text.disabled" }} />
+              <Typography color="text.secondary">
+                {searchQuery ? "No calls found" : "No call history yet"}
+              </Typography>
+              {!searchQuery && (
+                <Typography variant="body2" color="text.disabled">
+                  Your call records will appear here
                 </Typography>
-                {!searchQuery && (
-                  <Typography variant="body2" color="text.disabled">
-                    Your call records will appear here
-                  </Typography>
-                )}
-              </Box>
-            ) : (
-              <List disablePadding>
-                {filteredCallHistory.map((call) => {
-                  const participantName = getParticipantName(
-                    call.participant,
-                    call.participantModel
-                  );
-                  const avatarSrc = getAvatarSrc(call.participant);
-                  const isSelected = selectedCall?._id === call._id;
+              )}
+            </Box>
+          ) : (
+            <List disablePadding>
+              {filteredCallHistory.map((call) => {
+                const participantName = getParticipantName(
+                  call.participant,
+                  call.participantModel,
+                );
+                const avatarSrc = getAvatarSrc(call.participant);
+                const isSelected = selectedCall?._id === call._id;
 
-                  return (
-                    <ListItem
-                      key={call._id}
-                      button
-                      onClick={() => handleSelectCall(call)}
-                      sx={{
-                        py: 1.5,
-                        px: 2,
-                        bgcolor: isSelected ? "action.selected" : "transparent",
-                        "&:hover": { bgcolor: "action.hover" },
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <Avatar src={avatarSrc} alt={participantName}>
-                          {participantName?.[0] || "?"}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
+                return (
+                  <ListItem
+                    key={call._id}
+                    button
+                    onClick={() => handleSelectCall(call)}
+                    sx={{
+                      py: 1.5,
+                      px: 2,
+                      bgcolor: isSelected ? "action.selected" : "transparent",
+                      "&:hover": { bgcolor: "action.hover" },
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <Avatar src={avatarSrc} alt={participantName}>
+                        {participantName?.[0] || "?"}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            fontWeight={500}
+                            noWrap
+                            sx={{ maxWidth: 150 }}
                           >
-                            <Typography
-                              variant="subtitle2"
-                              fontWeight={500}
-                              noWrap
-                              sx={{ maxWidth: 150 }}
-                            >
-                              {participantName}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatTime(call.callTime)}
-                            </Typography>
-                          </Box>
-                        }
-                        secondary={
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                              mt: 0.5,
-                            }}
+                            {participantName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatTime(call.callTime)}
+                          </Typography>
+                        </Box>
+                      }
+                      secondary={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            mt: 0.5,
+                          }}
+                        >
+                          {getCallIcon(call)}
+                          <Typography
+                            variant="body2"
+                            color={
+                              call.status === "missed" ||
+                              call.status === "rejected"
+                                ? "error.main"
+                                : "text.secondary"
+                            }
                           >
-                            {getCallIcon(call)}
-                            <Typography
-                              variant="body2"
-                              color={
-                                call.status === "missed" ||
-                                  call.status === "rejected"
-                                  ? "error.main"
-                                  : "text.secondary"
-                              }
-                            >
-                              {getCallStatusText(call)}
+                            {getCallStatusText(call)}
+                          </Typography>
+                          {call.duration > 0 && (
+                            <Typography variant="body2" color="text.disabled">
+                              • {formatCallDuration(call.duration)}
                             </Typography>
-                            {call.duration > 0 && (
-                              <Typography variant="body2" color="text.disabled">
-                                • {formatCallDuration(call.duration)}
-                              </Typography>
-                            )}
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                  );
-                })}
-              </List>
-            )}
+                          )}
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
         </Box>
       </Paper>
 
@@ -908,6 +916,7 @@ const ChatPage = ({ userType = "customer" }) => {
                 getAvatarSrc={getAvatarSrc}
                 getParticipantName={getParticipantName}
                 onCall={handleCall}
+                goBack={handleResetCurrentId}
               />
 
               {/* Check if chat is accepted */}
@@ -980,139 +989,143 @@ const ChatPage = ({ userType = "customer" }) => {
             </Box>
           )
         ) : // Calls Tab Content
-          selectedCall ? (
-            <>
-              {/* Call Details Header */}
-              <Box
-                sx={{
-                  p: 2,
-                  borderBottom: 1,
-                  borderColor: "divider",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                }}
-              >
-                <IconButton
-                  onClick={() => setSelectedCall(null)}
-                  sx={{ display: { md: "none" } }}
-                >
-                  <ChatIcon />
-                </IconButton>
-                <Avatar
-                  src={getAvatarSrc(selectedCall.participant)}
-                  alt={getParticipantName(
-                    selectedCall.participant,
-                    selectedCall.participantModel
-                  )}
-                  sx={{ width: 48, height: 48 }}
-                >
-                  {
-                    getParticipantName(
-                      selectedCall.participant,
-                      selectedCall.participantModel
-                    )?.[0]
-                  }
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {getParticipantName(
-                      selectedCall.participant,
-                      selectedCall.participantModel
-                    )}
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    {getCallIcon(selectedCall)}
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedCall.callType === "video"
-                        ? "Video call"
-                        : "Voice call"}
-                      {selectedCall.duration &&
-                        ` • ${formatCallDuration(selectedCall.duration)}`}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              {/* Call Details Content */}
-              <Box
-                sx={{
-                  flex: 1,
-                  p: 3,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textAlign: "center",
-                }}
-              >
-                <Avatar
-                  src={getAvatarSrc(selectedCall.participant)}
-                  alt={getParticipantName(
-                    selectedCall.participant,
-                    selectedCall.participantModel
-                  )}
-                  sx={{ width: 120, height: 120, mb: 3 }}
-                >
-                  {
-                    getParticipantName(
-                      selectedCall.participant,
-                      selectedCall.participantModel
-                    )?.[0]
-                  }
-                </Avatar>
-                <Typography variant="h5" fontWeight={600} gutterBottom>
-                  {getParticipantName(
-                    selectedCall.participant,
-                    selectedCall.participantModel
-                  )}
-                </Typography>
-                <Typography variant="body1" color="text.secondary" gutterBottom>
-                  {formatTime(selectedCall.callTime)}
-                </Typography>
-                <Chip
-                  icon={getCallIcon(selectedCall)}
-                  label={
-                    selectedCall.status === "missed" ||
-                      selectedCall.status === "rejected"
-                      ? `${getCallStatusText(selectedCall)} Call`
-                      : `${selectedCall.callType === "video" ? "Video" : "Voice"
-                      } Call${selectedCall.duration > 0
-                        ? ` • ${formatCallDuration(selectedCall.duration)}`
-                        : ""
-                      }`
-                  }
-                  variant="outlined"
-                  color={
-                    selectedCall.status === "missed" ||
-                      selectedCall.status === "rejected"
-                      ? "error"
-                      : "default"
-                  }
-                  sx={{ mt: 1 }}
-                />
-              </Box>
-            </>
-          ) : (
+        selectedCall ? (
+          <>
+            {/* Call Details Header */}
             <Box
               sx={{
+                p: 2,
+                borderBottom: 1,
+                borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => setSelectedCall(null)}
+                sx={{ display: { md: "none" } }}
+              >
+                <ArrowBackIosNew />
+              </IconButton>
+              <Avatar
+                src={getAvatarSrc(selectedCall.participant)}
+                alt={getParticipantName(
+                  selectedCall.participant,
+                  selectedCall.participantModel,
+                )}
+                sx={{ width: 48, height: 48 }}
+              >
+                {
+                  getParticipantName(
+                    selectedCall.participant,
+                    selectedCall.participantModel,
+                  )?.[0]
+                }
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  {getParticipantName(
+                    selectedCall.participant,
+                    selectedCall.participantModel,
+                  )}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {getCallIcon(selectedCall)}
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedCall.callType === "video"
+                      ? "Video call"
+                      : "Voice call"}
+                    {selectedCall.duration &&
+                      ` • ${formatCallDuration(selectedCall.duration)}`}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Call Details Content */}
+            <Box
+              sx={{
+                flex: 1,
+                p: 3,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                flex: 1,
-                p: 4,
+                textAlign: "center",
               }}
             >
-              <PhoneIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                Select a call
+              <Avatar
+                src={getAvatarSrc(selectedCall.participant)}
+                alt={getParticipantName(
+                  selectedCall.participant,
+                  selectedCall.participantModel,
+                )}
+                sx={{ width: 120, height: 120, mb: 3 }}
+              >
+                {
+                  getParticipantName(
+                    selectedCall.participant,
+                    selectedCall.participantModel,
+                  )?.[0]
+                }
+              </Avatar>
+              <Typography variant="h5" fontWeight={600} gutterBottom>
+                {getParticipantName(
+                  selectedCall.participant,
+                  selectedCall.participantModel,
+                )}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Choose a call from the history to view details
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                {formatTime(selectedCall.callTime)}
               </Typography>
+              <Chip
+                icon={getCallIcon(selectedCall)}
+                label={
+                  selectedCall.status === "missed" ||
+                  selectedCall.status === "rejected"
+                    ? `${getCallStatusText(selectedCall)} Call`
+                    : `${
+                        selectedCall.callType === "video" ? "Video" : "Voice"
+                      } Call${
+                        selectedCall.duration > 0
+                          ? ` • ${formatCallDuration(selectedCall.duration)}`
+                          : ""
+                      }`
+                }
+                variant="outlined"
+                color={
+                  selectedCall.status === "missed" ||
+                  selectedCall.status === "rejected"
+                    ? "error"
+                    : "default"
+                }
+                sx={{ mt: 1 }}
+              />
             </Box>
-          )}
+          </>
+        ) : (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: 1,
+              p: 4,
+            }}
+          >
+            <PhoneIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+            <Typography variant="h5" color="text.secondary" gutterBottom>
+              Select a call
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Choose a call from the history to view details
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );

@@ -591,6 +591,7 @@ const CallScreen = ({
           right: 0,
           bottom: 0,
           zIndex: 1201,
+          height: '100dvh'
         }}
         className="callscreen app-container call-screen"
       >
@@ -621,9 +622,11 @@ const CallScreen = ({
           right: 0,
           bottom: 0,
           zIndex: 1201,
+          height: "100dvh",
         }}
-        className={`callscreen app-container call-screen ${callType === "voice" ? "voice-call" : "video-call"
-          }`}
+        className={`callscreen app-container call-screen ${
+          callType === "voice" ? "voice-call" : "video-call"
+        }`}
       >
         {/* Call Header */}
         <div className="call-header">
@@ -645,8 +648,9 @@ const CallScreen = ({
 
         {/* Video Container */}
         <div
-          className={`video-container ${callType === "voice" ? "voice-mode" : "video-mode"
-            }`}
+          className={`video-container ${
+            callType === "voice" ? "voice-mode" : "video-mode"
+          }`}
         >
           {callType === "voice" ? (
             // Voice Call UI
@@ -696,8 +700,9 @@ const CallScreen = ({
         <div className="call-controls">
           {/* Microphone Mute Button */}
           <button
-            className={`control-btn ${isMuted ? "muted" : ""} ${!isMuted && isSpeaking ? "speaking" : ""
-              }`}
+            className={`control-btn ${isMuted ? "muted" : ""} ${
+              !isMuted && isSpeaking ? "speaking" : ""
+            }`}
             onClick={toggleMute}
             title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
             style={{
@@ -724,8 +729,9 @@ const CallScreen = ({
               <div className="audio-control-group">
                 {/* Left Button - Mute/Unmute Audio Output (Speaker) */}
                 <button
-                  className={`control-btn audio-output-mute-btn ${isAudioOutputMuted ? "muted" : ""
-                    }`}
+                  className={`control-btn audio-output-mute-btn ${
+                    isAudioOutputMuted ? "muted" : ""
+                  }`}
                   onClick={toggleAudioOutputMute}
                   title={
                     isAudioOutputMuted
@@ -738,11 +744,11 @@ const CallScreen = ({
                       return <VolumeX size={28} />;
                     }
                     const selectedDevice = audioOutputDevices.find(
-                      (d) => d.deviceId === selectedAudioOutput
+                      (d) => d.deviceId === selectedAudioOutput,
                     );
                     if (selectedDevice) {
                       const deviceInfo = identifyDeviceType(
-                        selectedDevice.label || "Speaker"
+                        selectedDevice.label || "Speaker",
                       );
                       const SelectedIcon = deviceInfo.icon;
                       return <SelectedIcon size={28} />;
@@ -769,16 +775,17 @@ const CallScreen = ({
                   <div className="audio-menu-items">
                     {audioOutputDevices.map((device) => {
                       const deviceInfo = identifyDeviceType(
-                        device.label || "Speaker"
+                        device.label || "Speaker",
                       );
                       const DeviceIcon = deviceInfo.icon;
                       return (
                         <button
                           key={device.deviceId}
-                          className={`audio-menu-item ${selectedAudioOutput === device.deviceId
-                            ? "active"
-                            : ""
-                            }`}
+                          className={`audio-menu-item ${
+                            selectedAudioOutput === device.deviceId
+                              ? "active"
+                              : ""
+                          }`}
                           onClick={() => {
                             changeAudioOutput(device.deviceId);
                             setShowAudioMenu(false);

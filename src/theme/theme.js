@@ -222,7 +222,7 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 0,
         },
         elevation1: {
           boxShadow:

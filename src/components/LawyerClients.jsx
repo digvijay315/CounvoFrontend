@@ -208,7 +208,7 @@ const LawyerClients = () => {
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Typography variant="h4" fontWeight="700" color="success.main">
-              {filteredClients.length}
+              {Boolean(searchQuery) ? filteredClients.length : 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Filtered Results

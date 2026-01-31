@@ -14,13 +14,28 @@ const usePayment = () => {
   const confirmPayment = async (
     razorpayOrderId,
     razorpayPaymentId,
-    razorpaySignature
+    razorpaySignature,
   ) => {
     try {
       const response = await api.post("/api/v2/payment/confirm", {
         razorpay_order_id: razorpayOrderId,
         razorpay_payment_id: razorpayPaymentId,
         razorpay_signature: razorpaySignature,
+      });
+      return response.data;
+    } catch (err) {
+      console.error("Error confirming payment:", err);
+      throw err;
+    }
+  };
+
+  // Cancel Payment
+  const cancelPayment = async (paymentId, status = "cancelled") => {
+    try {
+      if(!paymentId) return;
+      const response = await api.post("/api/v2/payment/cancel", {
+        paymentId,
+        status,
       });
       return response.data;
     } catch (err) {
@@ -37,7 +52,7 @@ const usePayment = () => {
     lawyerId,
     amount,
     notes = {},
-    onSuccess = null
+    onSuccess = null,
   ) => {
     setIsLoading(true);
     setError(null);
@@ -58,6 +73,7 @@ const usePayment = () => {
         setIsLoading(false);
         return;
       }
+      const orderPaymentId = response?.data?.paymentId;
       const orderData = response.data.order || response.data;
 
       // Step 2: Configure Razorpay payment options
@@ -76,7 +92,7 @@ const usePayment = () => {
             const confirmResult = await confirmPayment(
               paymentResponse.razorpay_order_id,
               paymentResponse.razorpay_payment_id,
-              paymentResponse.razorpay_signature
+              paymentResponse.razorpay_signature,
             );
 
             toast.success("Payment successful and verified!");
@@ -89,7 +105,7 @@ const usePayment = () => {
           } catch (err) {
             console.error("Payment verification error:", err);
             toast.error(
-              "Payment completed but verification failed. Please contact support."
+              "Payment completed but verification failed. Please contact support.",
             );
           }
         },
@@ -108,6 +124,7 @@ const usePayment = () => {
           ondismiss: function () {
             setIsLoading(false);
             toast.info("Payment cancelled");
+            cancelPayment(orderPaymentId, "cancelled");
           },
         },
       };
@@ -120,6 +137,7 @@ const usePayment = () => {
         toast.error(`Payment failed: ${response.error.description}`);
         setError(response.error.description);
         setIsLoading(false);
+        cancelPayment(orderPaymentId, "failed");
       });
 
       razorpay.open();

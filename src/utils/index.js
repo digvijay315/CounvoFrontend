@@ -244,20 +244,20 @@ export const generateInvoicePDF = (invoiceData) => {
   // Table rows
   const tableRows = [
     {
-      particulars: 'Legal Consultation Fee',
+      particulars: "Legal Consultation Fee",
       recipient: recipientName,
-      amount: consultationFee.toFixed(2)
+      amount: consultationFee.toFixed(2),
     },
     {
-      particulars: 'Counvo Platform Usage Fee',
-      recipient: 'Counvo Technologies Pvt Ltd',
-      amount: platformFeeAmount.toFixed(2)
+      particulars: "Counvo Platform Usage Fee",
+      recipient: "Counvo Sphere Pvt Ltd",
+      amount: platformFeeAmount.toFixed(2),
     },
     {
       particulars: `GST @ ${gstPercent}% on Platform Fee`,
-      recipient: 'Government of India',
-      amount: gstAmount.toFixed(2)
-    }
+      recipient: "Government of India",
+      amount: gstAmount.toFixed(2),
+    },
   ];
 
   tableRows.forEach((row) => {

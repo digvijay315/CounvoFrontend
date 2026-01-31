@@ -17,7 +17,13 @@ import {
   Grid,
   IconButton,
 } from "@mui/material";
-import { Payment, CheckCircle, Cancel, Pending, FileDownload } from "@mui/icons-material";
+import {
+  Payment,
+  CheckCircle,
+  Cancel,
+  Pending,
+  FileDownload,
+} from "@mui/icons-material";
 import usePaymentHistory from "../../hooks/usePaymentHistory";
 import { generateInvoicePDF } from "../../utils";
 
@@ -83,7 +89,6 @@ const PaymentHistory = () => {
     );
   }
 
-
   const handleDownloadInvoice = (payment) => {
     // Assuming payment.invoiceUrl contains the URL to download the invoice
     let lawyerName = payment?.lawyerId?.fullName,
@@ -97,7 +102,7 @@ const PaymentHistory = () => {
       date: new Date(payment?.createdAt).toLocaleDateString("en-IN", {
         year: "numeric",
         month: "long",
-        day: "numeric"
+        day: "numeric",
       }),
       billedTo: {
         name: clientName,
@@ -109,9 +114,9 @@ const PaymentHistory = () => {
       consultationFee: payment.transferAmount,
       recipientName: lawyerName,
       platformFee: PlatformFee,
-      gstPercent: GstPercent
-    })
-  }
+      gstPercent: GstPercent,
+    });
+  };
 
   return (
     <Box sx={{ p: 0.5 }}>
@@ -143,10 +148,14 @@ const PaymentHistory = () => {
       )}
 
       {/* Payments Table */}
-      <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e0e0e0" }}>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{ border: "1px solid #e0e0e0" }}
+      >
         <Table>
           <TableHead>
-            <TableRow sx={{ '& .MuiTableCell-head': { minWidth: 180 } }}>
+            <TableRow sx={{ "& .MuiTableCell-head": { minWidth: 180 } }}>
               <TableCell>
                 <strong>Invoice No</strong>
               </TableCell>
@@ -187,7 +196,10 @@ const PaymentHistory = () => {
               payments.map((payment) => (
                 <TableRow key={payment._id} hover>
                   <TableCell>
-                    <Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ fontFamily: "monospace" }}
+                    >
                       {payment.orderId}
                     </Typography>
                   </TableCell>
@@ -200,6 +212,16 @@ const PaymentHistory = () => {
                   <TableCell>
                     <Typography variant="caption" color="text.secondary">
                       {payment.lawyerId?.email || ""}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {payment.clientId?.fullName || "N/A"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="caption" color="text.secondary">
+                      {payment.clientId?.email || ""}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -217,14 +239,19 @@ const PaymentHistory = () => {
                   <TableCell>
                     <Chip
                       icon={getStatusIcon(payment.status)}
-                      label={payment.status === "created" ? "Cancelled" : payment.status}
+                      label={payment.status}
                       color={getStatusColor(payment.status)}
                       size="small"
                     />
                   </TableCell>
 
                   <TableCell>
-                    <IconButton disabled={payment.status !== "paid"} onClick={() => { handleDownloadInvoice(payment) }}>
+                    <IconButton
+                      disabled={payment.status !== "paid"}
+                      onClick={() => {
+                        handleDownloadInvoice(payment);
+                      }}
+                    >
                       <FileDownload />
                     </IconButton>
                   </TableCell>
@@ -251,4 +278,3 @@ const PaymentHistory = () => {
 };
 
 export default PaymentHistory;
-

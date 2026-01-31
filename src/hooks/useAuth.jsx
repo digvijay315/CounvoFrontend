@@ -47,6 +47,7 @@ const useAuth = () => {
 
   const handleLogout = () => {
     dispatch(clearUser());
+    localStorage.removeItem("persist:root");
   };
   return {
     // Redux dispatch

@@ -114,139 +114,167 @@ const AdminManagePayments = () => {
     }
 
     return (
-        <Box sx={{ p: 0.5 }}>
-            <Typography variant="h5" fontWeight="600" gutterBottom>
-                Payment History
-            </Typography>
+      <Box sx={{ p: 0.5 }}>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Payment History
+        </Typography>
 
-            {/* Statistics Cards */}
-            {statistics && (
-                <Grid container spacing={3} sx={{ mb: 3 }}>
-                    <Grid item xs={12} md={4}>
-                        <Card>
-                            <CardContent>
-                                <Box display="flex" alignItems="center" gap={2}>
-                                    <Payment color="primary" fontSize="large" />
-                                    <Box>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Total Spent
-                                        </Typography>
-                                        <Typography variant="h5" fontWeight="600">
-                                            {formatAmount(statistics.totalSpent)}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-            )}
+        {/* Statistics Cards */}
+        {statistics && (
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <Payment color="primary" fontSize="large" />
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Spent
+                      </Typography>
+                      <Typography variant="h5" fontWeight="600">
+                        {formatAmount(statistics.totalSpent)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )}
 
-            {/* Payments Table */}
-            <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e0e0e0" }}>
-                <Table>
-                    <TableHead>
-                        <TableRow sx={{ '& .MuiTableCell-head': { minWidth: 180 } }}>
-                            <TableCell>
-                                <strong>Invoice No</strong>
-                            </TableCell>
-                            <TableCell>
-                                <strong>Date</strong>
-                            </TableCell>
-                            <TableCell>
-                                <strong>Lawyer Name</strong>
-                            </TableCell>
-                            <TableCell>
-                                <strong>Lawyer Email</strong>
-                            </TableCell>
-                            <TableCell>
-                                <strong>Consultation Type</strong>
-                            </TableCell>
-                            <TableCell>
-                                <strong>Amount</strong>
-                            </TableCell>
-                            <TableCell>
-                                <strong>Status</strong>
-                            </TableCell>
+        {/* Payments Table */}
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{ border: "1px solid #e0e0e0" }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow sx={{ "& .MuiTableCell-head": { minWidth: 180 } }}>
+                <TableCell>
+                  <strong>Invoice No</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Date</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Lawyer Name</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Lawyer Email</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Payee Name</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Payee Email</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Consultation Type</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Amount</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Status</strong>
+                </TableCell>
 
-                            <TableCell>
-                                <strong>Receipt</strong>
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {payments.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={6} align="center">
-                                    <Typography color="text.secondary" py={4}>
-                                        No payment history found
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            payments.map((payment) => (
-                                <TableRow key={payment._id} hover>
-                                    <TableCell>
-                                        <Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-                                            {payment.orderId}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>{formatDate(payment.createdAt)}</TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2">
-                                            {payment.lawyerId?.fullName || "N/A"}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {payment.lawyerId?.email || ""}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={payment.consultationType}
-                                            size="small"
-                                            variant="outlined"
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography fontWeight="600">
-                                            {formatAmount(payment.totalAmount)}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            icon={getStatusIcon(payment.status)}
-                                            label={payment.status === "created" ? "Cancelled" : payment.status}
-                                            color={getStatusColor(payment.status)}
-                                            size="small"
-                                        />
-                                    </TableCell>
+                <TableCell>
+                  <strong>Receipt</strong>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {payments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    <Typography color="text.secondary" py={4}>
+                      No payment history found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                payments.map((payment) => (
+                  <TableRow key={payment._id} hover>
+                    <TableCell>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontFamily: "monospace" }}
+                      >
+                        {payment.orderId}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{formatDate(payment.createdAt)}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {payment.lawyerId?.fullName || "N/A"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption" color="text.secondary">
+                        {payment.lawyerId?.email || ""}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {payment.clientId?.fullName || "N/A"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption" color="text.secondary">
+                        {payment.clientId?.email || ""}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={payment.consultationType}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography fontWeight="600">
+                        {formatAmount(payment.totalAmount)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={getStatusIcon(payment.status)}
+                        label={payment.status}
+                        color={getStatusColor(payment.status)}
+                        size="small"
+                      />
+                    </TableCell>
 
-                                    <TableCell>
-                                        <IconButton disabled={payment.status !== "paid"} onClick={() => { handleDownloadInvoice(payment) }}>
-                                            <FileDownload />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                    <TableCell>
+                      <IconButton
+                        disabled={payment.status !== "paid"}
+                        onClick={() => {
+                          handleDownloadInvoice(payment);
+                        }}
+                      >
+                        <FileDownload />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-                <Box display="flex" justifyContent="center" mt={3}>
-                    <Pagination
-                        count={pagination.totalPages}
-                        page={page}
-                        onChange={(e, value) => setPage(value)}
-                        color="primary"
-                    />
-                </Box>
-            )}
-        </Box>
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <Box display="flex" justifyContent="center" mt={3}>
+            <Pagination
+              count={pagination.totalPages}
+              page={page}
+              onChange={(e, value) => setPage(value)}
+              color="primary"
+            />
+          </Box>
+        )}
+      </Box>
     );
 };
 

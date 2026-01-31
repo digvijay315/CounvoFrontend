@@ -159,7 +159,7 @@ function FindLawyer() {
         title: "Lawyer Unavailable",
         text:
           message ||
-          "The lawyer couldn't accept your request. Let's find you another lawyer!",
+          "This lawyer isn’t available for this request. Let's find you another lawyer!",
         confirmButtonText: "Find Another Lawyer",
         showCancelButton: true,
         cancelButtonText: "Close",
@@ -176,7 +176,7 @@ function FindLawyer() {
       // Show timeout message (lawyer not added to rejected list - can try again)
       Swal.fire({
         icon: "warning",
-        title: "Request Timed Out",
+        title: "Lawyer didn’t respond",
         text:
           message ||
           "The lawyer didn't respond in time. Would you like to try another lawyer?",
@@ -199,7 +199,7 @@ function FindLawyer() {
       window.removeEventListener("chatRequestRejected", handleChatRejected);
       window.removeEventListener(
         "chatRequestNotAccepted",
-        handleChatNotAccepted
+        handleChatNotAccepted,
       );
     };
   }, [navigate, showSuggestionDialog]);
@@ -252,7 +252,7 @@ function FindLawyer() {
       }
       // Note: isConnecting will be set to false by the event handlers
     },
-    [userId, user, onlineLawyers, initiateChatRequest]
+    [userId, user, onlineLawyers, initiateChatRequest],
   );
 
   // ==================== FILTERED DATA ====================
@@ -265,7 +265,7 @@ function FindLawyer() {
       if (rejectedByLawyers.includes(lawyer._id)) return false;
 
       let lawyerSpecializations =
-        lawyer?.lawyerKycId?.professionalInfo?.specializations || [],
+          lawyer?.lawyerKycId?.professionalInfo?.specializations || [],
         lawyerLanguages =
           lawyer?.lawyerKycId?.professionalInfo?.languages || [],
         lawyerPracticingCourts =
@@ -274,7 +274,7 @@ function FindLawyer() {
       // Filter by specialization
       if (specialization) {
         const hasSpecialization = lawyerSpecializations.includes(
-          specialization.toLowerCase()
+          specialization.toLowerCase(),
         );
         if (!hasSpecialization) return false;
       }
@@ -289,7 +289,7 @@ function FindLawyer() {
         // Filter by practicing court
         if (practicingCourt) {
           const hasPracticingCourt = lawyerPracticingCourts.includes(
-            practicingCourt.toLowerCase()
+            practicingCourt.toLowerCase(),
           );
           if (!hasPracticingCourt) return false;
         }
@@ -314,7 +314,7 @@ function FindLawyer() {
     (lawyerPool) => {
       // Filter out already suggested lawyers in this session
       const availableLawyers = lawyerPool.filter(
-        (l) => !usedLawyerIds.includes(l._id)
+        (l) => !usedLawyerIds.includes(l._id),
       );
 
       // If all lawyers have been suggested, reset the pool
@@ -326,7 +326,7 @@ function FindLawyer() {
       const randomIndex = Math.floor(Math.random() * availableLawyers.length);
       return availableLawyers[randomIndex];
     },
-    [usedLawyerIds]
+    [usedLawyerIds],
   );
 
   const findSuggestedLawyer = useCallback(() => {
@@ -401,7 +401,9 @@ function FindLawyer() {
     // Reset used lawyer IDs for new search
     setUsedLawyerIds([]);
 
-    document.getElementById("dashboard-content-area")?.scrollTo({ top: 0, behavior: "smooth" });
+    document
+      .getElementById("dashboard-content-area")
+      ?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleFindAnotherLawyer = () => {
@@ -644,8 +646,8 @@ function FindLawyer() {
                         color: "primary.dark",
                         border: "1px solid",
                         borderColor: "primary.dark",
-                        px: { xs: 2, md: 5 },
-                        py: { xs: 1, md: 3 },
+                        px: { xs: 2, md: 3 },
+                        py: { xs: 1, md: 1 },
                         borderRadius: 1,
                         width: "100%",
                         textAlign: "center",
@@ -653,15 +655,15 @@ function FindLawyer() {
                         flexDirection: "row",
                         justifyContent: "center",
                         alignItems: "center",
-                        gap: 2,
+                        gap: 1,
                       }}
                     >
-                      <Typography variant="h1" fontWeight="700">
+                      <Typography variant="h2" fontWeight="700">
                         {item.value}
                       </Typography>
                       <Typography
-                        variant="h6"
-                        sx={{ textAlign: "start", lineHeight: 1.1 }}
+                        variant="body2"
+                        sx={{ textAlign: "start", lineHeight: 1.1, fontWeight:700 }}
                         dangerouslySetInnerHTML={{ __html: item.label }}
                       />
                     </Box>
@@ -839,7 +841,9 @@ function FindLawyer() {
               fontWeight: 600,
             }}
           >
-            Find Another Lawyer
+            {!suggestedLawyer || filteredLawyers.length <= 1
+              ? "No other lawyer available right now."
+              : "Find Another Lawyer"}
           </Button>
         </DialogActions>
       </Dialog>
