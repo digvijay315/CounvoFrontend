@@ -614,6 +614,7 @@
     gap: 6px;
     padding: 8px;
     padding-top: 52px; /* below compact header */
+    padding-bottom: 76px; /* above call controls */
   }
 
   .remote-videos.remote-count-1 {
@@ -642,19 +643,33 @@
 
   .remote-video-wrapper {
     position: relative;
-    background: #1f2937;
+    background: #0f0f0f;
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.08);
     min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
+  /* No cropping: show entire remote video, centered */
   .remote-video {
     width: 100%;
     height: 100%;
-    min-height: 100%;
-    object-fit: cover;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .remote-video video {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
   }
 
   /* Self: small pip at top right */
@@ -1108,9 +1123,12 @@
       right: 4px;
     }
 
+    /* Mobile: use entire visible area, reserve space for header and controls */
     .video-container.video-mode .remote-videos {
       padding-top: 48px;
-      padding: 6px;
+      padding-left: 4px;
+      padding-right: 4px;
+      padding-bottom: 72px;
       gap: 4px;
     }
 
