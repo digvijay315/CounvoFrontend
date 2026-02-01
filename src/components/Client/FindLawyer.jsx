@@ -575,20 +575,7 @@ function FindLawyer() {
                       ))}
                     </Select>
                   </FormControl>
-                  <FormControl sx={{ minWidth: 200 }}>
-                    <Select
-                      value={language || ""}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      displayEmpty
-                      size="medium"
-                    >
-                      {LawyerLanguages.map((lang) => (
-                        <MuiMenuItem key={lang.value} value={lang.value}>
-                          {lang.label}
-                        </MuiMenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+
                   <FormControl sx={{ minWidth: 200 }}>
                     <Select
                       value={practicingCourt || ""}
@@ -599,6 +586,20 @@ function FindLawyer() {
                       {LawyerPracticingCourts.map((court) => (
                         <MuiMenuItem key={court.value} value={court.value}>
                           {court.label}
+                        </MuiMenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl sx={{ minWidth: 200 }}>
+                    <Select
+                      value={language || ""}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      displayEmpty
+                      size="medium"
+                    >
+                      {LawyerLanguages.map((lang) => (
+                        <MuiMenuItem key={lang.value} value={lang.value}>
+                          {lang.label}
                         </MuiMenuItem>
                       ))}
                     </Select>
@@ -663,7 +664,11 @@ function FindLawyer() {
                       </Typography>
                       <Typography
                         variant="body2"
-                        sx={{ textAlign: "start", lineHeight: 1.1, fontWeight:700 }}
+                        sx={{
+                          textAlign: "start",
+                          lineHeight: 1.1,
+                          fontWeight: 700,
+                        }}
                         dangerouslySetInnerHTML={{ __html: item.label }}
                       />
                     </Box>

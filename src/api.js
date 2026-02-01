@@ -3,6 +3,7 @@ import { APP_CONFIG } from "./_constants/config";
 import { toast } from "react-toastify";
 import { NAVIGATION_CONSTANTS } from "./_constants/navigationConstants";
 import { store } from "./redux/store";
+import { clearUser } from "./redux/slices/authSlice";
 
 const api = axios.create({
   baseURL: APP_CONFIG.API_URL,
@@ -23,11 +24,12 @@ api.interceptors.response.use(
   },
   async (error) => {
     if (error.response.status === 401) {
+
+      store.dispatch(clearUser());
       localStorage.removeItem("authToken");
       localStorage.removeItem("persist:root");
-      window.location.reload();
       window.location.href = NAVIGATION_CONSTANTS.LOGIN_PATH;
-      toast.error("Session expired. Please login again.");
+
       return Promise.reject(error);
     }
     if (error.response.status === 403) {

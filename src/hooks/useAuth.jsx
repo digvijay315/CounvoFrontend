@@ -8,6 +8,7 @@ import {
   selectAuth,
   clearUser,
 } from "../redux/slices/authSlice";
+import { NAVIGATION_CONSTANTS } from '../_constants/navigationConstants';
 
 /**
  * Custom hook to access authentication state from Redux store
@@ -47,7 +48,8 @@ const useAuth = () => {
 
   const handleLogout = () => {
     dispatch(clearUser());
-    localStorage.removeItem("persist:root");
+    localStorage?.removeItem("persist:root");
+    window.location.href = NAVIGATION_CONSTANTS.LOGIN_PATH;
   };
   return {
     // Redux dispatch

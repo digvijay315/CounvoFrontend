@@ -14,7 +14,7 @@ const ProtectedRoute = () => {
       dispatch(getUserDetails());
     } else {
       handleLogout();
-      navigate(NAVIGATION_CONSTANTS.LOGIN_PATH, { replace: true });
+      // navigate(NAVIGATION_CONSTANTS.LOGIN_PATH, { replace: true });
     }
   }, [token]);
 

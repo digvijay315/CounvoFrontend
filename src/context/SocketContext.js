@@ -146,7 +146,6 @@ export const SocketProvider = ({ children }) => {
 
     // Connection event handlers
     const handleConnect = () => {
-      console.log("✅ Socket connected:", socketIO.id);
       setIsConnected(true);
 
       // Emit online status based on user role
@@ -161,7 +160,6 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleDisconnect = (reason) => {
-      console.log("❌ Socket disconnected:", reason);
       setIsConnected(false);
     };
 
@@ -172,7 +170,6 @@ export const SocketProvider = ({ children }) => {
 
     // Online users handlers
     const handleOnlineLawyersList = (ids) => {
-      console.log("📋 Online lawyers:", ids);
       setOnlineLawyers(ids);
     };
 
@@ -181,7 +178,6 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleOnlineClientsList = (ids) => {
-      console.log("📋 Online clients:", ids);
       setOnlineClients(ids);
     };
 
