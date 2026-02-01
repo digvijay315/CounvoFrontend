@@ -590,7 +590,10 @@ const CallScreen = React.forwardRef(
       return callerId;
     };
 
-    useImperativeHandle(agoraClientRef, () => clientRef?.current ?? {});
+    useImperativeHandle(agoraClientRef, () => ({
+      ...(clientRef.current ?? {}),
+      handleEndCall,
+    }));
     // Loading Screen or Ringing Screen
     if ((isLoading && !inCall) || (!inCall && callStatus === "ringing")) {
       return (

@@ -260,8 +260,8 @@ export const SocketProvider = ({ children }) => {
         timer: 2000,
         showConfirmButton: false,
       });
-      if(agoraClientRef.current){
-        agoraClientRef?.current?.leave();
+      if (agoraClientRef.current.handleEndCall) {
+        agoraClientRef?.current?.handleEndCall();
       }
     };
 
