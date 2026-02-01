@@ -681,10 +681,15 @@ const CallScreen = React.forwardRef(
                 <p className="call-duration">Voice Call Active</p>
               </div>
             ) : (
-              // Video Call UI
+              // Video Call UI: remote(s) fill main area, self small top-right
               <>
-                {/* Remote Videos */}
-                <div className="remote-videos">
+                {/* Main area: remote participants (split by count) */}
+                <div
+                  className={`remote-videos remote-count-${Math.min(
+                    Math.max(remoteUsers.length, 1),
+                    4
+                  )}`}
+                >
                   {remoteUsers.length === 0 ? (
                     <div className="waiting-message">
                       <p>Waiting for {getCallerName()} to join...</p>
@@ -704,10 +709,10 @@ const CallScreen = React.forwardRef(
                   )}
                 </div>
 
-                {/* Local Video */}
+                {/* Self: small pip at top right */}
                 <div className="local-video-wrapper">
                   <div id="local-video" className="local-video"></div>
-                  <span className="video-label">You ({userFullName})</span>
+                  <span className="video-label">You</span>
                 </div>
               </>
             )}
@@ -761,11 +766,11 @@ const CallScreen = React.forwardRef(
                         return <VolumeX size={28} />;
                       }
                       const selectedDevice = audioOutputDevices.find(
-                        (d) => d.deviceId === selectedAudioOutput,
+                        (d) => d.deviceId === selectedAudioOutput
                       );
                       if (selectedDevice) {
                         const deviceInfo = identifyDeviceType(
-                          selectedDevice.label || "Speaker",
+                          selectedDevice.label || "Speaker"
                         );
                         const SelectedIcon = deviceInfo.icon;
                         return <SelectedIcon size={28} />;
@@ -792,7 +797,7 @@ const CallScreen = React.forwardRef(
                     <div className="audio-menu-items">
                       {audioOutputDevices.map((device) => {
                         const deviceInfo = identifyDeviceType(
-                          device.label || "Speaker",
+                          device.label || "Speaker"
                         );
                         const DeviceIcon = deviceInfo.icon;
                         return (
