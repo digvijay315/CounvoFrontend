@@ -24,6 +24,7 @@ import ChatPage from "../components/shared/ChatPage";
 import LawyerClients from "../components/LawyerClients";
 import ManageBlogs from "../components/Admin/ManageBlogs";
 import AdminManagePayments from "../components/Admin/AdminManagePayments";
+import ErrorPage from "./ErrorPage";
 
 const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
   const { user } = useAuth();
@@ -40,6 +41,7 @@ const RoleBasedRoutes = ({ UserElement, LawyerElement, AdminElement }) => {
 const router = createBrowserRouter([
   {
     element: <GuestRoute />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/auth",
