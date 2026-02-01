@@ -613,8 +613,8 @@
     display: grid;
     gap: 6px;
     padding: 8px;
-    padding-top: 52px; /* below compact header */
-    padding-bottom: 76px; /* above call controls */
+    padding-top: 68px; /* below compact header */
+    padding-bottom: 90px; /* above call controls */
   }
 
   .remote-videos.remote-count-1 {
@@ -683,7 +683,6 @@
     background: #1f2937;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     border: 2px solid rgba(255, 255, 255, 0.2);
     z-index: 50;
     transition: transform 0.2s ease;
@@ -1125,10 +1124,10 @@
 
     /* Mobile: use entire visible area, reserve space for header and controls */
     .video-container.video-mode .remote-videos {
-      padding-top: 48px;
+      padding-top: 60px;
       padding-left: 4px;
       padding-right: 4px;
-      padding-bottom: 72px;
+      padding-bottom: 80px;
       gap: 4px;
     }
 
