@@ -116,6 +116,7 @@ export const SocketProvider = ({ children }) => {
   // Message handlers ref (for external components to register)
   const messageHandlersRef = useRef(new Map());
 
+  const agoraClientRef = useRef(null);
 
   const [isGranted, setIsGranted] = useState(false);
   const handleNotificationIfMimimized = (title, body) => {
@@ -259,6 +260,9 @@ export const SocketProvider = ({ children }) => {
         timer: 2000,
         showConfirmButton: false,
       });
+      if(agoraClientRef.current){
+        agoraClientRef?.current?.leave();
+      }
     };
 
     // Chat request handlers
@@ -646,6 +650,7 @@ export const SocketProvider = ({ children }) => {
       {/* Calling Screen */}
       {activeCall.isActive && (
         <CallScreen
+        ref={agoraClientRef}
           userId={userId}
           callerId={activeCall.peerId}
           callerInfo={activeCall.peerInfo}
