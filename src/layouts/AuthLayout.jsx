@@ -54,10 +54,10 @@ const AuthLayout = () => {
                 <div
                   className="illustration-icon glass-bg rounded-xl p-1"
                   style={{
-                    background: "rgba(255,255,255,0.25)",
+                    background: "rgba(234, 179, 8, 0.2)",
                     backdropFilter: "blur(8px)",
                     WebkitBackdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255,255,255,0.28)",
+                    border: "1px solid rgba(234, 179, 8, 0.4)",
                   }}
                 >
                   ⚖️

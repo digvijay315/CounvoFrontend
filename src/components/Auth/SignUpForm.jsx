@@ -78,7 +78,7 @@ const SignUpForm = () => {
         icon: "success",
         title: "Registration Successful!",
         text: "Please sign in to continue",
-        confirmButtonColor: "#667eea",
+        confirmButtonColor: "#eab308",
       }).then(() => {
         navigate("/auth/signin");
       });
