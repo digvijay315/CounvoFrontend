@@ -111,7 +111,10 @@ const router = createBrowserRouter([
           },
 
           { path: NAVIGATION_CONSTANTS.SUPPORT_PATH, element: <Support /> },
-          { path: NAVIGATION_CONSTANTS.REPORT_PATH, element: <AdminReport /> },
+          {
+            path: NAVIGATION_CONSTANTS.REPORT_PATH,
+            element: <RoleBasedRoutes AdminElement={<AdminReport />} />,
+          },
           {
             path: NAVIGATION_CONSTANTS.MANAGE_APPROVALS_PATH,
             element: <RoleBasedRoutes AdminElement={<ManageApprovals />} />,

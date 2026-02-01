@@ -10,6 +10,7 @@ import {
 } from "@mui/icons-material";
 import { Files } from "lucide-react";
 import { FaRupeeSign } from "react-icons/fa";
+import { BarChart } from "lucide-react";
 
 export const NAVIGATION_CONSTANTS = {
   MANAGE_PAYMENTS_PATH: "/dashboard/managepayments",
@@ -91,6 +92,12 @@ export const NAVIGATION_MENU_ITEMS = [
     label: "Manage Payments",
     path: NAVIGATION_CONSTANTS.MANAGE_PAYMENTS_PATH,
     icon: <FaRupeeSign />,
+    allowedRoles: ["admin"],
+  },
+  {
+    label: "Reports",
+    path: NAVIGATION_CONSTANTS.REPORT_PATH,
+    icon: <BarChart />,
     allowedRoles: ["admin"],
   },
 ];
