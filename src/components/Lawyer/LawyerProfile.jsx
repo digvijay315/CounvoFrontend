@@ -15,42 +15,134 @@ import {
   CircularProgress,
   Divider,
   Stack,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Edit as EditIcon,
-  CheckCircle as CheckCircleIcon,
   Close as CloseIcon,
   PhotoCamera as PhotoCameraIcon,
+  Person as PersonIcon,
+  School as SchoolIcon,
+  Gavel as GavelIcon,
+  VerifiedUser as VerifiedUserIcon,
+  Work as WorkIcon,
+  AccountBalance as AccountBalanceIcon,
 } from "@mui/icons-material";
 import Select from "react-select";
 import { State, City } from "country-state-city";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import { getUserDetails } from "../../redux/slices/authSlice";
+import PersonalInfoStep from "./KycSteps/PersonalInfoStep";
+import EducationStep from "./KycSteps/EducationStep";
+import BarCouncilInfoStep from "./KycSteps/BarCouncilInfoStep";
+import AibeInfoStep from "./KycSteps/AibeInfoStep";
+import ProfessionalInfoStep from "./KycSteps/ProfessionalInfoStep";
+import BankDetailsStep from "./KycSteps/BankDetailsStep";
+
+const kycTabs = [
+  { label: "Basic", key: "basic" },
+  { label: "Personal", key: "personalInfo" },
+  { label: "Education", key: "education" },
+  { label: "Bar Council", key: "barCouncilInfo" },
+  { label: "AIBE", key: "aibeInfo" },
+  { label: "Professional", key: "professionalInfo" },
+  { label: "Bank", key: "bankDetails" },
+  { label: "Declarations", key: "declarations" },
+];
+const kycSteps = [
+  { label: "Personal Information", icon: PersonIcon, key: "personalInfo" },
+  { label: "Education", icon: SchoolIcon, key: "education" },
+  { label: "Bar Council Info", icon: GavelIcon, key: "barCouncilInfo" },
+  { label: "AIBE Info", icon: VerifiedUserIcon, key: "aibeInfo" },
+  { label: "Professional Info", icon: WorkIcon, key: "professionalInfo" },
+  { label: "Bank Details", icon: AccountBalanceIcon, key: "bankDetails" },
+];
+
+const defaultKycData = {
+  personalInfo: {
+    gender: "",
+    dateOfBirth: "",
+    alternateContact: "",
+    residentialAddress: {
+      street: "",
+      city: "",
+      state: "",
+      pinCode: "",
+      country: "India",
+    },
+    correspondingAddress: {
+      street: "",
+      city: "",
+      state: "",
+      pinCode: "",
+      country: "India",
+      isSameAsResidential: false,
+    },
+  },
+  education: [
+    { degree: "", university: "", yearOfGraduation: "", certificateUrl: "" },
+  ],
+  barCouncilInfo: {
+    barEnrollmentNumber: "",
+    barState: "",
+    enrollmentYear: "",
+    barCertificateUrl: [],
+    barMembership: "",
+  },
+  aibeInfo: { aibeNumber: "", aibeCertificateUrl: [], aibeYear: "" },
+  professionalInfo: {
+    practiceType: "",
+    lawFirmName: "",
+    officeAddress: {
+      street: "",
+      street2: "",
+      city: "",
+      state: "",
+      pinCode: "",
+      country: "India",
+    },
+    specializations: [],
+    languages: [],
+    practicingCourts: [],
+    proofOfPractice: [],
+    professionalBio: "",
+  },
+  bankDetails: {
+    accountHolderName: "",
+    bankName: "",
+    accountNumber: "",
+    ifscCode: "",
+    accountType: "",
+    cancelledChequeUrl: [],
+  },
+  declarations: {
+    authenticityDeclaration: false,
+    consentForVerification: false,
+    termsAndConditionsAccepted: false,
+    declarationDate: "",
+    ipAddress: "",
+  },
+};
 
 const LawyerProfile = () => {
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const [kycLoading, setKycLoading] = useState(true);
+  const [kycData, setKycData] = useState(defaultKycData);
   const { user: userData, userId } = useAuth();
 
-  const [show, setShow] = useState(false);
+  const [show1, setShow1] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
-  const handleShow = () => {
-    setShow(true);
-  };
-
-  const handleClose = () => {
-    setShow(false);
-  };
-
-  const [clientprofile, setclientprofile] = useState({
+  const [editBasic, setEditBasic] = useState({
+    fullName: "",
+    phone: "",
     profilepic: [],
-    gender: "",
-    dob: "",
-    contact_no: "",
-    residential_address: "",
-    state: "",
-    city: "",
-    pin_code: "",
-    corrosponding_address: "",
   });
 
   const [selectedState, setSelectedState] = useState(null);
@@ -75,109 +167,255 @@ const LawyerProfile = () => {
         label: city.name,
       }));
       setCityOptions(mappedCities);
-      setSelectedCity(null); // reset city when state changes
+      setSelectedCity(null);
     }
   }, [selectedState]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setclientprofile((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const completeuserprofile = async () => {
-    try {
-      setIsLoading(true);
-      const resp = await api.put(
-        `api/user/updateuserprofile/${userId}`,
-        clientprofile,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      if (resp.status === 200) {
-        Swal.fire({
-          icon: "success",
-          title: "Profile Updated",
-          text: "Your Profile Completed Successfully",
-          showConfirmButton: "true",
-        });
-        setclientprofile([]);
-        handleClose();
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (!userId || userData?.role !== "lawyer") {
+      setKycLoading(false);
+      return;
     }
-  };
-
-  //================================== edit profile start=========================================================
-
-  const [edituserprofile, setedituserprofile] = useState({
-    fullName: "",
-    email: "",
-    username: "",
-    profilepic: [],
-    gender: "",
-    dob: "",
-    contact_no: "",
-    residential_address: "",
-    state: "",
-    city: "",
-    pin_code: "",
-    corrosponding_address: "",
-  });
-
-  const [show1, setShow1] = useState(false);
-  const [activeTab2, setActiveTab2] = useState(0);
+    const fetchKyc = async () => {
+      try {
+        const res = await api.get(`/api/v2/lawyer-kyc/${userId}`);
+        if (res.data?.success && res.data?.kyc) {
+          const k = res.data.kyc;
+          setKycData({
+            personalInfo: k.personalInfo || defaultKycData.personalInfo,
+            education:
+              Array.isArray(k.education) && k.education.length
+                ? k.education
+                : defaultKycData.education,
+            barCouncilInfo: k.barCouncilInfo || defaultKycData.barCouncilInfo,
+            aibeInfo: k.aibeInfo || defaultKycData.aibeInfo,
+            professionalInfo: (() => {
+              const p = k.professionalInfo || defaultKycData.professionalInfo;
+              const addr = p?.officeAddress || {};
+              const streetParts = (addr.street || "").split(", ");
+              return {
+                ...p,
+                officeAddress: {
+                  ...addr,
+                  street: streetParts[0] || "",
+                  street2: streetParts[1] || "",
+                  city: addr.city || "",
+                  state: addr.state || "",
+                  pinCode: addr.pinCode || "",
+                  country: addr.country || "India",
+                },
+              };
+            })(),
+            bankDetails: k.bankDetails || defaultKycData.bankDetails,
+            declarations: k.declarations || defaultKycData.declarations,
+          });
+        }
+      } catch (err) {
+        if (err.response?.status !== 404) console.error(err);
+      } finally {
+        setKycLoading(false);
+      }
+    };
+    fetchKyc();
+  }, [userId, userData?.role]);
 
   const handleShow1 = () => {
-    setActiveTab2(0);
     setShow1(true);
-    setedituserprofile(userData);
+    setActiveTab(0);
+    setEditBasic({
+      fullName: userData?.fullName ?? "",
+      phone: userData?.phone ?? "",
+      profilepic: [],
+    });
   };
 
   const handleClose1 = () => {
     setShow1(false);
   };
 
-  const handleChangeedit = (e) => {
-    const { name, value } = e.target;
-    setedituserprofile((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const updateKycData = (section, data) => {
+    setKycData((prev) => ({ ...prev, [section]: data }));
   };
 
-  const completeedituserprofile = async () => {
+  const validateKycStep = (stepKey) => {
+    switch (stepKey) {
+      case "personalInfo": {
+        const d = kycData.personalInfo;
+        return !!(
+          d?.gender &&
+          d?.dateOfBirth &&
+          d?.residentialAddress?.street &&
+          d?.residentialAddress?.city &&
+          d?.residentialAddress?.state &&
+          d?.residentialAddress?.pinCode
+        );
+      }
+      case "education":
+        return (
+          kycData.education?.length > 0 &&
+          kycData.education.every(
+            (e) =>
+              e.degree && e.university && e.yearOfGraduation && e.certificateUrl
+          )
+        );
+      case "barCouncilInfo": {
+        const d = kycData.barCouncilInfo;
+        return !!(
+          d?.barEnrollmentNumber &&
+          d?.barState &&
+          d?.enrollmentYear &&
+          d?.barCertificateUrl?.length > 0
+        );
+      }
+      case "aibeInfo":
+        if (kycData.aibeInfo?.aibeNumber || kycData.aibeInfo?.aibeYear) {
+          return !!(
+            kycData.aibeInfo?.aibeNumber &&
+            kycData.aibeInfo?.aibeYear &&
+            kycData.aibeInfo?.aibeCertificateUrl?.length > 0
+          );
+        }
+        return true;
+      case "professionalInfo": {
+        const d = kycData.professionalInfo;
+        return !!(
+          d?.officeAddress?.street &&
+          d?.practiceType &&
+          d?.specializations?.length > 0 &&
+          d?.languages?.length > 0
+        );
+      }
+      case "bankDetails": {
+        const d = kycData.bankDetails;
+        return !!(
+          d?.accountHolderName &&
+          d?.bankName &&
+          d?.accountNumber &&
+          d?.ifscCode &&
+          d?.accountType &&
+          d?.cancelledChequeUrl?.length > 0
+        );
+      }
+      case "declarations": {
+        const d = kycData.declarations;
+        return !!(
+          d?.authenticityDeclaration &&
+          d?.consentForVerification &&
+          d?.termsAndConditionsAccepted
+        );
+      }
+      default:
+        return true;
+    }
+  };
+
+  const renderKycStepContent = (index) => {
+    switch (index) {
+      case 0:
+        return (
+          <PersonalInfoStep
+            data={kycData.personalInfo}
+            onChange={(data) => updateKycData("personalInfo", data)}
+          />
+        );
+      case 1:
+        return (
+          <EducationStep
+            data={kycData.education}
+            onChange={(data) => updateKycData("education", data)}
+            onUploadingChange={setUploading}
+          />
+        );
+      case 2:
+        return (
+          <BarCouncilInfoStep
+            data={kycData.barCouncilInfo}
+            onChange={(data) => updateKycData("barCouncilInfo", data)}
+            onUploadingChange={setUploading}
+          />
+        );
+      case 3:
+        return (
+          <AibeInfoStep
+            data={kycData.aibeInfo}
+            onChange={(data) => updateKycData("aibeInfo", data)}
+            onUploadingChange={setUploading}
+          />
+        );
+      case 4:
+        return (
+          <ProfessionalInfoStep
+            data={kycData.professionalInfo}
+            onChange={(data) => updateKycData("professionalInfo", data)}
+            onUploadingChange={setUploading}
+          />
+        );
+      case 5:
+        return (
+          <BankDetailsStep
+            data={kycData.bankDetails}
+            onChange={(data) => updateKycData("bankDetails", data)}
+            onUploadingChange={setUploading}
+            readOnly
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const completeeditlawyerprofile = async () => {
     try {
       setIsLoading(true);
-      const resp = await api.put(
-        `api/user/updateuserprofile/${userId}`,
-        edituserprofile,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+      const formData = new FormData();
+      formData.append("fullName", editBasic.fullName ?? "");
+      formData.append("phone", editBasic.phone ?? "");
+      const pics = Array.isArray(editBasic.profilepic)
+        ? editBasic.profilepic
+        : [];
+      pics
+        .filter((f) => f instanceof File)
+        .forEach((f) => formData.append("profilepic", f));
+      await api.put(`api/user/updateuserprofile/${userId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      let kycPayload = { ...kycData };
+      try {
+        const oa = kycPayload.professionalInfo?.officeAddress;
+        if (oa?.street2) {
+          kycPayload.professionalInfo.officeAddress.street = [
+            oa.street,
+            oa.street2,
+          ]
+            .filter(Boolean)
+            .join(", ");
+          delete kycPayload.professionalInfo.officeAddress.street2;
         }
-      );
-      if (resp.status === 200) {
+      } catch (_) {}
+      const kycRes = await api.post(`/api/v2/lawyer-kyc/${userId}`, kycPayload);
+      if (kycRes.data?.success) {
         Swal.fire({
           icon: "success",
           title: "Profile Updated",
-          text: "Your Profile Completed Successfully",
-          showConfirmButton: "true",
+          text: "Your profile and KYC have been updated successfully.",
+          showConfirmButton: true,
         });
-        setedituserprofile([]);
+        dispatch(getUserDetails());
         handleClose1();
+      } else {
+        toast.error(kycRes.data?.message || "KYC update failed.");
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Update failed",
+        text:
+          error.response?.data?.message ||
+          "Could not update profile. Please try again.",
+        showConfirmButton: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -221,17 +459,10 @@ const LawyerProfile = () => {
                   {userData?.fullName}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Client Account
+                  Lawyer Account
                 </Typography>
-                {/* Action Buttons - Simple */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    justifyContent: "center",
-                  }}
-                >
-                  {/* <Button
+                <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                  <Button
                     size="small"
                     variant="contained"
                     color="primary"
@@ -239,16 +470,7 @@ const LawyerProfile = () => {
                     onClick={handleShow1}
                   >
                     Edit Profile
-                  </Button> */}
-                  {/* <Button
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<CheckCircleIcon />}
-                    onClick={handleShow}
-                  >
-                    Complete Profile
-                  </Button> */}
+                  </Button>
                 </Box>
               </Stack>
             </Box>
@@ -286,7 +508,7 @@ const LawyerProfile = () => {
                   Contact Number
                 </Typography>
                 <Typography variant="body1" fontWeight="500">
-                  {userData?.contact_no || "Not provided"}
+                  {userData?.phone || userData?.contact_no || "Not provided"}
                 </Typography>
               </Box>
             </Grid>
@@ -297,8 +519,11 @@ const LawyerProfile = () => {
                   Location
                 </Typography>
                 <Typography variant="body1" fontWeight="500">
-                  {userData?.city && userData?.state
-                    ? `${userData?.city}, ${userData?.state}`
+                  {kycData?.personalInfo?.residentialAddress?.city &&
+                  kycData?.personalInfo?.residentialAddress?.state
+                    ? `${kycData.personalInfo.residentialAddress.city}, ${kycData.personalInfo.residentialAddress.state}`
+                    : userData?.city && userData?.state
+                    ? `${userData.city}, ${userData.state}`
                     : "Not provided"}
                 </Typography>
               </Box>
@@ -309,205 +534,6 @@ const LawyerProfile = () => {
         </CardContent>
       </Card>
 
-      {/* Complete Profile Drawer */}
-      <Drawer
-        anchor="right"
-        open={show}
-        onClose={handleClose}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: 500 },
-            maxWidth: "100%",
-          },
-        }}
-      >
-        {/* Header - Simple */}
-        <Box
-          sx={{
-            p: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="h6" fontWeight="600">
-            Complete Your Profile
-          </Typography>
-          <IconButton onClick={handleClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-
-        {/* Content */}
-        <Box sx={{ p: 3, overflowY: "auto" }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Typography variant="body2" fontWeight="500" gutterBottom>
-                Profile Picture
-              </Typography>
-              <input
-                name="profilepic"
-                type="file"
-                accept=".jpg, .jpeg, .png"
-                id="profilepic-complete"
-                style={{ display: "none" }}
-                onChange={(e) =>
-                  setclientprofile({
-                    ...clientprofile,
-                    profilepic: Array.from(e.target.files),
-                  })
-                }
-              />
-              <label htmlFor="profilepic-complete">
-                <Button
-                  component="span"
-                  variant="outlined"
-                  startIcon={<PhotoCameraIcon />}
-                  fullWidth
-                  sx={{
-                    py: 1.5,
-                    borderStyle: "dashed",
-                    textTransform: "none",
-                  }}
-                >
-                  Upload Profile Picture
-                </Button>
-              </label>
-
-              {clientprofile.profilepic?.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Selected: {clientprofile.profilepic[0].name}
-                  </Typography>
-                </Box>
-              )}
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Gender"
-                name="gender"
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChange}
-              >
-                <MenuItem value="male">Male</MenuItem>
-                <MenuItem value="female">Female</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </TextField>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Date of Birth"
-                name="dob"
-                type="date"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Contact Number"
-                name="contact_no"
-                type="tel"
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Select
-                className="react-select-container"
-                classNamePrefix="react-select"
-                options={stateOptions}
-                value={selectedState}
-                onChange={(value) => {
-                  setSelectedState(value);
-                  setclientprofile((prev) => ({
-                    ...prev,
-                    state: value.label,
-                  }));
-                }}
-                name="state"
-                placeholder="Select State"
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 9999,
-                  }),
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Select
-                className="react-select-container"
-                classNamePrefix="react-select"
-                options={cityOptions}
-                value={selectedCity}
-                onChange={(value) => {
-                  setSelectedCity(value);
-                  setclientprofile((prev) => ({
-                    ...prev,
-                    city: value.label, // stores the state's name like "Maharashtra"
-                  }));
-                }}
-                name="city"
-                placeholder="Select City"
-                isDisabled={!selectedState}
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 9999,
-                  }),
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="PIN Code"
-                name="pin_code"
-                type="text"
-                inputProps={{ maxLength: 6 }}
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-                <Button variant="outlined" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={completeuserprofile}
-                >
-                  Save Changes
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
-      </Drawer>
-
       {/* Edit Profile Drawer */}
       <Drawer
         anchor="right"
@@ -515,248 +541,193 @@ const LawyerProfile = () => {
         onClose={handleClose1}
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: 500 },
+            width: { xs: "100%", sm: 560 },
             maxWidth: "100%",
           },
         }}
       >
-        {/* Header - Simple */}
         <Box
           sx={{
             p: 2,
+            borderBottom: "1px solid",
+            borderColor: "divider",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            borderBottom: "1px solid",
-            borderColor: "divider",
           }}
         >
           <Typography variant="h6" fontWeight="600">
-            Edit Your Profile
+            Edit Profile & KYC
           </Typography>
           <IconButton onClick={handleClose1}>
             <CloseIcon />
           </IconButton>
         </Box>
 
-        {/* Content */}
-        <Box sx={{ p: 3, overflowY: "auto" }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Typography variant="body2" fontWeight="500" gutterBottom>
-                Profile Picture
-              </Typography>
-              <input
-                name="profilepic"
-                type="file"
-                accept=".jpg, .jpeg, .png"
-                id="profilepic-edit"
-                style={{ display: "none" }}
-                onChange={(e) =>
-                  setedituserprofile({
-                    ...edituserprofile,
-                    profilepic: Array.from(e.target.files),
-                  })
-                }
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            height: "calc(100vh - 60px)",
+          }}
+        >
+          <Tabs
+            value={activeTab}
+            onChange={(_, v) => setActiveTab(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              minHeight: 48,
+              flexShrink: 0,
+            }}
+          >
+            {kycTabs.map((tab, idx) => (
+              <Tab
+                key={tab.key}
+                label={tab.label}
+                id={`edit-tab-${idx}`}
+                aria-controls={`edit-tabpanel-${idx}`}
               />
-              <label htmlFor="profilepic-edit">
-                <Button
-                  component="span"
-                  variant="outlined"
-                  startIcon={<PhotoCameraIcon />}
-                  fullWidth
-                  sx={{
-                    py: 1.5,
-                    borderStyle: "dashed",
-                    textTransform: "none",
-                  }}
+            ))}
+          </Tabs>
+          <Box
+            sx={{ p: 2, overflowY: "auto", flex: 1 }}
+            role="tabpanel"
+            id={`edit-tabpanel-${activeTab}`}
+            aria-labelledby={`edit-tab-${activeTab}`}
+          >
+            {activeTab === 0 && (
+              <>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  gutterBottom
                 >
-                  Upload Profile Picture
-                </Button>
-              </label>
-
-              {edituserprofile.profilepic?.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Selected: {edituserprofile.profilepic[0].name}
-                  </Typography>
+                  Basic info (name, phone, photo)
+                </Typography>
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  <Grid item xs={12}>
+                    <Typography variant="body2" fontWeight="500" gutterBottom>
+                      Profile Picture
+                    </Typography>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png"
+                      id="profilepic-lawyer-edit"
+                      style={{ display: "none" }}
+                      onChange={(e) =>
+                        setEditBasic((prev) => ({
+                          ...prev,
+                          profilepic: Array.from(e.target.files || []),
+                        }))
+                      }
+                    />
+                    <label htmlFor="profilepic-lawyer-edit">
+                      <Button
+                        component="span"
+                        variant="outlined"
+                        startIcon={<PhotoCameraIcon />}
+                        fullWidth
+                        sx={{
+                          py: 1.5,
+                          borderStyle: "dashed",
+                          textTransform: "none",
+                        }}
+                      >
+                        Upload Profile Picture
+                      </Button>
+                    </label>
+                    {editBasic.profilepic?.length > 0 &&
+                      editBasic.profilepic[0] instanceof File && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block", mt: 1 }}
+                        >
+                          Selected: {editBasic.profilepic[0].name}
+                        </Typography>
+                      )}
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Full Name"
+                      value={editBasic.fullName ?? ""}
+                      fullWidth
+                      size="small"
+                      variant="outlined"
+                      onChange={(e) =>
+                        setEditBasic((prev) => ({
+                          ...prev,
+                          fullName: e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Phone"
+                      value={editBasic.phone ?? ""}
+                      fullWidth
+                      size="small"
+                      variant="outlined"
+                      onChange={(e) =>
+                        setEditBasic((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                </Grid>
+                <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={completeeditlawyerprofile}
+                    disabled={uploading || isLoading}
+                    startIcon={
+                      isLoading ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : null
+                    }
+                  >
+                    {isLoading ? "Saving..." : "Save"}
+                  </Button>
+                  <Button variant="outlined" onClick={handleClose1}>
+                    Cancel
+                  </Button>
                 </Box>
-              )}
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Full Name"
-                name="fullName"
-                defaultValue={edituserprofile.fullName}
-                type="text"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                onChange={handleChangeedit}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Email"
-                name="email"
-                defaultValue={edituserprofile.email}
-                type="text"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                onChange={handleChangeedit}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="User Name"
-                name="username"
-                defaultValue={edituserprofile.username}
-                type="text"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                onChange={handleChangeedit}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Gender"
-                name="gender"
-                fullWidth
-                size="small"
-                value={edituserprofile.gender}
-                variant="outlined"
-                onChange={handleChangeedit}
-              >
-                <MenuItem value="male">Male</MenuItem>
-                <MenuItem value="female">Female</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </TextField>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Date of Birth"
-                name="dob"
-                value={edituserprofile.dob}
-                type="date"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                onChange={handleChangeedit}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Contact Number"
-                name="contact_no"
-                type="tel"
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChangeedit}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Select
-                className="react-select-container"
-                classNamePrefix="react-select"
-                options={stateOptions}
-                value={
-                  stateOptions.find(
-                    (option) => option.label === edituserprofile?.state
-                  ) || selectedState
-                }
-                onChange={(value) => {
-                  setSelectedState(value);
-                  setedituserprofile((prev) => ({
-                    ...prev,
-                    state: value.label, // Store only the state's name
-                  }));
-                }}
-                name="state"
-                placeholder="Select State"
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 9999,
-                  }),
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Select
-                className="react-select-container"
-                classNamePrefix="react-select"
-                options={cityOptions}
-                value={
-                  cityOptions.find(
-                    (option) => option.label === edituserprofile?.city
-                  ) || selectedCity
-                }
-                onChange={(value) => {
-                  setSelectedCity(value);
-                  setedituserprofile((prev) => ({
-                    ...prev,
-                    city: value.label, // Store only the city's name
-                  }));
-                }}
-                name="city"
-                placeholder="Select City"
-                isDisabled={!selectedState?.label} // Disable if state is not selected
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 9999,
-                  }),
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="PIN Code"
-                name="pin_code"
-                value={edituserprofile.pin_code}
-                type="text"
-                inputProps={{ maxLength: 6 }}
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChangeedit}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-                <Button variant="outlined" onClick={handleClose1}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={completeedituserprofile}
-                >
-                  Save Changes
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
+              </>
+            )}
+            {activeTab >= 1 && activeTab <= 6 && (
+              <>
+                {renderKycStepContent(activeTab - 1)}
+                <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={completeeditlawyerprofile}
+                    disabled={uploading || isLoading}
+                    startIcon={
+                      uploading || isLoading ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : null
+                    }
+                  >
+                    {uploading
+                      ? "Uploading..."
+                      : isLoading
+                      ? "Saving..."
+                      : "Save"}
+                  </Button>
+                  <Button variant="outlined" onClick={handleClose1}>
+                    Cancel
+                  </Button>
+                </Box>
+              </>
+            )}
+          </Box>
         </Box>
       </Drawer>
 

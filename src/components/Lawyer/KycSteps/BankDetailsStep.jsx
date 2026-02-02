@@ -13,8 +13,14 @@ const accountTypes = [
   { value: 'current', label: 'Current Account' },
 ];
 
-const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
+const BankDetailsStep = ({
+  data,
+  onChange,
+  onUploadingChange,
+  readOnly = false,
+}) => {
   const handleChange = (field, value) => {
+    if (readOnly) return;
     onChange({
       ...data,
       [field]: value,
@@ -22,6 +28,7 @@ const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
   };
 
   const handleFileChange = (urls) => {
+    if (readOnly) return;
     onChange({
       ...data,
       cancelledChequeUrl: urls,
@@ -31,7 +38,9 @@ const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
   return (
     <Box>
       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        Enter your bank account details for receiving payments
+        {readOnly
+          ? "Bank account details (view only)"
+          : "Enter your bank account details for receiving payments"}
       </Typography>
 
       <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -40,9 +49,11 @@ const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
             label="Account Holder Name"
             fullWidth
             size="small"
-            value={data.accountHolderName}
-            onChange={(e) => handleChange('accountHolderName', e.target.value)}
+            value={data.accountHolderName ?? ""}
+            onChange={(e) => handleChange("accountHolderName", e.target.value)}
             placeholder="Enter name as per bank records"
+            disabled={readOnly}
+            InputProps={{ readOnly }}
           />
         </Grid>
 
@@ -51,9 +62,11 @@ const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
             label="Bank Name"
             fullWidth
             size="small"
-            value={data.bankName}
-            onChange={(e) => handleChange('bankName', e.target.value)}
+            value={data.bankName ?? ""}
+            onChange={(e) => handleChange("bankName", e.target.value)}
             placeholder="e.g., HDFC Bank"
+            disabled={readOnly}
+            InputProps={{ readOnly }}
           />
         </Grid>
 
@@ -63,8 +76,9 @@ const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
             label="Account Type"
             fullWidth
             size="small"
-            value={data.accountType}
-            onChange={(e) => handleChange('accountType', e.target.value)}
+            value={data.accountType ?? ""}
+            onChange={(e) => handleChange("accountType", e.target.value)}
+            disabled={readOnly}
           >
             {accountTypes.map((type) => (
               <MenuItem key={type.value} value={type.value}>
@@ -79,9 +93,11 @@ const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
             label="Account Number"
             fullWidth
             size="small"
-            value={data.accountNumber}
-            onChange={(e) => handleChange('accountNumber', e.target.value)}
+            value={data.accountNumber ?? ""}
+            onChange={(e) => handleChange("accountNumber", e.target.value)}
             placeholder="Enter account number"
+            disabled={readOnly}
+            InputProps={{ readOnly }}
           />
         </Grid>
 
@@ -90,27 +106,37 @@ const BankDetailsStep = ({ data, onChange, onUploadingChange }) => {
             label="IFSC Code"
             fullWidth
             size="small"
-            value={data.ifscCode}
-            onChange={(e) => handleChange('ifscCode', e.target.value.toUpperCase())}
+            value={data.ifscCode ?? ""}
+            onChange={(e) =>
+              handleChange("ifscCode", e.target.value.toUpperCase())
+            }
             placeholder="e.g., HDFC0001234"
+            disabled={readOnly}
+            InputProps={{ readOnly }}
           />
         </Grid>
 
-        <Grid item xs={12}>
-          <FileUpload
-            label="Upload Cancelled Cheque / Bank Statement"
-            folder="kyc/bank-documents"
-            accept=".pdf,.jpg,.jpeg,.png"
-            multiple={false}
-            value={data.cancelledChequeUrl || []}
-            onChange={handleFileChange}
-            onUploadingChange={onUploadingChange}
-            maxFiles={2}
-          />
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-            This helps us verify your bank account details
-          </Typography>
-        </Grid>
+        {!readOnly && (
+          <Grid item xs={12}>
+            <FileUpload
+              label="Upload Cancelled Cheque / Bank Statement"
+              folder="kyc/bank-documents"
+              accept=".pdf,.jpg,.jpeg,.png"
+              multiple={false}
+              value={data.cancelledChequeUrl || []}
+              onChange={handleFileChange}
+              onUploadingChange={onUploadingChange}
+              maxFiles={2}
+            />
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 1, display: "block" }}
+            >
+              This helps us verify your bank account details
+            </Typography>
+          </Grid>
+        )}
       </Grid>
     </Box>
   );

@@ -16,33 +16,23 @@ import {
   Divider,
   Stack,
 } from "@mui/material";
-import {
-  Edit as EditIcon,
-  CheckCircle as CheckCircleIcon,
-  Close as CloseIcon,
-  PhotoCamera as PhotoCameraIcon,
-} from "@mui/icons-material";
+import { Edit as EditIcon, Close as CloseIcon } from "@mui/icons-material";
 import Select from "react-select";
 import { State, City } from "country-state-city";
 import Swal from "sweetalert2";
+import { useDispatch } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import { getUserDetails } from "../../redux/slices/authSlice";
 
 const ClientProfile = () => {
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const { user: userData, userId } = useAuth();
+  const [showEdit, setShowEdit] = useState(false);
 
-  const [show, setShow] = useState(false);
-
-  const handleShow = () => {
-    setShow(true);
-  };
-
-  const handleClose = () => {
-    setShow(false);
-  };
-
-  const [clientprofile, setclientprofile] = useState({
-    profilepic: [],
+  const [edituserprofile, setedituserprofile] = useState({
+    fullName: "",
+    email: "",
     gender: "",
     dob: "",
     contact_no: "",
@@ -50,7 +40,6 @@ const ClientProfile = () => {
     state: "",
     city: "",
     pin_code: "",
-    corrosponding_address: "",
   });
 
   const [selectedState, setSelectedState] = useState(null);
@@ -75,75 +64,46 @@ const ClientProfile = () => {
         label: city.name,
       }));
       setCityOptions(mappedCities);
-      setSelectedCity(null); // reset city when state changes
+      setSelectedCity(null);
     }
   }, [selectedState]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setclientprofile((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const completeuserprofile = async () => {
-    try {
-      setIsLoading(true);
-      const resp = await api.put(
-        `api/user/updateuserprofile/${userId}`,
-        clientprofile,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      if (resp.status === 200) {
-        Swal.fire({
-          icon: "success",
-          title: "Profile Updated",
-          text: "Your Profile Completed Successfully",
-          showConfirmButton: "true",
-        });
-        setclientprofile([]);
-        handleClose();
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+  // Sync city dropdown when edit drawer opens with existing user city
+  useEffect(() => {
+    if (showEdit && edituserprofile?.city && cityOptions.length > 0) {
+      const cityOpt = cityOptions.find((c) => c.label === edituserprofile.city);
+      if (cityOpt) setSelectedCity(cityOpt);
     }
+  }, [showEdit, edituserprofile?.city, cityOptions]);
+
+  const handleOpenEdit = () => {
+    setShowEdit(true);
+    // Prefill form from userData; map phone to contact_no for display
+    const u = userData || {};
+    const udetails = u.userDetails || {};
+    setedituserprofile({
+      fullName: u.fullName ?? "",
+      email: u.email ?? "",
+      gender: udetails.gender ?? "",
+      dob:
+        udetails.dob ??
+        (udetails.dateOfBirth
+          ? new Date(udetails.dateOfBirth).toISOString().slice(0, 10)
+          : ""),
+      contact_no: udetails.contact_no ?? udetails.phone ?? "",
+      residential_address: udetails.residential_address ?? "",
+      state: udetails.state ?? "",
+      city: udetails.city ?? "",
+      pin_code: udetails.pin_code ?? "",
+    });
+    const stateOpt = stateOptions.find(
+      (o) => o.label === (udetails.state || "")
+    );
+    setSelectedState(stateOpt || null);
   };
 
-  //================================== edit profile start=========================================================
-
-  const [edituserprofile, setedituserprofile] = useState({
-    fullName: "",
-    email: "",
-    username: "",
-    profilepic: [],
-    gender: "",
-    dob: "",
-    contact_no: "",
-    residential_address: "",
-    state: "",
-    city: "",
-    pin_code: "",
-    corrosponding_address: "",
-  });
-
-  const [show1, setShow1] = useState(false);
-  const [activeTab2, setActiveTab2] = useState(0);
-
-  const handleShow1 = () => {
-    setActiveTab2(0);
-    setShow1(true);
-    setedituserprofile(userData);
-  };
-
-  const handleClose1 = () => {
-    setShow1(false);
+  const handleCloseEdit = () => {
+    setShowEdit(false);
   };
 
   const handleChangeedit = (e) => {
@@ -157,27 +117,32 @@ const ClientProfile = () => {
   const completeedituserprofile = async () => {
     try {
       setIsLoading(true);
+      const payload = { ...edituserprofile };
       const resp = await api.put(
         `api/user/updateuserprofile/${userId}`,
-        edituserprofile,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        payload
       );
       if (resp.status === 200) {
         Swal.fire({
           icon: "success",
           title: "Profile Updated",
-          text: "Your Profile Completed Successfully",
-          showConfirmButton: "true",
+          text: "Your profile has been updated successfully.",
+          showConfirmButton: true,
         });
-        setedituserprofile([]);
-        handleClose1();
+        dispatch(getUserDetails());
+        setedituserprofile({});
+        handleCloseEdit();
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Update failed",
+        text:
+          error.response?.data?.message ||
+          "Could not update profile. Please try again.",
+        showConfirmButton: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -208,7 +173,6 @@ const ClientProfile = () => {
               }}
             >
               <Avatar
-                src={userData?.profilepic?.[0]}
                 alt="Profile"
                 sx={{
                   width: 100,
@@ -224,31 +188,16 @@ const ClientProfile = () => {
                   Customer Account
                 </Typography>
                 {/* Action Buttons - Simple */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    justifyContent: "center",
-                  }}
-                >
-                  {/* <Button
+                <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                  <Button
                     size="small"
                     variant="contained"
                     color="primary"
                     startIcon={<EditIcon />}
-                    onClick={handleShow1}
+                    onClick={handleOpenEdit}
                   >
                     Edit Profile
-                  </Button> */}
-                  {/* <Button
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<CheckCircleIcon />}
-                    onClick={handleShow}
-                  >
-                    Complete Profile
-                  </Button> */}
+                  </Button>
                 </Box>
               </Stack>
             </Box>
@@ -286,7 +235,7 @@ const ClientProfile = () => {
                   Contact Number
                 </Typography>
                 <Typography variant="body1" fontWeight="500">
-                  {userData?.contact_no || "Not provided"}
+                  {userData?.contact_no || userData?.phone || "Not provided"}
                 </Typography>
               </Box>
             </Grid>
@@ -297,8 +246,8 @@ const ClientProfile = () => {
                   Location
                 </Typography>
                 <Typography variant="body1" fontWeight="500">
-                  {userData?.city && userData?.state
-                    ? `${userData?.city}, ${userData?.state}`
+                  {userData?.userDetails?.city && userData?.userDetails?.state
+                    ? `${userData?.userDetails?.city}, ${userData?.userDetails?.state}`
                     : "Not provided"}
                 </Typography>
               </Box>
@@ -309,210 +258,11 @@ const ClientProfile = () => {
         </CardContent>
       </Card>
 
-      {/* Complete Profile Drawer */}
-      <Drawer
-        anchor="right"
-        open={show}
-        onClose={handleClose}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: 500 },
-            maxWidth: "100%",
-          },
-        }}
-      >
-        {/* Header - Simple */}
-        <Box
-          sx={{
-            p: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="h6" fontWeight="600">
-            Complete Your Profile
-          </Typography>
-          <IconButton onClick={handleClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-
-        {/* Content */}
-        <Box sx={{ p: 3, overflowY: "auto" }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Typography variant="body2" fontWeight="500" gutterBottom>
-                Profile Picture
-              </Typography>
-              <input
-                name="profilepic"
-                type="file"
-                accept=".jpg, .jpeg, .png"
-                id="profilepic-complete"
-                style={{ display: "none" }}
-                onChange={(e) =>
-                  setclientprofile({
-                    ...clientprofile,
-                    profilepic: Array.from(e.target.files),
-                  })
-                }
-              />
-              <label htmlFor="profilepic-complete">
-                <Button
-                  component="span"
-                  variant="outlined"
-                  startIcon={<PhotoCameraIcon />}
-                  fullWidth
-                  sx={{
-                    py: 1.5,
-                    borderStyle: "dashed",
-                    textTransform: "none",
-                  }}
-                >
-                  Upload Profile Picture
-                </Button>
-              </label>
-
-              {clientprofile.profilepic?.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Selected: {clientprofile.profilepic[0].name}
-                  </Typography>
-                </Box>
-              )}
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Gender"
-                name="gender"
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChange}
-              >
-                <MenuItem value="male">Male</MenuItem>
-                <MenuItem value="female">Female</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </TextField>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Date of Birth"
-                name="dob"
-                type="date"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Contact Number"
-                name="contact_no"
-                type="tel"
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Select
-                className="react-select-container"
-                classNamePrefix="react-select"
-                options={stateOptions}
-                value={selectedState}
-                onChange={(value) => {
-                  setSelectedState(value);
-                  setclientprofile((prev) => ({
-                    ...prev,
-                    state: value.label,
-                  }));
-                }}
-                name="state"
-                placeholder="Select State"
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 9999,
-                  }),
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Select
-                className="react-select-container"
-                classNamePrefix="react-select"
-                options={cityOptions}
-                value={selectedCity}
-                onChange={(value) => {
-                  setSelectedCity(value);
-                  setclientprofile((prev) => ({
-                    ...prev,
-                    city: value.label, // stores the state's name like "Maharashtra"
-                  }));
-                }}
-                name="city"
-                placeholder="Select City"
-                isDisabled={!selectedState}
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 9999,
-                  }),
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="PIN Code"
-                name="pin_code"
-                type="text"
-                inputProps={{ maxLength: 6 }}
-                fullWidth
-                size="small"
-                variant="outlined"
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-                <Button variant="outlined" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={completeuserprofile}
-                >
-                  Save Changes
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
-      </Drawer>
-
       {/* Edit Profile Drawer */}
       <Drawer
         anchor="right"
-        open={show1}
-        onClose={handleClose1}
+        open={showEdit}
+        onClose={handleCloseEdit}
         PaperProps={{
           sx: {
             width: { xs: "100%", sm: 500 },
@@ -532,9 +282,9 @@ const ClientProfile = () => {
           }}
         >
           <Typography variant="h6" fontWeight="600">
-            Edit Your Profile
+            Edit Profile
           </Typography>
-          <IconButton onClick={handleClose1}>
+          <IconButton onClick={handleCloseEdit}>
             <CloseIcon />
           </IconButton>
         </Box>
@@ -542,53 +292,11 @@ const ClientProfile = () => {
         {/* Content */}
         <Box sx={{ p: 3, overflowY: "auto" }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Typography variant="body2" fontWeight="500" gutterBottom>
-                Profile Picture
-              </Typography>
-              <input
-                name="profilepic"
-                type="file"
-                accept=".jpg, .jpeg, .png"
-                id="profilepic-edit"
-                style={{ display: "none" }}
-                onChange={(e) =>
-                  setedituserprofile({
-                    ...edituserprofile,
-                    profilepic: Array.from(e.target.files),
-                  })
-                }
-              />
-              <label htmlFor="profilepic-edit">
-                <Button
-                  component="span"
-                  variant="outlined"
-                  startIcon={<PhotoCameraIcon />}
-                  fullWidth
-                  sx={{
-                    py: 1.5,
-                    borderStyle: "dashed",
-                    textTransform: "none",
-                  }}
-                >
-                  Upload Profile Picture
-                </Button>
-              </label>
-
-              {edituserprofile.profilepic?.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Selected: {edituserprofile.profilepic[0].name}
-                  </Typography>
-                </Box>
-              )}
-            </Grid>
-
             <Grid item xs={12}>
               <TextField
                 label="Full Name"
                 name="fullName"
-                defaultValue={edituserprofile.fullName}
+                value={edituserprofile.fullName ?? ""}
                 type="text"
                 fullWidth
                 size="small"
@@ -602,27 +310,14 @@ const ClientProfile = () => {
               <TextField
                 label="Email"
                 name="email"
-                defaultValue={edituserprofile.email}
+                value={edituserprofile.email ?? ""}
                 type="text"
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
                 variant="outlined"
-                onChange={handleChangeedit}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="User Name"
-                name="username"
-                defaultValue={edituserprofile.username}
-                type="text"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                onChange={handleChangeedit}
+                disabled
+                helperText="Email cannot be changed"
               />
             </Grid>
 
@@ -661,11 +356,26 @@ const ClientProfile = () => {
               <TextField
                 label="Contact Number"
                 name="contact_no"
+                value={edituserprofile.contact_no ?? ""}
                 type="tel"
                 fullWidth
                 size="small"
                 variant="outlined"
                 onChange={handleChangeedit}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                label="Residential Address"
+                name="residential_address"
+                value={edituserprofile.residential_address ?? ""}
+                type="text"
+                fullWidth
+                size="small"
+                variant="outlined"
+                onChange={handleChangeedit}
+                placeholder="Street, area, landmark"
               />
             </Grid>
 
@@ -732,7 +442,7 @@ const ClientProfile = () => {
               <TextField
                 label="PIN Code"
                 name="pin_code"
-                value={edituserprofile.pin_code}
+                value={edituserprofile.pin_code ?? ""}
                 type="text"
                 inputProps={{ maxLength: 6 }}
                 fullWidth
@@ -744,15 +454,16 @@ const ClientProfile = () => {
 
             <Grid item xs={12}>
               <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-                <Button variant="outlined" onClick={handleClose1}>
+                <Button variant="outlined" onClick={handleCloseEdit}>
                   Cancel
                 </Button>
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={completeedituserprofile}
+                  disabled={isLoading}
                 >
-                  Save Changes
+                  {isLoading ? "Saving..." : "Save Changes"}
                 </Button>
               </Box>
             </Grid>
