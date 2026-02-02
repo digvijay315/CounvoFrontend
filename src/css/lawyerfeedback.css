@@ -50,7 +50,7 @@
 
 .form-submit-btn {
   margin-top: 16px;
-  background: linear-gradient(90deg, #3c8cff, #5466fd 75%);
+  background: #faad14 !important;
   color: white;
   font-weight: 600;
   font-size: 17px;
@@ -60,6 +60,8 @@
   cursor: pointer;
   box-shadow: 0 2px 14px #b6cbff31;
   transition: filter .13s;
+    position: sticky;
+  bottom: 10;
 }
 .form-submit-btn:hover { filter: brightness(0.93); }
 

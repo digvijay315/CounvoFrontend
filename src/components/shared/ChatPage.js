@@ -25,6 +25,10 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -37,6 +41,8 @@ import {
   VideoCall as VideoCallIcon,
   ArrowBackIos,
   ArrowBackIosNew,
+  SwapHoriz as SwitchIcon,
+  RateReview as ReviewIcon,
 } from "@mui/icons-material";
 import { useSocket } from "../../context/SocketContext";
 import useAuth from "../../hooks/useAuth";
@@ -51,6 +57,9 @@ import MessageInput from "./chat/MessageInput";
 import ChatPendingApproval from "./chat/ChatPendingApproval";
 import ChatApprovalButtons from "./chat/ChatApprovalButtons";
 import useNotification from "../../hooks/useNotification";
+import { NAVIGATION_CONSTANTS } from "../../_constants/navigationConstants";
+import CustomerFeedbackForm from "../customerfeedback";
+import LawyerFeedbackForm from "../lawyerfeedbackform";
 
 // ==================== UTILITY FUNCTIONS ====================
 const formatTime = (timestamp) => {
@@ -97,7 +106,8 @@ const ChatPage = ({ userType = "customer" }) => {
     registerMessageHandler,
     initiateCall,
   } = useSocket();
-  const { isBrowserMinimized, verifyPermission, createNotification } = useNotification();
+  const { isBrowserMinimized, verifyPermission, createNotification } =
+    useNotification();
 
   // Tab state from query params
   const currentTab = searchParams.get("tab") === "call" ? "call" : "messages";
@@ -116,6 +126,11 @@ const ChatPage = ({ userType = "customer" }) => {
   const [callHistory, setCallHistory] = useState([]);
   const [selectedCall, setSelectedCall] = useState(null);
   const [isLoadingCallHistory, setIsLoadingCallHistory] = useState(false);
+
+  // Review feedback dialog (both sides)
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  // Has user already submitted review for this reviewee? key = revieweeId, value = true/false
+  const [reviewSubmittedMap, setReviewSubmittedMap] = useState({});
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -172,6 +187,27 @@ const ChatPage = ({ userType = "customer" }) => {
       fetchCallHistory();
     }
   }, [currentTab, fetchCallHistory]);
+
+  // Fetch review status when selected chat (reviewee) changes
+  const fetchReviewStatus = useCallback(async (revieweeId) => {
+    if (!revieweeId) return;
+    try {
+      const res = await api.get(`api/review/status?revieweeId=${revieweeId}`);
+      setReviewSubmittedMap((prev) => ({
+        ...prev,
+        [revieweeId]: res.data?.submitted === true,
+      }));
+    } catch (err) {
+      setReviewSubmittedMap((prev) => ({ ...prev, [revieweeId]: false }));
+    }
+  }, []);
+
+  useEffect(() => {
+    const revieweeId = selectedChat?.participant?._id;
+    if (revieweeId) {
+      fetchReviewStatus(revieweeId);
+    }
+  }, [selectedChat?.participant?._id, fetchReviewStatus]);
 
   // Handle call selection
   const handleSelectCall = (call) => {
@@ -309,10 +345,10 @@ const ChatPage = ({ userType = "customer" }) => {
           prev.map((g) =>
             g._id === selectedChat._id
               ? {
-                ...g,
-                lastMessage: msgText || (fileName ? `📎 ${fileName}` : ""),
-                lastMessageAt: newMsg.timestamp,
-              }
+                  ...g,
+                  lastMessage: msgText || (fileName ? `📎 ${fileName}` : ""),
+                  lastMessageAt: newMsg.timestamp,
+                }
               : g
           )
         );
@@ -326,7 +362,10 @@ const ChatPage = ({ userType = "customer" }) => {
       if (isBrowserMinimized() || from !== participantId) {
         verifyPermission().then((permission) => {
           if (permission === "granted") {
-            createNotification("New message received", msgText || "You have received a new message.",);
+            createNotification(
+              "New message received",
+              msgText || "You have received a new message."
+            );
           }
         });
       }
@@ -572,11 +611,10 @@ const ChatPage = ({ userType = "customer" }) => {
     }
   };
 
-
-  const handleResetCurrentId = ()=> {
+  const handleResetCurrentId = () => {
     setSelectedCall(null);
-    setSelectedChat(null)
-  }
+    setSelectedChat(null);
+  };
 
   return (
     <Box
@@ -677,7 +715,7 @@ const ChatPage = ({ userType = "customer" }) => {
                 {filteredChatGroups.map((group) => {
                   const participantName = getParticipantName(
                     group.participant,
-                    group.participantModel,
+                    group.participantModel
                   );
                   const avatarSrc = getAvatarSrc(group.participant);
                   const isOnline = onlineUsers.includes(group.participant?._id);
@@ -812,7 +850,7 @@ const ChatPage = ({ userType = "customer" }) => {
               {filteredCallHistory.map((call) => {
                 const participantName = getParticipantName(
                   call.participant,
-                  call.participantModel,
+                  call.participantModel
                 );
                 const avatarSrc = getAvatarSrc(call.participant);
                 const isSelected = selectedCall?._id === call._id;
@@ -947,6 +985,36 @@ const ChatPage = ({ userType = "customer" }) => {
                       gap: 1,
                     }}
                   >
+                    <Stack
+                      direction="row"
+                      justifyContent="center"
+                      spacing={2}
+                      sx={{ px: 1, pb: 1, width: "100%" }}
+                    >
+                      {userType === "customer" && (
+                        <Button
+                          variant="outlined"
+                          startIcon={<SwitchIcon />}
+                          onClick={() =>
+                            navigate(NAVIGATION_CONSTANTS.FIND_LAWYER_PATH)
+                          }
+                          sx={{ textTransform: "none", borderRadius: 10 }}
+                        >
+                          Switch
+                        </Button>
+                      )}
+                      {reviewSubmittedMap[selectedChat?.participant?._id] ===
+                        false && (
+                        <Button
+                          variant="contained"
+                          startIcon={<ReviewIcon />}
+                          onClick={() => setShowReviewDialog(true)}
+                          sx={{ textTransform: "none", borderRadius: 10 }}
+                        >
+                          Review
+                        </Button>
+                      )}
+                    </Stack>
                     <MessagesArea
                       messages={messages}
                       isLoadingMessages={isLoadingMessages}
@@ -954,6 +1022,63 @@ const ChatPage = ({ userType = "customer" }) => {
                       messagesEndRef={messagesEndRef}
                     />
                   </Box>
+
+                  <Dialog
+                    open={showReviewDialog}
+                    onClose={() => setShowReviewDialog(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                      sx: {
+                        borderRadius: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        maxHeight: "90vh",
+                      },
+                    }}
+                  >
+                    <DialogTitle
+                      sx={{
+                        textAlign: "center",
+                        fontSize: 24,
+                        fontWeight: 600,
+                        flexShrink: 0,
+                      }}
+                    >
+                      We Value Your Feedback
+                    </DialogTitle>
+                    <DialogContent
+                      sx={{
+                        flex: 1,
+                        overflow: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        px: 3,
+                      }}
+                    >
+                      {userType === "lawyer" ? (
+                        <LawyerFeedbackForm
+                          revieweeId={selectedChat?.participant?._id}
+                          onSubmit={async () => {
+                            await fetchReviewStatus(
+                              selectedChat?.participant?._id
+                            );
+                            setShowReviewDialog(false);
+                          }}
+                        />
+                      ) : (
+                        <CustomerFeedbackForm
+                          revieweeId={selectedChat?.participant?._id}
+                          onSubmit={async () => {
+                            await fetchReviewStatus(
+                              selectedChat?.participant?._id
+                            );
+                            setShowReviewDialog(false);
+                          }}
+                        />
+                      )}
+                    </DialogContent>
+                  </Dialog>
 
                   {/* Message Input */}
                   <MessageInput
@@ -973,19 +1098,125 @@ const ChatPage = ({ userType = "customer" }) => {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
                 flex: 1,
-                p: 4,
+                minHeight: 0,
               }}
             >
-              <ChatIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                Select a conversation
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Choose a chat from the left to start messaging
-              </Typography>
+              {/* Centre content - can scroll if needed */}
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  p: 4,
+                }}
+              >
+                <ChatIcon
+                  sx={{ fontSize: 64, color: "text.disabled", mb: 1 }}
+                />
+                <Typography variant="h5" color="text.secondary" gutterBottom>
+                  Select a conversation
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Choose a chat from the left to start messaging
+                </Typography>
+              </Box>
+              {/* Buttons fixed at bottom - no scroll */}
+              <Box
+                sx={{
+                  flexShrink: 0,
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 2,
+                  py: 2,
+                  px: 2,
+                  borderTop: 1,
+                  borderColor: "divider",
+                  bgcolor: "background.paper",
+                }}
+              >
+                {userType === "customer" && (
+                  <Button
+                    variant="outlined"
+                    startIcon={<SwitchIcon />}
+                    onClick={() =>
+                      navigate(NAVIGATION_CONSTANTS.FIND_LAWYER_PATH)
+                    }
+                    sx={{ textTransform: "none", borderRadius: 10 }}
+                  >
+                    Switch
+                  </Button>
+                )}
+                {reviewSubmittedMap[selectedChat?.participant?._id] ===
+                  false && (
+                  <Button
+                    variant="contained"
+                    startIcon={<ReviewIcon />}
+                    onClick={() => setShowReviewDialog(true)}
+                    sx={{ textTransform: "none", borderRadius: 10 }}
+                  >
+                    Review
+                  </Button>
+                )}
+              </Box>
+              <Dialog
+                open={showReviewDialog}
+                onClose={() => setShowReviewDialog(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                  sx: {
+                    borderRadius: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    maxHeight: "90vh",
+                  },
+                }}
+              >
+                <DialogTitle
+                  sx={{
+                    textAlign: "center",
+                    fontSize: 24,
+                    fontWeight: 600,
+                    flexShrink: 0,
+                  }}
+                >
+                  We Value Your Feedback
+                </DialogTitle>
+                <DialogContent
+                  sx={{
+                    flex: 1,
+                    overflow: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    px: 3,
+                  }}
+                >
+                  {userType === "lawyer" ? (
+                    <LawyerFeedbackForm
+                      revieweeId={selectedChat?.participant?._id}
+                      onSubmit={async () => {
+                        await fetchReviewStatus(selectedChat?.participant?._id);
+                        setShowReviewDialog(false);
+                      }}
+                    />
+                  ) : (
+                    <CustomerFeedbackForm
+                      revieweeId={selectedChat?.participant?._id}
+                      onSubmit={async () => {
+                        await fetchReviewStatus(selectedChat?.participant?._id);
+                        setShowReviewDialog(false);
+                      }}
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
             </Box>
           )
         ) : // Calls Tab Content
@@ -1014,14 +1245,14 @@ const ChatPage = ({ userType = "customer" }) => {
                 src={getAvatarSrc(selectedCall.participant)}
                 alt={getParticipantName(
                   selectedCall.participant,
-                  selectedCall.participantModel,
+                  selectedCall.participantModel
                 )}
                 sx={{ width: 48, height: 48 }}
               >
                 {
                   getParticipantName(
                     selectedCall.participant,
-                    selectedCall.participantModel,
+                    selectedCall.participantModel
                   )?.[0]
                 }
               </Avatar>
@@ -1029,7 +1260,7 @@ const ChatPage = ({ userType = "customer" }) => {
                 <Typography variant="subtitle1" fontWeight={600}>
                   {getParticipantName(
                     selectedCall.participant,
-                    selectedCall.participantModel,
+                    selectedCall.participantModel
                   )}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1061,21 +1292,21 @@ const ChatPage = ({ userType = "customer" }) => {
                 src={getAvatarSrc(selectedCall.participant)}
                 alt={getParticipantName(
                   selectedCall.participant,
-                  selectedCall.participantModel,
+                  selectedCall.participantModel
                 )}
                 sx={{ width: 120, height: 120, mb: 3 }}
               >
                 {
                   getParticipantName(
                     selectedCall.participant,
-                    selectedCall.participantModel,
+                    selectedCall.participantModel
                   )?.[0]
                 }
               </Avatar>
               <Typography variant="h5" fontWeight={600} gutterBottom>
                 {getParticipantName(
                   selectedCall.participant,
-                  selectedCall.participantModel,
+                  selectedCall.participantModel
                 )}
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
