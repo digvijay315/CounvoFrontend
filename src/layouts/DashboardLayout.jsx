@@ -15,7 +15,8 @@ const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef(null);
   const headerRef = useRef(null);
-  const { verifyPermission, requestNotificationPermission, createNotification } = useNotification();
+  const { isSupported, verifyPermission, requestNotificationPermission } =
+    useNotification();
 
   const handleDrawerToggle = () => {
     if (isMobile) {
@@ -33,13 +34,14 @@ const DashboardLayout = () => {
     setMobileOpen(false);
   };
 
-  const [showNotificationPermission, setShowNotificationPermission] = useState(false);
+  const [showNotificationPermission, setShowNotificationPermission] =
+    useState(false);
 
   const handleDeclineRequestPermission = () => {
     setShowNotificationPermission(false);
     // Set to local storage to avoid repeated prompts
     localStorage.setItem("notification-permission-declined", "true");
-  }
+  };
   const handleAcceptRequestPermission = async () => {
     const permission = await requestNotificationPermission();
     if (permission === "granted") {
@@ -48,18 +50,20 @@ const DashboardLayout = () => {
   };
   useEffect(() => {
     const checkAndRequestNotificationPermission = async () => {
-      // check if user has previously declined
+      if (!isSupported()) return;
       const declined = localStorage.getItem("notification-permission-declined");
       if (declined === "true") return;
       const permission = await verifyPermission();
-      if (permission !== "granted" && permission !== "denied") {
+      if (
+        permission !== "granted" &&
+        permission !== "denied" &&
+        permission !== "unsupported"
+      ) {
         setShowNotificationPermission(true);
       }
     };
-    //  Good timeout for Js to be loaded correctly
-    setTimeout(() => {
-      checkAndRequestNotificationPermission();
-    }, 1500);
+    const t = setTimeout(checkAndRequestNotificationPermission, 1500);
+    return () => clearTimeout(t);
   }, []);
 
   const hidePadding = pathname === "/dashboard/messages";
