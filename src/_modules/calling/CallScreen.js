@@ -695,6 +695,10 @@ const CallScreen = React.forwardRef(
                     Math.max(remoteUsers.length, 1),
                     4
                   )}`}
+                  style={{
+                    maxWidth: "500px",
+                    marginInline: "auto",
+                  }}
                 >
                   {remoteUsers.length === 0 ? (
                     <div className="waiting-message">
