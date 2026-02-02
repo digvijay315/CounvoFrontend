@@ -38,6 +38,7 @@ export const SOCKET_EVENTS = {
   // Messaging events
   PRIVATE_MESSAGE: "privateMessage",
   RECEIVE_MESSAGE: "receiveMessage",
+  TYPING: "typing",
 
   // Calling events
   INITIATE_CALL: "initiateCall",
@@ -86,7 +87,8 @@ const getSocket = () => {
 export const SocketProvider = ({ children }) => {
   const user = useSelector(selectUser);
   const userRole = useSelector(selectUserRole);
-  const { isBrowserMinimized, verifyPermission, createNotification } = useNotification();
+  const { isBrowserMinimized, verifyPermission, createNotification } =
+    useNotification();
   const userId = user?._id;
 
   // Connection state
@@ -112,6 +114,10 @@ export const SocketProvider = ({ children }) => {
   const [incomingChatRequest, setIncomingChatRequest] = useState(null);
   // Chat request state (for clients waiting for response)
   const [pendingChatRequest, setPendingChatRequest] = useState(null);
+
+  // Typing indicator: userId of the other user who is currently typing (or null)
+  const [typingFromUserId, setTypingFromUserId] = useState(null);
+  const typingClearTimeoutRef = useRef(null);
 
   // Message handlers ref (for external components to register)
   const messageHandlersRef = useRef(new Map());
@@ -190,11 +196,12 @@ export const SocketProvider = ({ children }) => {
       });
     };
 
-
-
     // Call handlers
     const handleIncomingCall = async ({ callerId, callType, callerModel }) => {
-      handleNotificationIfMimimized("Incoming Call", "You have an incoming call.");
+      handleNotificationIfMimimized(
+        "Incoming Call",
+        "You have an incoming call."
+      );
       // Fetch caller info
       let callerInfo = null;
       try {
@@ -236,7 +243,10 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleCallAccepted = ({ accepterId }) => {
-      handleNotificationIfMimimized("Call Accepted", "Your call has been accepted.");
+      handleNotificationIfMimimized(
+        "Call Accepted",
+        "Your call has been accepted."
+      );
       setActiveCall((prev) => ({
         ...prev,
         callStatus: "connected",
@@ -267,7 +277,10 @@ export const SocketProvider = ({ children }) => {
 
     // Chat request handlers
     const handleIncomingChatRequest = ({ clientId, clientInfo }) => {
-      handleNotificationIfMimimized("New chat request", "You have a new chat request.");
+      handleNotificationIfMimimized(
+        "New chat request",
+        "You have a new chat request."
+      );
       setIncomingChatRequest({
         clientId,
         clientInfo,
@@ -275,27 +288,42 @@ export const SocketProvider = ({ children }) => {
     };
 
     const handleChatRequestAccepted = ({ lawyerId, chatGroupId }) => {
-      handleNotificationIfMimimized("Chat Request Accepted", "Your chat request has been accepted.");
+      handleNotificationIfMimimized(
+        "Chat Request Accepted",
+        "Your chat request has been accepted."
+      );
       setPendingChatRequest(null);
       // Navigate to chat - will be handled by the component
       window.dispatchEvent(
-        new CustomEvent("chatRequestAccepted", { detail: { lawyerId, chatGroupId } })
+        new CustomEvent("chatRequestAccepted", {
+          detail: { lawyerId, chatGroupId },
+        })
       );
     };
 
     const handleChatRequestRejected = ({ lawyerId, message }) => {
-      handleNotificationIfMimimized("Call request declined", "Your chat request was declined.");
+      handleNotificationIfMimimized(
+        "Call request declined",
+        "Your chat request was declined."
+      );
       setPendingChatRequest(null);
       window.dispatchEvent(
-        new CustomEvent("chatRequestRejected", { detail: { lawyerId, message } })
+        new CustomEvent("chatRequestRejected", {
+          detail: { lawyerId, message },
+        })
       );
     };
 
     const handleChatRequestNotAccepted = ({ lawyerId, message }) => {
-      handleNotificationIfMimimized("Call request timout", "Chat request was aborted due to timeout.");
+      handleNotificationIfMimimized(
+        "Call request timout",
+        "Chat request was aborted due to timeout."
+      );
       setPendingChatRequest(null);
       window.dispatchEvent(
-        new CustomEvent("chatRequestNotAccepted", { detail: { lawyerId, message } })
+        new CustomEvent("chatRequestNotAccepted", {
+          detail: { lawyerId, message },
+        })
       );
     };
 
@@ -314,10 +342,28 @@ export const SocketProvider = ({ children }) => {
     socketIO.on(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
     socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
     socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
-    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED, handleChatRequestNotAccepted);
+    socketIO.on(
+      SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED,
+      handleChatRequestNotAccepted
+    );
+
+    const handleTyping = (payload) => {
+      const { fromUserId } = payload || {};
+      if (typingClearTimeoutRef.current)
+        clearTimeout(typingClearTimeoutRef.current);
+      setTypingFromUserId(fromUserId || null);
+      typingClearTimeoutRef.current = setTimeout(() => {
+        setTypingFromUserId(null);
+        typingClearTimeoutRef.current = null;
+      }, 1000);
+    };
+    socketIO.on(SOCKET_EVENTS.TYPING, handleTyping);
 
     // Cleanup on unmount or user change
     return () => {
+      if (typingClearTimeoutRef.current)
+        clearTimeout(typingClearTimeoutRef.current);
+      socketIO.off(SOCKET_EVENTS.TYPING, handleTyping);
       socketIO.off(SOCKET_EVENTS.CONNECT, handleConnect);
       socketIO.off(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
       socketIO.off(SOCKET_EVENTS.CONNECT_ERROR, handleConnectError);
@@ -329,12 +375,42 @@ export const SocketProvider = ({ children }) => {
       socketIO.off(SOCKET_EVENTS.CALL_REJECTED, handleCallRejected);
       socketIO.off(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
       socketIO.off(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
-      socketIO.off(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
-      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
-      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
-      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED, handleChatRequestNotAccepted);
+      socketIO.off(
+        SOCKET_EVENTS.INCOMING_CHAT_REQUEST,
+        handleIncomingChatRequest
+      );
+      socketIO.off(
+        SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED,
+        handleChatRequestAccepted
+      );
+      socketIO.off(
+        SOCKET_EVENTS.CHAT_REQUEST_REJECTED,
+        handleChatRequestRejected
+      );
+      socketIO.off(
+        SOCKET_EVENTS.CHAT_REQUEST_NOT_ACCEPTED,
+        handleChatRequestNotAccepted
+      );
     };
   }, [userId, userRole]);
+
+  /**
+   * Emit typing indicator to the other user
+   */
+  const emitTyping = useCallback(
+    (toUserId) => {
+      if (!socket?.connected || !toUserId) return false;
+      const fromUserType = userRole === "lawyer" ? "lawyer" : "client";
+      socket.emit(SOCKET_EVENTS.TYPING, {
+        toUserId,
+        fromUserType,
+        name: user?.fullName || "",
+        fromUserId: userId,
+      });
+      return true;
+    },
+    [socket, userRole, userId, user?.fullName]
+  );
 
   // Disconnect when user logs out
   useEffect(() => {
@@ -596,7 +672,7 @@ export const SocketProvider = ({ children }) => {
    */
   const on = useCallback(
     (event, handler) => {
-      if (!socket) return () => { };
+      if (!socket) return () => {};
       socket.on(event, handler);
       return () => socket.off(event, handler);
     },
@@ -618,6 +694,8 @@ export const SocketProvider = ({ children }) => {
     // Messaging
     sendMessage,
     registerMessageHandler,
+    typingFromUserId,
+    emitTyping,
 
     // Calling
     incomingCall,
@@ -650,7 +728,7 @@ export const SocketProvider = ({ children }) => {
       {/* Calling Screen */}
       {activeCall.isActive && (
         <CallScreen
-        ref={agoraClientRef}
+          ref={agoraClientRef}
           userId={userId}
           callerId={activeCall.peerId}
           callerInfo={activeCall.peerInfo}

@@ -105,6 +105,8 @@ const ChatPage = ({ userType = "customer" }) => {
     sendMessage,
     registerMessageHandler,
     initiateCall,
+    typingFromUserId,
+    emitTyping,
   } = useSocket();
   const { isBrowserMinimized, verifyPermission, createNotification } =
     useNotification();
@@ -135,10 +137,28 @@ const ChatPage = ({ userType = "customer" }) => {
   // Refs
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const typingDebounceRef = useRef(null);
 
   // Computed
   const userModel = userType === "lawyer" ? "Lawyer" : "User";
   const onlineUsers = userType === "lawyer" ? onlineClients : onlineLawyers;
+  const isOtherUserTyping =
+    !!selectedChat?.participant?._id &&
+    typingFromUserId === selectedChat.participant._id;
+
+  // Emit typing indicator when user types (debounced)
+  useEffect(() => {
+    const participantId = selectedChat?.participant?._id;
+    if (!participantId || !messageInput.trim()) return;
+    if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current);
+    typingDebounceRef.current = setTimeout(() => {
+      emitTyping(participantId);
+      typingDebounceRef.current = null;
+    }, 300);
+    return () => {
+      if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current);
+    };
+  }, [messageInput, selectedChat?.participant?._id, emitTyping]);
 
   // Handle tab change
   const handleTabChange = (event, newTab) => {
@@ -951,6 +971,7 @@ const ChatPage = ({ userType = "customer" }) => {
               <ChatHeader
                 selectedChat={selectedChat}
                 onlineUsers={onlineUsers}
+                isOtherUserTyping={isOtherUserTyping}
                 getAvatarSrc={getAvatarSrc}
                 getParticipantName={getParticipantName}
                 onCall={handleCall}

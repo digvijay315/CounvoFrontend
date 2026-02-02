@@ -16,13 +16,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 const ChatHeader = ({
   selectedChat,
   onlineUsers,
+  isOtherUserTyping = false,
   getAvatarSrc,
   getParticipantName,
   onCall,
-  goBack
+  goBack,
 }) => {
   const navigate = useNavigate();
-  const {pathname} = useLocation();
+  const { pathname } = useLocation();
   if (!selectedChat) return null;
   return (
     <Paper
@@ -35,17 +36,17 @@ const ChatHeader = ({
         justifyContent: "space-between",
         borderBottom: 1,
         borderColor: "divider",
-        borderRadius:0
+        borderRadius: 0,
       }}
     >
-      <Stack direction={"row"} alignItems={'center'}>
+      <Stack direction={"row"} alignItems={"center"}>
         <IconButton
           size="small"
           color="primary"
-           onClick={()=>{
+          onClick={() => {
             navigate(pathname);
             goBack();
-           }}
+          }}
         >
           <ArrowBackIosNew />
         </IconButton>
@@ -70,7 +71,7 @@ const ChatHeader = ({
               src={getAvatarSrc(selectedChat.participant)}
               alt={getParticipantName(
                 selectedChat.participant,
-                selectedChat.participantModel,
+                selectedChat.participantModel
               )}
               sx={{ width: "2.4rem", height: "2.4rem" }}
             />
@@ -85,11 +86,13 @@ const ChatHeader = ({
             >
               {getParticipantName(
                 selectedChat.participant,
-                selectedChat.participantModel,
+                selectedChat.participantModel
               )}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {onlineUsers.includes(selectedChat.participant?._id)
+              {isOtherUserTyping
+                ? "Typing..."
+                : onlineUsers.includes(selectedChat.participant?._id)
                 ? "Online"
                 : "Offline"}
             </Typography>
