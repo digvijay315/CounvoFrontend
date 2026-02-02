@@ -51,7 +51,7 @@ const CallScreen = React.forwardRef(
     const BACKEND_URL = APP_CONFIG.API_URL;
 
     // Refs for Agora client and tracks
-  const clientRef = useRef(null);
+    const clientRef = useRef(null);
     const localAudioTrackRef = useRef(null);
     const localVideoTrackRef = useRef(null);
 
@@ -99,7 +99,7 @@ const CallScreen = React.forwardRef(
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const audioOutputs = devices.filter(
-          (device) => device.kind === "audiooutput",
+          (device) => device.kind === "audiooutput"
         );
         setAudioOutputDevices(audioOutputs);
 
@@ -158,7 +158,7 @@ const CallScreen = React.forwardRef(
       } catch (error) {
         console.error("Error fetching token:", error);
         alert(
-          "Failed to get token. Make sure the backend is running on port 3000.",
+          "Failed to get token. Make sure the backend is running on port 3000."
         );
         return null;
       }
@@ -206,7 +206,7 @@ const CallScreen = React.forwardRef(
           const existingUser = prevUsers.find((u) => u.uid === user.uid);
           if (existingUser) {
             return prevUsers.map((u) =>
-              u.uid === user.uid ? { ...u, videoTrack: user.videoTrack } : u,
+              u.uid === user.uid ? { ...u, videoTrack: user.videoTrack } : u
             );
           }
           return [
@@ -221,7 +221,7 @@ const CallScreen = React.forwardRef(
 
         // Play video track
         const remoteVideoContainer = document.getElementById(
-          `remote-video-${user.uid}`,
+          `remote-video-${user.uid}`
         );
         if (remoteVideoContainer) {
           user.videoTrack.play(remoteVideoContainer);
@@ -233,7 +233,7 @@ const CallScreen = React.forwardRef(
           const existingUser = prevUsers.find((u) => u.uid === user.uid);
           if (existingUser) {
             return prevUsers.map((u) =>
-              u.uid === user.uid ? { ...u, audioTrack: user.audioTrack } : u,
+              u.uid === user.uid ? { ...u, audioTrack: user.audioTrack } : u
             );
           }
           return [
@@ -267,8 +267,8 @@ const CallScreen = React.forwardRef(
       if (mediaType === "video") {
         setRemoteUsers((prevUsers) =>
           prevUsers.map((u) =>
-            u.uid === user.uid ? { ...u, videoTrack: null } : u,
-          ),
+            u.uid === user.uid ? { ...u, videoTrack: null } : u
+          )
         );
       }
     };
@@ -277,7 +277,7 @@ const CallScreen = React.forwardRef(
     const handleUserLeft = (user) => {
       console.log("User left:", user.uid);
       setRemoteUsers((prevUsers) =>
-        prevUsers.filter((u) => u.uid !== user.uid),
+        prevUsers.filter((u) => u.uid !== user.uid)
       );
     };
 
@@ -345,7 +345,7 @@ const CallScreen = React.forwardRef(
       } catch (error) {
         console.error("Error creating local tracks:", error);
         alert(
-          "Failed to access camera/microphone. Please check permissions and try again.",
+          "Failed to access camera/microphone. Please check permissions and try again."
         );
         return false;
       }
@@ -451,28 +451,27 @@ const CallScreen = React.forwardRef(
       setVoiceLevel(0);
     };
 
-    // Handle ending a call
+    // Handle ending a call (works in both ringing/connecting and in-call)
     const handleEndCall = async () => {
       try {
-        // Leave channel
-        if (clientRef.current) {
-          await clientRef.current.leave();
+        if (inCall) {
+          // Leave channel and cleanup only if we actually joined
+          if (clientRef.current) {
+            await clientRef.current.leave();
+          }
+          await cleanupTracks();
+          setInCall(false);
+          setChannelName("");
+          setToken(null);
+          setRemoteUsers([]);
+          setIsMuted(false);
+          setIsVideoOff(false);
+          setPermissionsGranted(false);
         }
-
-        // Cleanup tracks
-        await cleanupTracks();
-
-        // Reset state
-        setInCall(false);
-        setChannelName("");
-        setToken(null);
-        setRemoteUsers([]);
-        setIsMuted(false);
-        setIsVideoOff(false);
-        setPermissionsGranted(false);
-        onCallEnded();
+        onCallEnded(); // Always notify context (emits END_CALL so other peer is notified)
       } catch (error) {
         console.error("Error ending call:", error);
+        onCallEnded();
       }
     };
 
@@ -546,13 +545,13 @@ const CallScreen = React.forwardRef(
 
         navigator.mediaDevices.addEventListener(
           "devicechange",
-          handleDeviceChange,
+          handleDeviceChange
         );
 
         return () => {
           navigator.mediaDevices.removeEventListener(
             "devicechange",
-            handleDeviceChange,
+            handleDeviceChange
           );
         };
       }
@@ -623,6 +622,13 @@ const CallScreen = React.forwardRef(
                     callType === "video" ? "video" : "voice"
                   } call with ${getCallerName()}`}
             </p>
+            <button
+              className="control-btn end-call cancel-call-btn"
+              onClick={handleEndCall}
+              title="Cancel call"
+            >
+              <Phone size={28} />
+            </button>
           </div>
         </div>
       );

@@ -15,7 +15,13 @@ import api from "../api";
 import IncomingCallScreen from "../_modules/calling/IncomingCallScreen";
 import CallScreen from "../_modules/calling/CallScreen";
 import IncomingChatRequest from "../_modules/chat/IncomingChatRequest";
-import { Backdrop, CircularProgress, Paper, Typography } from "@mui/material";
+import {
+  Backdrop,
+  Button,
+  CircularProgress,
+  Paper,
+  Typography,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import useNotification from "../hooks/useNotification";
 import { set } from "react-hook-form";
@@ -123,6 +129,16 @@ export const SocketProvider = ({ children }) => {
   const messageHandlersRef = useRef(new Map());
 
   const agoraClientRef = useRef(null);
+
+  // Refs for reload/unload handlers (avoid stale closures when emitting END_CALL / REJECT_CALL)
+  const activeCallRef = useRef(activeCall);
+  const incomingCallRef = useRef(incomingCall);
+  const socketRef = useRef(socket);
+  const userIdRef = useRef(userId);
+  activeCallRef.current = activeCall;
+  incomingCallRef.current = incomingCall;
+  socketRef.current = socket;
+  userIdRef.current = userId;
 
   const [isGranted, setIsGranted] = useState(false);
   const handleNotificationIfMimimized = (title, body) => {
@@ -263,6 +279,7 @@ export const SocketProvider = ({ children }) => {
         callStatus: "idle",
         callDirection: null,
       });
+      setIncomingCall(null); // Dismiss incoming call UI when caller cancels or call ends
       Swal.fire({
         icon: "info",
         title: "Call Ended",
@@ -270,8 +287,8 @@ export const SocketProvider = ({ children }) => {
         timer: 2000,
         showConfirmButton: false,
       });
-      if (agoraClientRef.current.handleEndCall) {
-        agoraClientRef?.current?.handleEndCall();
+      if (agoraClientRef.current?.handleEndCall) {
+        agoraClientRef.current.handleEndCall();
       }
     };
 
@@ -632,6 +649,58 @@ export const SocketProvider = ({ children }) => {
     return true;
   }, [socket, incomingChatRequest]);
 
+  // ==================== RELOAD / UNLOAD DURING CALL ====================
+
+  /**
+   * Warn user on reload/close when a call is active or incoming; on actual leave, emit END_CALL or REJECT_CALL so the other peer is notified.
+   */
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (activeCallRef.current?.isActive) {
+        e.preventDefault();
+        e.returnValue =
+          "You have an ongoing call. Leaving will end the call. Are you sure?";
+        return e.returnValue;
+      }
+      if (incomingCallRef.current) {
+        e.preventDefault();
+        e.returnValue =
+          "You have an incoming call. Leaving will end the call. Are you sure?";
+        return e.returnValue;
+      }
+    };
+
+    const handlePageHide = () => {
+      const ac = activeCallRef.current;
+      const inc = incomingCallRef.current;
+      const s = socketRef.current;
+      const uid = userIdRef.current;
+      if (!s?.connected || !uid) return;
+      // Active call: we're in a call — notify peer with END_CALL
+      if (ac?.isActive && ac?.peerId) {
+        s.emit(SOCKET_EVENTS.END_CALL, {
+          callerId: uid,
+          receiverId: ac.peerId,
+        });
+      }
+      // Incoming call screen: we're viewing incoming — reject so caller stops ringing
+      if (inc?.callerId) {
+        s.emit(SOCKET_EVENTS.REJECT_CALL, {
+          callerId: inc.callerId,
+          rejecterId: uid,
+          message: "User is no longer available.",
+        });
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, []);
+
   // ==================== UTILITY METHODS ====================
 
   /**
@@ -794,7 +863,7 @@ export const SocketProvider = ({ children }) => {
         />
       )}
 
-      {/* Loading Backdrop */}
+      {/* Loading Backdrop - shown while call is ringing (waiting for answer) */}
       <Backdrop
         open={activeCall.isActive && activeCall.callStatus === "ringing"}
         sx={{
@@ -818,6 +887,21 @@ export const SocketProvider = ({ children }) => {
           <Typography variant="h6" fontWeight="600" color="primary">
             Connecting, Please wait
           </Typography>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={endCall}
+            sx={{
+              mt: 2,
+              px: 3,
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+            }}
+          >
+            Cancel call
+          </Button>
         </Paper>
       </Backdrop>
     </SocketContext.Provider>

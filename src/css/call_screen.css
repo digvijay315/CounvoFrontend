@@ -478,6 +478,10 @@
     flex-shrink: 0;
   }
 
+  .call-loading .cancel-call-btn {
+    margin-top: 24px;
+  }
+
   &.app-container.voice-call {
     background: #0a0a0a;
   }
