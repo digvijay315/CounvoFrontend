@@ -1,36 +1,73 @@
-import React, { useState, useEffect } from "react";
-import { Chat as ChatIcon, Close as CloseIcon, Timer as TimerIcon } from "@mui/icons-material";
-import { Avatar, Box, Typography, Button, Stack, Paper, LinearProgress } from "@mui/material";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Chat as ChatIcon,
+  Close as CloseIcon,
+  Timer as TimerIcon,
+} from "@mui/icons-material";
+import {
+  Avatar,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Paper,
+  LinearProgress,
+} from "@mui/material";
 
 const TIMEOUT_SECONDS = 60;
 
+const computeTimeLeft = (expiresAt) => {
+  if (!expiresAt || typeof expiresAt !== "number") return null;
+  return Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+};
+
 const IncomingChatRequest = ({
   clientInfo,
+  expiresAt, // Server timestamp when request expires (syncs lawyer & client)
   onAccept,
   onReject,
   onTimeout, // Called when timer expires (different from reject)
 }) => {
-  const [timeLeft, setTimeLeft] = useState(TIMEOUT_SECONDS);
+  const initialTime =
+    expiresAt != null
+      ? computeTimeLeft(expiresAt) ?? TIMEOUT_SECONDS
+      : TIMEOUT_SECONDS;
+  const [timeLeft, setTimeLeft] = useState(initialTime);
+  const timeoutFiredRef = useRef(false);
 
-  // Countdown timer
+  // Server-synced countdown: recompute from expiresAt every second; fallback to local countdown if no expiresAt
   useEffect(() => {
-    if (timeLeft <= 0) {
-      // Timer expired - dismiss without rejecting
-      if (onTimeout) {
-        onTimeout();
+    const tick = () => {
+      const left = expiresAt != null ? computeTimeLeft(expiresAt) : null;
+      if (left !== null) {
+        setTimeLeft(left);
+        if (left <= 0 && !timeoutFiredRef.current && onTimeout) {
+          timeoutFiredRef.current = true;
+          onTimeout();
+        }
+        return left > 0;
       }
-      return;
-    }
+      setTimeLeft((prev) => {
+        const next = Math.max(0, prev - 1);
+        if (next <= 0 && !timeoutFiredRef.current && onTimeout) {
+          timeoutFiredRef.current = true;
+          onTimeout();
+        }
+        return next;
+      });
+      return true;
+    };
 
+    if (!tick()) return;
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      if (!tick()) clearInterval(timer);
     }, 1000);
-
     return () => clearInterval(timer);
-  }, [timeLeft, onTimeout]);
+  }, [expiresAt, onTimeout]);
 
-  const progress = (timeLeft / TIMEOUT_SECONDS) * 100;
-  const isUrgent = timeLeft <= 15;
+  const displayTime = Math.max(0, timeLeft);
+  const progress = (displayTime / TIMEOUT_SECONDS) * 100;
+  const isUrgent = displayTime <= 15;
 
   return (
     <Box
@@ -95,7 +132,7 @@ const IncomingChatRequest = ({
               fontWeight="600"
               color={isUrgent ? "error.main" : "text.secondary"}
             >
-              {timeLeft}s remaining
+              {displayTime}s remaining
             </Typography>
           </Box>
           <LinearProgress
@@ -205,7 +242,11 @@ const IncomingChatRequest = ({
           </Button>
         </Stack>
 
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ mt: 2, display: "block" }}
+        >
           Accepting will start a conversation with this client
         </Typography>
       </Paper>
@@ -214,4 +255,3 @@ const IncomingChatRequest = ({
 };
 
 export default IncomingChatRequest;
-

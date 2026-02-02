@@ -63,6 +63,8 @@ export const SOCKET_EVENTS = {
   ACCEPT_CHAT_REQUEST: "acceptChatRequest",
   REJECT_CHAT_REQUEST: "rejectChatRequest",
   CHAT_REQUEST_TIMEOUT: "chatRequestTimeout",
+  CHAT_REQUEST_ACK: "chatRequestAck",
+  CHAT_REQUEST_CANCELLED: "chatRequestCancelled",
   CHAT_REQUEST_ACCEPTED: "chatRequestAccepted",
   CHAT_REQUEST_REJECTED: "chatRequestRejected",
   CHAT_REQUEST_NOT_ACCEPTED: "chatRequestNotAccepted",
@@ -130,13 +132,17 @@ export const SocketProvider = ({ children }) => {
 
   const agoraClientRef = useRef(null);
 
-  // Refs for reload/unload handlers (avoid stale closures when emitting END_CALL / REJECT_CALL)
+  // Refs for reload/unload handlers (avoid stale closures when emitting END_CALL / REJECT_CALL / chat)
   const activeCallRef = useRef(activeCall);
   const incomingCallRef = useRef(incomingCall);
+  const pendingChatRequestRef = useRef(pendingChatRequest);
+  const incomingChatRequestRef = useRef(incomingChatRequest);
   const socketRef = useRef(socket);
   const userIdRef = useRef(userId);
   activeCallRef.current = activeCall;
   incomingCallRef.current = incomingCall;
+  pendingChatRequestRef.current = pendingChatRequest;
+  incomingChatRequestRef.current = incomingChatRequest;
   socketRef.current = socket;
   userIdRef.current = userId;
 
@@ -293,7 +299,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     // Chat request handlers
-    const handleIncomingChatRequest = ({ clientId, clientInfo }) => {
+    const handleIncomingChatRequest = ({ clientId, clientInfo, expiresAt }) => {
       handleNotificationIfMimimized(
         "New chat request",
         "You have a new chat request."
@@ -301,7 +307,16 @@ export const SocketProvider = ({ children }) => {
       setIncomingChatRequest({
         clientId,
         clientInfo,
+        expiresAt,
       });
+    };
+
+    const handleChatRequestAck = ({ lawyerId, expiresAt }) => {
+      setPendingChatRequest((prev) => (prev ? { ...prev, expiresAt } : null));
+    };
+
+    const handleChatRequestCancelled = () => {
+      setIncomingChatRequest(null);
     };
 
     const handleChatRequestAccepted = ({ lawyerId, chatGroupId }) => {
@@ -357,6 +372,11 @@ export const SocketProvider = ({ children }) => {
     socketIO.on(SOCKET_EVENTS.CALL_ACCEPTED, handleCallAccepted);
     socketIO.on(SOCKET_EVENTS.CALL_ENDED, handleCallEnded);
     socketIO.on(SOCKET_EVENTS.INCOMING_CHAT_REQUEST, handleIncomingChatRequest);
+    socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_ACK, handleChatRequestAck);
+    socketIO.on(
+      SOCKET_EVENTS.CHAT_REQUEST_CANCELLED,
+      handleChatRequestCancelled
+    );
     socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED, handleChatRequestAccepted);
     socketIO.on(SOCKET_EVENTS.CHAT_REQUEST_REJECTED, handleChatRequestRejected);
     socketIO.on(
@@ -395,6 +415,11 @@ export const SocketProvider = ({ children }) => {
       socketIO.off(
         SOCKET_EVENTS.INCOMING_CHAT_REQUEST,
         handleIncomingChatRequest
+      );
+      socketIO.off(SOCKET_EVENTS.CHAT_REQUEST_ACK, handleChatRequestAck);
+      socketIO.off(
+        SOCKET_EVENTS.CHAT_REQUEST_CANCELLED,
+        handleChatRequestCancelled
       );
       socketIO.off(
         SOCKET_EVENTS.CHAT_REQUEST_ACCEPTED,
@@ -673,6 +698,8 @@ export const SocketProvider = ({ children }) => {
     const handlePageHide = () => {
       const ac = activeCallRef.current;
       const inc = incomingCallRef.current;
+      const pending = pendingChatRequestRef.current;
+      const incChat = incomingChatRequestRef.current;
       const s = socketRef.current;
       const uid = userIdRef.current;
       if (!s?.connected || !uid) return;
@@ -689,6 +716,19 @@ export const SocketProvider = ({ children }) => {
           callerId: inc.callerId,
           rejecterId: uid,
           message: "User is no longer available.",
+        });
+      }
+      // Client waiting for lawyer: cancel so lawyer's incoming request is cleared
+      if (pending?.lawyerId) {
+        s.emit(SOCKET_EVENTS.CHAT_REQUEST_CANCELLED, {
+          clientId: uid,
+          lawyerId: pending.lawyerId,
+        });
+      }
+      // Lawyer viewing incoming chat request: reject so client gets notified
+      if (incChat?.clientId) {
+        s.emit(SOCKET_EVENTS.REJECT_CHAT_REQUEST, {
+          clientId: incChat.clientId,
         });
       }
     };
@@ -825,6 +865,7 @@ export const SocketProvider = ({ children }) => {
       {incomingChatRequest && (
         <IncomingChatRequest
           clientInfo={incomingChatRequest.clientInfo}
+          expiresAt={incomingChatRequest.expiresAt}
           onAccept={async () => {
             try {
               // Create chat group first

@@ -67,10 +67,11 @@ function FindLawyer() {
   const [rejectedByLawyers, setRejectedByLawyers] = useState([]);
   const [requestTimer, setRequestTimer] = useState(60);
 
-  // Timer for pending chat request
+  // Timer for pending chat request (server-synced via expiresAt so lawyer & client match)
   const TIMEOUT_SECONDS = 60;
   const isWaitingForResponse =
     isConnecting || pendingChatRequest?.status === "pending";
+  const expiresAt = pendingChatRequest?.expiresAt;
 
   useEffect(() => {
     if (!isWaitingForResponse) {
@@ -78,18 +79,27 @@ function FindLawyer() {
       return;
     }
 
-    const timer = setInterval(() => {
-      setRequestTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const computeTimeLeft = () => {
+      if (expiresAt != null && typeof expiresAt === "number") {
+        return Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      }
+      return null;
+    };
 
+    const tick = () => {
+      const left = computeTimeLeft();
+      if (left !== null) {
+        setRequestTimer(left);
+        return left > 0;
+      }
+      setRequestTimer((prev) => (prev <= 1 ? 0 : prev - 1));
+      return true;
+    };
+
+    tick(); // initial
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [isWaitingForResponse]);
+  }, [isWaitingForResponse, expiresAt]);
 
   // ==================== DATA FETCHING ====================
   const fetchLawyers = useCallback(async () => {
@@ -199,7 +209,7 @@ function FindLawyer() {
       window.removeEventListener("chatRequestRejected", handleChatRejected);
       window.removeEventListener(
         "chatRequestNotAccepted",
-        handleChatNotAccepted,
+        handleChatNotAccepted
       );
     };
   }, [navigate, showSuggestionDialog]);
@@ -252,7 +262,7 @@ function FindLawyer() {
       }
       // Note: isConnecting will be set to false by the event handlers
     },
-    [userId, user, onlineLawyers, initiateChatRequest],
+    [userId, user, onlineLawyers, initiateChatRequest]
   );
 
   // ==================== FILTERED DATA ====================
@@ -274,7 +284,7 @@ function FindLawyer() {
       // Filter by specialization
       if (specialization) {
         const hasSpecialization = lawyerSpecializations.includes(
-          specialization.toLowerCase(),
+          specialization.toLowerCase()
         );
         if (!hasSpecialization) return false;
       }
@@ -289,7 +299,7 @@ function FindLawyer() {
         // Filter by practicing court
         if (practicingCourt) {
           const hasPracticingCourt = lawyerPracticingCourts.includes(
-            practicingCourt.toLowerCase(),
+            practicingCourt.toLowerCase()
           );
           if (!hasPracticingCourt) return false;
         }
@@ -314,7 +324,7 @@ function FindLawyer() {
     (lawyerPool) => {
       // Filter out already suggested lawyers in this session
       const availableLawyers = lawyerPool.filter(
-        (l) => !usedLawyerIds.includes(l._id),
+        (l) => !usedLawyerIds.includes(l._id)
       );
 
       // If all lawyers have been suggested, reset the pool
@@ -326,7 +336,7 @@ function FindLawyer() {
       const randomIndex = Math.floor(Math.random() * availableLawyers.length);
       return availableLawyers[randomIndex];
     },
-    [usedLawyerIds],
+    [usedLawyerIds]
   );
 
   const findSuggestedLawyer = useCallback(() => {
