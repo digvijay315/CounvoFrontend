@@ -102,7 +102,7 @@ export const generateInvoicePDF = (invoiceData) => {
     consultationFee,
     recipientName,
     platformFee,
-    gstPercent
+    gstPercent,
   } = invoiceData;
 
   // Calculate amounts
@@ -112,9 +112,9 @@ export const generateInvoicePDF = (invoiceData) => {
 
   // Create new PDF document
   const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
   });
 
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -126,19 +126,19 @@ export const generateInvoicePDF = (invoiceData) => {
   const addText = (text, x, y, options = {}) => {
     const {
       fontSize = 10,
-      fontStyle = 'normal',
-      align = 'left',
-      color = [0, 0, 0]
+      fontStyle = "normal",
+      align = "left",
+      color = [0, 0, 0],
     } = options;
 
     doc.setFontSize(fontSize);
-    doc.setFont('helvetica', fontStyle);
+    doc.setFont("helvetica", fontStyle);
     doc.setTextColor(...color);
 
-    if (align === 'center') {
-      doc.text(text, x, y, { align: 'center' });
-    } else if (align === 'right') {
-      doc.text(text, x, y, { align: 'right' });
+    if (align === "center") {
+      doc.text(text, x, y, { align: "center" });
+    } else if (align === "right") {
+      doc.text(text, x, y, { align: "right" });
     } else {
       doc.text(text, x, y);
     }
@@ -152,31 +152,50 @@ export const generateInvoicePDF = (invoiceData) => {
   };
 
   // Helper function to draw rectangle
-  const drawRect = (x, y, width, height, fillColor = null, borderColor = [200, 200, 200]) => {
+  const drawRect = (
+    x,
+    y,
+    width,
+    height,
+    fillColor = null,
+    borderColor = [200, 200, 200]
+  ) => {
     doc.setDrawColor(...borderColor);
     doc.setLineWidth(0.3);
 
     if (fillColor) {
       doc.setFillColor(...fillColor);
-      doc.rect(x, y, width, height, 'FD');
+      doc.rect(x, y, width, height, "FD");
     } else {
       doc.rect(x, y, width, height);
     }
   };
 
   // ========== HEADER ==========
-  addText('Invoice structure', margin, yPos, { fontSize: 12, fontStyle: 'bold' });
+  addText("Invoice structure", margin, yPos, {
+    fontSize: 12,
+    fontStyle: "bold",
+  });
   yPos += 8;
 
-  addText('COUNVO', margin, yPos, { fontSize: 18, fontStyle: 'bold' });
+  addText("COUNVO", margin, yPos, { fontSize: 18, fontStyle: "bold" });
   yPos += 7;
 
-  addText('Website: www.counvo.in', margin, yPos, { fontSize: 9, color: [80, 80, 80] });
+  addText("Website: www.counvo.in", margin, yPos, {
+    fontSize: 9,
+    color: [80, 80, 80],
+  });
   yPos += 5;
-  addText('Email: admin@counvo.in', margin, yPos, { fontSize: 9, color: [80, 80, 80] });
+  addText("Email: admin@counvo.in", margin, yPos, {
+    fontSize: 9,
+    color: [80, 80, 80],
+  });
   yPos += 8;
 
-  addText('GSTIN: 07AAMCC8904A1ZT', margin, yPos, { fontSize: 9, fontStyle: 'bold' });
+  addText("GSTIN: 07AAMCC8904A1ZT", margin, yPos, {
+    fontSize: 9,
+    fontStyle: "bold",
+  });
   yPos += 5;
 
   addText(`Invoice No: ${invoiceNo}`, margin, yPos, { fontSize: 9 });
@@ -188,7 +207,7 @@ export const generateInvoicePDF = (invoiceData) => {
   drawLine(margin, yPos, pageWidth - margin, yPos);
   yPos += 6;
 
-  addText('Billed To', margin, yPos, { fontSize: 10, fontStyle: 'bold' });
+  addText("Billed To", margin, yPos, { fontSize: 10, fontStyle: "bold" });
   yPos += 6;
 
   addText(`Name: ${billedTo.name}`, margin, yPos, { fontSize: 9 });
@@ -203,15 +222,15 @@ export const generateInvoicePDF = (invoiceData) => {
   drawLine(margin, yPos, pageWidth - margin, yPos);
   yPos += 6;
 
-  addText('Payment Mode', margin, yPos, { fontSize: 10, fontStyle: 'bold' });
+  addText("Payment Mode", margin, yPos, { fontSize: 10, fontStyle: "bold" });
   yPos += 6;
 
   addText(paymentMode, margin, yPos, { fontSize: 9 });
   yPos += 5;
   addText(`Payment Status: ${paymentStatus}`, margin, yPos, {
     fontSize: 9,
-    fontStyle: 'bold',
-    color: paymentStatus === 'Successful' ? [0, 128, 0] : [255, 0, 0]
+    fontStyle: "bold",
+    color: paymentStatus === "Successful" ? [0, 128, 0] : [255, 0, 0],
   });
   yPos += 10;
 
@@ -219,7 +238,7 @@ export const generateInvoicePDF = (invoiceData) => {
   drawLine(margin, yPos, pageWidth - margin, yPos);
   yPos += 6;
 
-  addText('Payment Summary', margin, yPos, { fontSize: 11, fontStyle: 'bold' });
+  addText("Payment Summary", margin, yPos, { fontSize: 11, fontStyle: "bold" });
   yPos += 8;
 
   // Table dimensions
@@ -232,12 +251,12 @@ export const generateInvoicePDF = (invoiceData) => {
   // Draw table header background
   drawRect(margin, yPos, tableWidth, rowHeight, [240, 240, 240]);
 
-  addText('Particulars', col1X, yPos + 5.5, { fontSize: 9, fontStyle: 'bold' });
-  addText('Recipient', col2X, yPos + 5.5, { fontSize: 9, fontStyle: 'bold' });
-  addText('Amount (Rs.)', col3X, yPos + 5.5, {
+  addText("Particulars", col1X, yPos + 5.5, { fontSize: 9, fontStyle: "bold" });
+  addText("Recipient", col2X, yPos + 5.5, { fontSize: 9, fontStyle: "bold" });
+  addText("Amount (Rs.)", col3X, yPos + 5.5, {
     fontSize: 9,
-    fontStyle: 'bold',
-    align: 'right'
+    fontStyle: "bold",
+    align: "right",
   });
   yPos += rowHeight;
 
@@ -246,17 +265,17 @@ export const generateInvoicePDF = (invoiceData) => {
     {
       particulars: "Legal Consultation Fee",
       recipient: recipientName,
-      amount: consultationFee.toFixed(2),
+      amount: convertToRuppee(consultationFee).toFixed(2),
     },
     {
       particulars: "Counvo Platform Usage Fee",
       recipient: "Counvo Sphere Pvt Ltd",
-      amount: platformFeeAmount.toFixed(2),
+      amount: convertToRuppee(platformFeeAmount).toFixed(2),
     },
     {
       particulars: `GST @ ${gstPercent}% on Platform Fee`,
       recipient: "Government of India",
-      amount: gstAmount.toFixed(2),
+      amount: convertToRuppee(gstAmount).toFixed(2),
     },
   ];
 
@@ -267,7 +286,7 @@ export const generateInvoicePDF = (invoiceData) => {
     addText(row.recipient, col2X, yPos + 5.5, { fontSize: 9 });
     addText(row.amount, col3X, yPos + 5.5, {
       fontSize: 9,
-      align: 'right'
+      align: "right",
     });
 
     yPos += rowHeight;
@@ -275,14 +294,14 @@ export const generateInvoicePDF = (invoiceData) => {
 
   // Total row
   drawRect(margin, yPos, tableWidth, rowHeight, [245, 245, 245]);
-  addText('Total Paid by Customer', col1X, yPos + 5.5, {
+  addText("Total Paid by Customer", col1X, yPos + 5.5, {
     fontSize: 10,
-    fontStyle: 'bold'
+    fontStyle: "bold",
   });
-  addText(totalAmount.toFixed(2), col3X, yPos + 5.5, {
+  addText(convertToRuppee(totalAmount).toFixed(2), col3X, yPos + 5.5, {
     fontSize: 10,
-    fontStyle: 'bold',
-    align: 'right'
+    fontStyle: "bold",
+    align: "right",
   });
   yPos += rowHeight + 10;
 
@@ -290,18 +309,21 @@ export const generateInvoicePDF = (invoiceData) => {
   drawLine(margin, yPos, pageWidth - margin, yPos);
   yPos += 6;
 
-  addText('Important Legal Disclosure', margin, yPos, { fontSize: 10, fontStyle: 'bold' });
+  addText("Important Legal Disclosure", margin, yPos, {
+    fontSize: 10,
+    fontStyle: "bold",
+  });
   yPos += 6;
 
   const disclosureText = [
-    '• Counvo is a technology platform that connects users with independent, verified lawyers.',
-    '• Counvo does not provide legal advice.',
-    '• The legal consultation fee is charged by the lawyer and is exempt from, GST under Indian law.',
-    '• GST is charged only on Counvo\'s platform service fee.',
-    '• This is a system-generated receipt. No signature is required.'
+    "• Counvo is a technology platform that connects users with independent, verified lawyers.",
+    "• Counvo does not provide legal advice.",
+    "• The legal consultation fee is charged by the lawyer and is exempt from, GST under Indian law.",
+    "• GST is charged only on Counvo's platform service fee.",
+    "• This is a system-generated receipt. No signature is required.",
   ];
 
-  disclosureText.forEach(line => {
+  disclosureText.forEach((line) => {
     addText(line, margin, yPos, { fontSize: 8, color: [60, 60, 60] });
     yPos += 4;
   });
@@ -309,16 +331,27 @@ export const generateInvoicePDF = (invoiceData) => {
   // ========== FOOTER ==========
   const footerY = pageHeight - 15;
   drawLine(margin, footerY - 5, pageWidth - margin, footerY - 5);
-  addText(
-    'Thank you for using Counvo',
-    pageWidth / 2,
-    footerY,
-    { fontSize: 9, align: 'center', color: [100, 100, 100] }
-  );
+  addText("Thank you for using Counvo", pageWidth / 2, footerY, {
+    fontSize: 9,
+    align: "center",
+    color: [100, 100, 100],
+  });
 
   // Save the PDF
-  const fileName = `Counvo_Invoice_${invoiceNo.replace(/\//g, '_')}_${date.replace(/\s/g, '_')}.pdf`;
+  const fileName = `Counvo_Invoice_${invoiceNo.replace(
+    /\//g,
+    "_"
+  )}_${date.replace(/\s/g, "_")}.pdf`;
   doc.save(fileName);
 
   return fileName;
+};
+
+export const convertToRuppee = (amount) => {
+  try {
+    return amount / 100;
+  } catch (error) {
+    console.error("Error converting to ruppee:", error);
+    return 0;
+  }
 };

@@ -23,7 +23,6 @@ import {
 import useLawyerEarnings from "../../hooks/useLawyerEarnings";
 import { generateInvoicePDF } from "../../utils";
 
-
 let PlatformFee = parseFloat(process.env.REACT_APP_PLATFORM_FEE || 0.05);
 let GstPercent = parseFloat(process.env.REACT_APP_GST_PERCENT || 18);
 
@@ -88,7 +87,7 @@ const LawyerEarnings = () => {
       date: new Date(payment?.createdAt).toLocaleDateString("en-IN", {
         year: "numeric",
         month: "long",
-        day: "numeric"
+        day: "numeric",
       }),
       billedTo: {
         name: clientName,
@@ -100,9 +99,9 @@ const LawyerEarnings = () => {
       consultationFee: payment.transferAmount,
       recipientName: lawyerName,
       platformFee: PlatformFee,
-      gstPercent: GstPercent
-    })
-  }
+      gstPercent: GstPercent,
+    });
+  };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -159,7 +158,7 @@ const LawyerEarnings = () => {
       >
         <Table>
           <TableHead>
-            <TableRow sx={{ '& .MuiTableCell-head': { minWidth: 200 } }}>
+            <TableRow sx={{ "& .MuiTableCell-head": { minWidth: 200 } }}>
               <TableCell>
                 <strong>Invoice No.</strong>
               </TableCell>
@@ -205,7 +204,10 @@ const LawyerEarnings = () => {
               payments.map((payment) => (
                 <TableRow key={payment._id} hover>
                   <TableCell>
-                    <Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ fontFamily: "monospace" }}
+                    >
                       {payment.orderId}
                     </Typography>
                   </TableCell>
@@ -248,7 +250,12 @@ const LawyerEarnings = () => {
                   </TableCell>
                   <TableCell>{formatDate(payment.createdAt)}</TableCell>
                   <TableCell>
-                    <IconButton disabled={payment.status !== "paid"} onClick={() => { handleDownloadInvoice(payment) }}>
+                    <IconButton
+                      disabled={payment.status !== "paid"}
+                      onClick={() => {
+                        handleDownloadInvoice(payment);
+                      }}
+                    >
                       <FileDownload />
                     </IconButton>
                   </TableCell>
