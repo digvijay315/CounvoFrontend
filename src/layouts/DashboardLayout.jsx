@@ -15,8 +15,11 @@ const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef(null);
   const headerRef = useRef(null);
-  const { isSupported, verifyPermission, requestNotificationPermission } =
-    useNotification();
+  const {
+    verifyPermission,
+    requestNotificationPermission,
+    createNotification,
+  } = useNotification();
 
   const handleDrawerToggle = () => {
     if (isMobile) {
@@ -50,20 +53,18 @@ const DashboardLayout = () => {
   };
   useEffect(() => {
     const checkAndRequestNotificationPermission = async () => {
-      if (!isSupported()) return;
+      // check if user has previously declined
       const declined = localStorage.getItem("notification-permission-declined");
       if (declined === "true") return;
       const permission = await verifyPermission();
-      if (
-        permission !== "granted" &&
-        permission !== "denied" &&
-        permission !== "unsupported"
-      ) {
+      if (permission !== "granted" && permission !== "denied") {
         setShowNotificationPermission(true);
       }
     };
-    const t = setTimeout(checkAndRequestNotificationPermission, 1500);
-    return () => clearTimeout(t);
+    //  Good timeout for Js to be loaded correctly
+    setTimeout(() => {
+      checkAndRequestNotificationPermission();
+    }, 1500);
   }, []);
 
   const hidePadding = pathname === "/dashboard/messages";

@@ -107,6 +107,8 @@ const ChatPage = ({ userType = "customer" }) => {
     initiateCall,
     typingFromUserId,
     emitTyping,
+    clearUnreadMessages,
+    setUserOnMessagesPage,
   } = useSocket();
   const { isBrowserMinimized, verifyPermission, createNotification } =
     useNotification();
@@ -288,6 +290,17 @@ const ChatPage = ({ userType = "customer" }) => {
     [userId, userModel]
   );
 
+  // Tell SocketContext we're on /dashboard/messages so it never shows the red dot here; handleIncomingMessage will reload the list for unread
+  useEffect(() => {
+    setUserOnMessagesPage(true);
+    return () => setUserOnMessagesPage(false);
+  }, [setUserOnMessagesPage]);
+
+  // Clear unread indicator when user is on Messages page
+  useEffect(() => {
+    clearUnreadMessages();
+  }, [clearUnreadMessages]);
+
   // Initial fetch
   useEffect(() => {
     fetchChatGroups();
@@ -333,70 +346,75 @@ const ChatPage = ({ userType = "customer" }) => {
 
   // ==================== REAL-TIME MESSAGE HANDLING ====================
   useEffect(() => {
-    if (!selectedChat) return;
-
-    const participantId = selectedChat.participant?._id;
-    if (!participantId) return;
-
-    const handleIncomingMessage = ({
-      from,
-      message: msgText,
-      fileUrl,
-      fileName,
-      fileType,
-      timestamp,
-    }) => {
-      if (from === participantId) {
-        const newMsg = {
-          _id: Date.now().toString(),
-          senderId: from,
-          senderModel: selectedChat.participantModel,
-          message: msgText,
-          fileUrl,
-          fileName,
-          fileType,
-          timestamp: timestamp || new Date().toISOString(),
-          isRead: true,
-        };
-        setMessages((prev) => [...prev, newMsg]);
-
-        // Update last message in chat group list
-        setChatGroups((prev) =>
-          prev.map((g) =>
-            g._id === selectedChat._id
-              ? {
-                  ...g,
-                  lastMessage: msgText || (fileName ? `📎 ${fileName}` : ""),
-                  lastMessageAt: newMsg.timestamp,
-                }
-              : g
-          )
-        );
-      } else {
-        // To show the updated chat group
+    let handleIncomingMessage = null;
+    if (!selectedChat) {
+      handleIncomingMessage = () => {
         setTimeout(() => {
           fetchChatGroups();
         }, 1000);
-      }
-      // Notify is user browser is minimized
-      if (isBrowserMinimized() || from !== participantId) {
-        verifyPermission().then((permission) => {
-          if (permission === "granted") {
-            createNotification(
-              "New message received",
-              msgText || "You have received a new message."
-            );
-          }
-        });
-      }
-    };
+      };
+    } else {
+      const participantId = selectedChat.participant?._id;
+      handleIncomingMessage = ({
+        from,
+        message: msgText,
+        fileUrl,
+        fileName,
+        fileType,
+        timestamp,
+      }) => {
+        if (from === participantId) {
+          const newMsg = {
+            _id: Date.now().toString(),
+            senderId: from,
+            senderModel: selectedChat.participantModel,
+            message: msgText,
+            fileUrl,
+            fileName,
+            fileType,
+            timestamp: timestamp || new Date().toISOString(),
+            isRead: true,
+          };
+          setMessages((prev) => [...prev, newMsg]);
+
+          // Update last message in chat group list
+          setChatGroups((prev) =>
+            prev.map((g) =>
+              g._id === selectedChat._id
+                ? {
+                    ...g,
+                    lastMessage: msgText || (fileName ? `📎 ${fileName}` : ""),
+                    lastMessageAt: newMsg.timestamp,
+                  }
+                : g
+            )
+          );
+        } else {
+          // To show the updated chat group
+          setTimeout(() => {
+            fetchChatGroups();
+          }, 1000);
+        }
+        // Notify is user browser is minimized
+        if (isBrowserMinimized() || from !== participantId) {
+          verifyPermission().then((permission) => {
+            if (permission === "granted") {
+              createNotification(
+                "New message received",
+                msgText || "You have received a new message."
+              );
+            }
+          });
+        }
+      };
+    }
 
     const unsubscribe = registerMessageHandler(
       "chatPage",
       handleIncomingMessage
     );
     return unsubscribe;
-  }, [selectedChat, registerMessageHandler]);
+  }, [selectedChat, registerMessageHandler, fetchChatGroups]);
 
   // ==================== ACTIONS ====================
   const handleSelectChat = (chatGroup) => {

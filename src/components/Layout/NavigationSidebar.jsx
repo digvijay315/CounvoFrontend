@@ -16,6 +16,7 @@ import {
   useMediaQuery,
   useTheme,
   Avatar,
+  Badge,
   Tooltip,
   Divider,
 } from "@mui/material";
@@ -23,10 +24,14 @@ import { alpha } from "@mui/material/styles";
 import { ExitToApp as LogoutIcon } from "@mui/icons-material";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { APP_CONFIG } from "../../_constants/config";
-import { GetNavigationMenuItems } from "../../_constants/navigationConstants";
+import {
+  GetNavigationMenuItems,
+  NAVIGATION_CONSTANTS,
+} from "../../_constants/navigationConstants";
 import LogoHorizontal from "../../components/counvoImg/LogoHorizontal.png";
 import LogoIcon from "../../components/counvoImg/LogoIcon.jpg";
 import useAuth from "../../hooks/useAuth";
+import { useSocket } from "../../context/SocketContext";
 
 const NavigationSidebar = forwardRef(({ mobileOpen, onClose }, ref) => {
   const theme = useTheme();
@@ -35,13 +40,14 @@ const NavigationSidebar = forwardRef(({ mobileOpen, onClose }, ref) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { userRole, user: userData, handleLogout } = useAuth();
+  const { hasUnreadMessages } = useSocket();
 
   // Mobile always uses full width, desktop uses collapsed/expanded width
   const drawerWidth = isMobile
     ? APP_CONFIG.NAVIGATION_SIDEBAR_WIDTH
     : isCollapsed
-      ? APP_CONFIG.SIDE_PANEL_COLLAPSED_WIDTH
-      : APP_CONFIG.NAVIGATION_SIDEBAR_WIDTH;
+    ? APP_CONFIG.SIDE_PANEL_COLLAPSED_WIDTH
+    : APP_CONFIG.NAVIGATION_SIDEBAR_WIDTH;
 
   const userFullName = userData?.fullName || "User";
   const menuItems = useMemo(() => GetNavigationMenuItems(userRole), [userRole]);
@@ -134,7 +140,14 @@ const NavigationSidebar = forwardRef(({ mobileOpen, onClose }, ref) => {
                     justifyContent: "center",
                   }}
                 >
-                  {item.icon}
+                  {item.path === NAVIGATION_CONSTANTS.MESSAGES_PATH &&
+                  hasUnreadMessages ? (
+                    <Badge color="error" variant="dot">
+                      {item.icon}
+                    </Badge>
+                  ) : (
+                    item.icon
+                  )}
                 </ListItemIcon>
                 {!isCollapsed && (
                   <ListItemText

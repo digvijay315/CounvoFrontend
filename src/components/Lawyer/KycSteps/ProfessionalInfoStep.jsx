@@ -118,7 +118,7 @@ const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
             label="Street Address Line 2"
             fullWidth
             size="small"
-            value={data.officeAddress?.street}
+            value={data.officeAddress?.street2}
             onChange={(e) => handleAddressChange("street2", e.target.value)}
             placeholder="Enter office address line 2"
           />
@@ -165,25 +165,29 @@ const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
             Specializations
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {LawyerSpecializations.map((spec) => (
-              <Chip
-                key={spec.value}
-                label={spec.label}
-                size="small"
-                onClick={() => handleArrayToggle("specializations", spec.value)}
-                color={
-                  data.specializations?.includes(spec.value)
-                    ? "primary"
-                    : "default"
-                }
-                variant={
-                  data.specializations?.includes(spec.value)
-                    ? "filled"
-                    : "outlined"
-                }
-                sx={{ cursor: "pointer" }}
-              />
-            ))}
+            {LawyerSpecializations?.filter((s) => Boolean(s?.value))?.map(
+              (spec) => (
+                <Chip
+                  key={spec.value}
+                  label={spec.label}
+                  size="small"
+                  onClick={() =>
+                    handleArrayToggle("specializations", spec.value)
+                  }
+                  color={
+                    data.specializations?.includes(spec.value)
+                      ? "primary"
+                      : "default"
+                  }
+                  variant={
+                    data.specializations?.includes(spec.value)
+                      ? "filled"
+                      : "outlined"
+                  }
+                  sx={{ cursor: "pointer" }}
+                />
+              )
+            )}
           </Box>
         </Grid>
 
@@ -197,7 +201,7 @@ const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
             Languages
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {LawyerLanguages.map((lang) => (
+            {LawyerLanguages?.filter((s) => Boolean(s?.value))?.map((lang) => (
               <Chip
                 key={lang.value}
                 label={lang.label}
@@ -225,27 +229,29 @@ const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
             Practicing Courts
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {LawyerPracticingCourts.map((court) => (
-              <Chip
-                key={court.value}
-                label={court.label}
-                size="small"
-                onClick={() =>
-                  handleArrayToggle("practicingCourts", court.value)
-                }
-                color={
-                  data.practicingCourts?.includes(court.value)
-                    ? "primary"
-                    : "default"
-                }
-                variant={
-                  data.practicingCourts?.includes(court.value)
-                    ? "filled"
-                    : "outlined"
-                }
-                sx={{ cursor: "pointer" }}
-              />
-            ))}
+            {LawyerPracticingCourts?.filter((s) => Boolean(s?.value))?.map(
+              (court) => (
+                <Chip
+                  key={court.value}
+                  label={court.label}
+                  size="small"
+                  onClick={() =>
+                    handleArrayToggle("practicingCourts", court.value)
+                  }
+                  color={
+                    data.practicingCourts?.includes(court.value)
+                      ? "primary"
+                      : "default"
+                  }
+                  variant={
+                    data.practicingCourts?.includes(court.value)
+                      ? "filled"
+                      : "outlined"
+                  }
+                  sx={{ cursor: "pointer" }}
+                />
+              )
+            )}
           </Box>
         </Grid>
 

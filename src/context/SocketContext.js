@@ -127,6 +127,12 @@ export const SocketProvider = ({ children }) => {
   const [typingFromUserId, setTypingFromUserId] = useState(null);
   const typingClearTimeoutRef = useRef(null);
 
+  // Unread messages indicator (show dot on menu + Messages when user is not on chat page and got a message)
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+  // True when user is on /dashboard/messages (ChatPage sets this on mount, clears on unmount) — no red dot in that case
+  const userOnMessagesPageRef = useRef(false);
+
   // Message handlers ref (for external components to register)
   const messageHandlersRef = useRef(new Map());
 
@@ -212,10 +218,41 @@ export const SocketProvider = ({ children }) => {
 
     // Message handler
     const handleReceiveMessage = (data) => {
-      // Notify all registered message handlers
+      debugger;
+      // Notify all registered message handlers (e.g. ChatPage when user is on messages)
       messageHandlersRef.current.forEach((handler) => {
         handler(data);
       });
+      // Browser notification when: 1) browser minimised, or 2) user is NOT on Chat page (no handler registered)
+      const shouldNotify =
+        data && (isBrowserMinimized() || messageHandlersRef.current.size === 0);
+      // Red dot only when user is NOT on /dashboard/messages (ChatPage sets userOnMessagesPageRef on mount)
+      if (shouldNotify && !userOnMessagesPageRef.current) {
+        setHasUnreadMessages(true);
+      }
+      if (shouldNotify) {
+        const body =
+          data.message ||
+          (data.fileName ? `📎 ${data.fileName}` : "You have a new message.");
+        if (isBrowserMinimized()) {
+          if (!isGranted) {
+            verifyPermission().then((permission) => {
+              if (permission === "granted") {
+                createNotification("New message", body);
+                setIsGranted(true);
+              }
+            });
+          } else {
+            createNotification("New message", body);
+          }
+        } else {
+          verifyPermission().then((permission) => {
+            if (permission === "granted") {
+              createNotification("New message", body);
+            }
+          });
+        }
+      }
     };
 
     // Call handlers
@@ -497,6 +534,20 @@ export const SocketProvider = ({ children }) => {
   const registerMessageHandler = useCallback((id, handler) => {
     messageHandlersRef.current.set(id, handler);
     return () => messageHandlersRef.current.delete(id);
+  }, []);
+
+  /**
+   * Clear unread messages indicator (call when user opens Messages / Chat page)
+   */
+  const clearUnreadMessages = useCallback(() => {
+    setHasUnreadMessages(false);
+  }, []);
+
+  /**
+   * Set whether user is currently on /dashboard/messages (ChatPage calls on mount/unmount so we don't show red dot when on Messages)
+   */
+  const setUserOnMessagesPage = useCallback((onPage) => {
+    userOnMessagesPageRef.current = onPage;
   }, []);
 
   // ==================== CALLING METHODS ====================
@@ -805,6 +856,9 @@ export const SocketProvider = ({ children }) => {
     registerMessageHandler,
     typingFromUserId,
     emitTyping,
+    hasUnreadMessages,
+    clearUnreadMessages,
+    setUserOnMessagesPage,
 
     // Calling
     incomingCall,

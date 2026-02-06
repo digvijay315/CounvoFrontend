@@ -6,6 +6,7 @@ import {
   MenuItem,
   Avatar,
   Box,
+  Badge,
   Divider,
   ListItemIcon,
   ListItemText,
@@ -23,12 +24,14 @@ import {
 import { useNavigate } from "react-router-dom";
 import { APP_CONFIG } from "../../_constants/config";
 import useAuth from "../../hooks/useAuth";
+import { useSocket } from "../../context/SocketContext";
 import { NAVIGATION_CONSTANTS } from "../../_constants/navigationConstants";
 
 const NavigationHeader = forwardRef(
   ({ onMenuClick, onNotificationClick }, ref) => {
     const theme = useTheme();
     const navigate = useNavigate();
+    const { hasUnreadMessages } = useSocket();
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [anchorElNotifications, setAnchorElNotifications] = useState(null);
     const { user: userData, handleLogout, isVerified } = useAuth();
@@ -107,19 +110,26 @@ const NavigationHeader = forwardRef(
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={onMenuClick}
-            sx={{
-              "&:hover": {
-                backgroundColor: alpha("#fff", 0.1),
-              },
-            }}
+          <Badge
+            color="error"
+            variant="dot"
+            invisible={!hasUnreadMessages}
+            sx={{ "& .MuiBadge-badge": { right: 4, top: 4 } }}
           >
-            <MenuIcon />
-          </IconButton>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={onMenuClick}
+              sx={{
+                "&:hover": {
+                  backgroundColor: alpha("#fff", 0.1),
+                },
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Badge>
         </Box>
 
         {/* Right Section - Icons & Profile */}
@@ -275,9 +285,7 @@ const NavigationHeader = forwardRef(
                   >
                     Verified
                   </Typography>
-                ) : (
-                  null
-                )}
+                ) : null}
               </Stack>
 
               <Typography
