@@ -173,7 +173,13 @@ const AdminManagePayments = () => {
                   <strong>Consultation Type</strong>
                 </TableCell>
                 <TableCell>
-                  <strong>Amount</strong>
+                  <strong>Consultation Fee</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Platform Fee</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Gross Amount</strong>
                 </TableCell>
                 <TableCell>
                   <strong>Status</strong>
@@ -233,7 +239,17 @@ const AdminManagePayments = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography fontWeight="600">
+                      <Typography fontWeight="600" color="primary">
+                        {formatAmount(payment.transferAmount)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatAmount(payment.platformCommission)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography>
                         {formatAmount(payment.totalAmount)}
                       </Typography>
                     </TableCell>

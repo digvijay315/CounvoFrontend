@@ -8,7 +8,6 @@ import {
   Chip,
   Divider,
 } from '@mui/material';
-import FileUpload from '../../shared/FileUpload';
 import {
   LawyerLanguages,
   LawyerPracticingCourts,
@@ -22,7 +21,7 @@ const practiceTypes = [
   { value: "government", label: "Government Advocate" },
 ];
 
-const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
+const ProfessionalInfoStep = ({ data, onChange }) => {
   const handleChange = (field, value) => {
     onChange({
       ...data,
@@ -48,12 +47,6 @@ const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
     handleChange(field, newArray);
   };
 
-  const handleFileChange = (urls) => {
-    onChange({
-      ...data,
-      proofOfPractice: urls,
-    });
-  };
 
   return (
     <Box>
@@ -272,19 +265,6 @@ const ProfessionalInfoStep = ({ data, onChange, onUploadingChange }) => {
             value={data.professionalBio}
             onChange={(e) => handleChange("professionalBio", e.target.value)}
             placeholder="Write a brief professional bio (experience, achievements, areas of expertise)"
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <FileUpload
-            label="Upload Proof of Practice"
-            folder="kyc/proof-of-practice"
-            accept=".pdf,.jpg,.jpeg,.png"
-            multiple={true}
-            value={data.proofOfPractice || []}
-            onChange={handleFileChange}
-            onUploadingChange={onUploadingChange}
-            maxFiles={5}
           />
         </Grid>
       </Grid>

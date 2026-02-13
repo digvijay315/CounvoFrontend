@@ -7,7 +7,6 @@ export const LawyerSpecializations = [
   { value: "criminal lawyer", label: "Criminal Lawyer" },
   { value: "consumer lawyer", label: "Consumer Lawyer" },
   { value: "labour lawyer", label: "Labour Lawyer" },
-  { value: "legal notice drafting", label: "Legal Notice Drafting" },
   {
     value: "company law & corporate compliance",
     label: "Company Law & Corporate Compliance",

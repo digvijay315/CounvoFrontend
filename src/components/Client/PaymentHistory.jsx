@@ -215,16 +215,6 @@ const PaymentHistory = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {payment.clientId?.fullName || "N/A"}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="caption" color="text.secondary">
-                      {payment.clientId?.email || ""}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
                     <Chip
                       label={payment.consultationType}
                       size="small"
@@ -233,7 +223,7 @@ const PaymentHistory = () => {
                   </TableCell>
                   <TableCell>
                     <Typography fontWeight="600">
-                      {formatAmount(payment.totalAmount)}
+                      {formatAmount(payment.transferAmount)}
                     </Typography>
                   </TableCell>
                   <TableCell>

@@ -108,7 +108,6 @@ const defaultKycData = {
     specializations: [],
     languages: [],
     practicingCourts: [],
-    proofOfPractice: [],
     professionalBio: "",
   },
   bankDetails: {

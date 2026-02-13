@@ -188,7 +188,7 @@ const ChatPage = ({ userType = "customer" }) => {
     setIsLoadingCallHistory(true);
     try {
       const res = await api.get(
-        `/api/v2/chat/call-history/${userId}?userType=${userModel}`
+        `/api/v2/chat/call-history/${userId}?userType=${userModel}`,
       );
       if (res.data.success) {
         setCallHistory(res.data.data || []);
@@ -250,7 +250,7 @@ const ChatPage = ({ userType = "customer" }) => {
     setIsLoadingGroups(true);
     try {
       const res = await api.get(
-        `/api/v2/chat/groups/${userId}?userType=${userModel}`
+        `/api/v2/chat/groups/${userId}?userType=${userModel}`,
       );
       setChatGroups(res.data);
     } catch (error) {
@@ -278,8 +278,8 @@ const ChatPage = ({ userType = "customer" }) => {
         // Update unread count locally
         setChatGroups((prev) =>
           prev.map((g) =>
-            g._id === chatGroupId ? { ...g, unreadCount: 0 } : g
-          )
+            g._id === chatGroupId ? { ...g, unreadCount: 0 } : g,
+          ),
         );
       } catch (error) {
         console.error("Error fetching messages:", error);
@@ -287,7 +287,7 @@ const ChatPage = ({ userType = "customer" }) => {
         setIsLoadingMessages(false);
       }
     },
-    [userId, userModel]
+    [userId, userModel],
   );
 
   // Tell SocketContext we're on /dashboard/messages so it never shows the red dot here; handleIncomingMessage will reload the list for unread
@@ -320,7 +320,7 @@ const ChatPage = ({ userType = "customer" }) => {
     if (chatIdFromUrl && chatGroups.length > 0 && !isLoadingGroups) {
       // Find the chat group matching the chatId in URL
       const chatToSelect = chatGroups.find(
-        (group) => group._id === chatIdFromUrl
+        (group) => group._id === chatIdFromUrl,
       );
 
       if (chatToSelect) {
@@ -386,8 +386,8 @@ const ChatPage = ({ userType = "customer" }) => {
                     lastMessage: msgText || (fileName ? `📎 ${fileName}` : ""),
                     lastMessageAt: newMsg.timestamp,
                   }
-                : g
-            )
+                : g,
+            ),
           );
         } else {
           // To show the updated chat group
@@ -401,7 +401,7 @@ const ChatPage = ({ userType = "customer" }) => {
             if (permission === "granted") {
               createNotification(
                 "New message received",
-                msgText || "You have received a new message."
+                msgText || "You have received a new message.",
               );
             }
           });
@@ -411,7 +411,7 @@ const ChatPage = ({ userType = "customer" }) => {
 
     const unsubscribe = registerMessageHandler(
       "chatPage",
-      handleIncomingMessage
+      handleIncomingMessage,
     );
     return unsubscribe;
   }, [selectedChat, registerMessageHandler, fetchChatGroups]);
@@ -460,8 +460,8 @@ const ChatPage = ({ userType = "customer" }) => {
       prev.map((g) =>
         g._id === selectedChat._id
           ? { ...g, lastMessage: msgText, lastMessageAt: timestamp }
-          : g
-      )
+          : g,
+      ),
     );
 
     // Save to database
@@ -543,8 +543,8 @@ const ChatPage = ({ userType = "customer" }) => {
         prev.map((g) =>
           g._id === selectedChat._id
             ? { ...g, lastMessage: `📎 ${fileName}`, lastMessageAt: timestamp }
-            : g
-        )
+            : g,
+        ),
       );
     } catch (error) {
       console.error("Upload failed:", error);
@@ -574,7 +574,7 @@ const ChatPage = ({ userType = "customer" }) => {
 
   const handleChatUpdate = (chatGroupId, updates) => {
     setChatGroups((prev) =>
-      prev.map((g) => (g._id === chatGroupId ? { ...g, ...updates } : g))
+      prev.map((g) => (g._id === chatGroupId ? { ...g, ...updates } : g)),
     );
 
     // Update selected chat if it's the one being modified
@@ -608,7 +608,7 @@ const ChatPage = ({ userType = "customer" }) => {
 
   const lawyerPayId = useMemo(
     () => findLawyerPayId(selectedChat),
-    [selectedChat]
+    [selectedChat],
   );
 
   // Format call duration
@@ -753,7 +753,7 @@ const ChatPage = ({ userType = "customer" }) => {
                 {filteredChatGroups.map((group) => {
                   const participantName = getParticipantName(
                     group.participant,
-                    group.participantModel
+                    group.participantModel,
                   );
                   const avatarSrc = getAvatarSrc(group.participant);
                   const isOnline = onlineUsers.includes(group.participant?._id);
@@ -888,7 +888,7 @@ const ChatPage = ({ userType = "customer" }) => {
               {filteredCallHistory.map((call) => {
                 const participantName = getParticipantName(
                   call.participant,
-                  call.participantModel
+                  call.participantModel,
                 );
                 const avatarSrc = getAvatarSrc(call.participant);
                 const isSelected = selectedCall?._id === call._id;
@@ -1100,7 +1100,7 @@ const ChatPage = ({ userType = "customer" }) => {
                           revieweeId={selectedChat?.participant?._id}
                           onSubmit={async () => {
                             await fetchReviewStatus(
-                              selectedChat?.participant?._id
+                              selectedChat?.participant?._id,
                             );
                             setShowReviewDialog(false);
                           }}
@@ -1110,7 +1110,7 @@ const ChatPage = ({ userType = "customer" }) => {
                           revieweeId={selectedChat?.participant?._id}
                           onSubmit={async () => {
                             await fetchReviewStatus(
-                              selectedChat?.participant?._id
+                              selectedChat?.participant?._id,
                             );
                             setShowReviewDialog(false);
                           }}
@@ -1165,44 +1165,6 @@ const ChatPage = ({ userType = "customer" }) => {
                 >
                   Choose a chat from the left to start messaging
                 </Typography>
-              </Box>
-              {/* Buttons fixed at bottom - no scroll */}
-              <Box
-                sx={{
-                  flexShrink: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: 2,
-                  py: 2,
-                  px: 2,
-                  borderTop: 1,
-                  borderColor: "divider",
-                  bgcolor: "background.paper",
-                }}
-              >
-                {userType === "customer" && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<SwitchIcon />}
-                    onClick={() =>
-                      navigate(NAVIGATION_CONSTANTS.FIND_LAWYER_PATH)
-                    }
-                    sx={{ textTransform: "none", borderRadius: 10 }}
-                  >
-                    Switch
-                  </Button>
-                )}
-                {reviewSubmittedMap[selectedChat?.participant?._id] ===
-                  false && (
-                  <Button
-                    variant="contained"
-                    startIcon={<ReviewIcon />}
-                    onClick={() => setShowReviewDialog(true)}
-                    sx={{ textTransform: "none", borderRadius: 10 }}
-                  >
-                    Review
-                  </Button>
-                )}
               </Box>
               <Dialog
                 open={showReviewDialog}
@@ -1284,14 +1246,14 @@ const ChatPage = ({ userType = "customer" }) => {
                 src={getAvatarSrc(selectedCall.participant)}
                 alt={getParticipantName(
                   selectedCall.participant,
-                  selectedCall.participantModel
+                  selectedCall.participantModel,
                 )}
                 sx={{ width: 48, height: 48 }}
               >
                 {
                   getParticipantName(
                     selectedCall.participant,
-                    selectedCall.participantModel
+                    selectedCall.participantModel,
                   )?.[0]
                 }
               </Avatar>
@@ -1299,7 +1261,7 @@ const ChatPage = ({ userType = "customer" }) => {
                 <Typography variant="subtitle1" fontWeight={600}>
                   {getParticipantName(
                     selectedCall.participant,
-                    selectedCall.participantModel
+                    selectedCall.participantModel,
                   )}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1331,21 +1293,21 @@ const ChatPage = ({ userType = "customer" }) => {
                 src={getAvatarSrc(selectedCall.participant)}
                 alt={getParticipantName(
                   selectedCall.participant,
-                  selectedCall.participantModel
+                  selectedCall.participantModel,
                 )}
                 sx={{ width: 120, height: 120, mb: 3 }}
               >
                 {
                   getParticipantName(
                     selectedCall.participant,
-                    selectedCall.participantModel
+                    selectedCall.participantModel,
                   )?.[0]
                 }
               </Avatar>
               <Typography variant="h5" fontWeight={600} gutterBottom>
                 {getParticipantName(
                   selectedCall.participant,
-                  selectedCall.participantModel
+                  selectedCall.participantModel,
                 )}
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>

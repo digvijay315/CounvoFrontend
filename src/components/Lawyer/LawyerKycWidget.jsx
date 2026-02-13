@@ -109,7 +109,6 @@ const LawyerKycWidget = ({ onSuccess }) => {
       specializations: [],
       languages: [],
       practicingCourts: [],
-      proofOfPractice: [],
       professionalBio: "",
     },
     // identityProof: {

@@ -640,7 +640,7 @@ function FindLawyer() {
               </Stack>
             </Container>
             <Stack
-              direction={{ xs: "row", md: "column" }}
+              direction={{ xs: "row" }}
               spacing={{ xs: 2, md: 4 }}
               justifyContent="center"
               alignItems="center"
@@ -784,19 +784,22 @@ function FindLawyer() {
             color: "white",
             py: 2,
             px: 3,
+            pr: 1,
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
           }}
         >
-          <Typography variant="h5" fontWeight="600" textAlign="center">
+          <Typography variant="h6" fontWeight="600">
             {specialization || practicingCourt || language
               ? "Suggested Lawyer (Based on Your Preferences)"
               : "Suggested Lawyer"}
           </Typography>
           <IconButton
+            size="small"
             onClick={handleCloseSuggestion}
             sx={{
-              position: "absolute",
-              right: 8,
-              top: 8,
               color: "white",
             }}
           >
