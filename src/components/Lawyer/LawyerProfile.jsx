@@ -366,17 +366,9 @@ const LawyerProfile = () => {
   const completeeditlawyerprofile = async () => {
     try {
       setIsLoading(true);
-      const formData = new FormData();
-      formData.append("fullName", editBasic.fullName ?? "");
-      formData.append("phone", editBasic.phone ?? "");
-      const pics = Array.isArray(editBasic.profilepic)
-        ? editBasic.profilepic
-        : [];
-      pics
-        .filter((f) => f instanceof File)
-        .forEach((f) => formData.append("profilepic", f));
-      await api.put(`api/user/updateuserprofile/${userId}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      await api.put(`api/user/updateuserprofile/${userId}`, {
+        fullName: editBasic.fullName,
+        phone: editBasic.phone,
       });
 
       let kycPayload = { ...kycData };
