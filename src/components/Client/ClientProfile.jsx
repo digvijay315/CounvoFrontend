@@ -35,7 +35,7 @@ const ClientProfile = () => {
     email: "",
     gender: "",
     dob: "",
-    contact_no: "",
+    phone: "",
     residential_address: "",
     state: "",
     city: "",
@@ -78,7 +78,7 @@ const ClientProfile = () => {
 
   const handleOpenEdit = () => {
     setShowEdit(true);
-    // Prefill form from userData; map phone to contact_no for display
+    // Prefill form from userData; map phone to phone for display
     const u = userData || {};
     const udetails = u.userDetails || {};
     setedituserprofile({
@@ -90,14 +90,14 @@ const ClientProfile = () => {
         (udetails.dateOfBirth
           ? new Date(udetails.dateOfBirth).toISOString().slice(0, 10)
           : ""),
-      contact_no: udetails.contact_no ?? udetails.phone ?? "",
+      phone: u.phone ?? udetails.contact_no ?? "",
       residential_address: udetails.residential_address ?? "",
       state: udetails.state ?? "",
       city: udetails.city ?? "",
       pin_code: udetails.pin_code ?? "",
     });
     const stateOpt = stateOptions.find(
-      (o) => o.label === (udetails.state || "")
+      (o) => o.label === (udetails.state || ""),
     );
     setSelectedState(stateOpt || null);
   };
@@ -120,7 +120,7 @@ const ClientProfile = () => {
       const payload = { ...edituserprofile };
       const resp = await api.put(
         `api/user/updateuserprofile/${userId}`,
-        payload
+        payload,
       );
       if (resp.status === 200) {
         Swal.fire({
@@ -235,7 +235,7 @@ const ClientProfile = () => {
                   Contact Number
                 </Typography>
                 <Typography variant="body1" fontWeight="500">
-                  {userData?.contact_no || userData?.phone || "Not provided"}
+                  {userData?.phone || "Not provided"}
                 </Typography>
               </Box>
             </Grid>
@@ -355,8 +355,8 @@ const ClientProfile = () => {
             <Grid item xs={12}>
               <TextField
                 label="Contact Number"
-                name="contact_no"
-                value={edituserprofile.contact_no ?? ""}
+                name="phone"
+                value={edituserprofile.phone ?? ""}
                 type="tel"
                 fullWidth
                 size="small"
@@ -386,7 +386,7 @@ const ClientProfile = () => {
                 options={stateOptions}
                 value={
                   stateOptions.find(
-                    (option) => option.label === edituserprofile?.state
+                    (option) => option.label === edituserprofile?.state,
                   ) || selectedState
                 }
                 onChange={(value) => {
@@ -415,7 +415,7 @@ const ClientProfile = () => {
                 options={cityOptions}
                 value={
                   cityOptions.find(
-                    (option) => option.label === edituserprofile?.city
+                    (option) => option.label === edituserprofile?.city,
                   ) || selectedCity
                 }
                 onChange={(value) => {
