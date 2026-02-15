@@ -6,6 +6,7 @@ import { User, Mail, Phone, Lock, Eye, EyeOff, UserPlus, Loader2, AlertCircle, U
 import Swal from 'sweetalert2';
 import { register as registerUser, clearError, selectIsLoading, selectError } from '../../redux/slices/authSlice';
 import './authForms.css';
+import api from "../../api";
 
 const SignUpForm = () => {
   const navigate = useNavigate();
@@ -57,33 +58,133 @@ const SignUpForm = () => {
     }
   }, [error]);
 
+  const [showOtp, setShowOtp] = useState(false);
+const [otp, setOtp] = useState("");
+const [otpLoading, setOtpLoading] = useState(false);
+const [formData, setFormData] = useState(null);
+
+
+
+
   const onSubmit = async (data) => {
-    // Clear any previous errors
+  try {
     dispatch(clearError());
-    console.log(data);
-    // Dispatch register action
-    const resultAction = await dispatch(
-      registerUser({
-        fullName: data.fullName,
-        email: data.email,
-        mobile: data.mobile,
-        password: data.password,
-        userType: data.userType,
-      })
+
+    setFormData(data); // store form data temporarily
+
+    const response = await api.post("api/auth/register", formData);
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message);
+    }
+
+    Swal.fire({
+      icon: "info",
+      title: "OTP Sent",
+      text: "Please check your email for OTP",
+    });
+
+    setShowOtp(true); // open OTP modal
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Registration Failed",
+      text: error.message,
+    });
+  }
+};
+
+const [loading, setLoading] = useState(false);
+
+const modalOverlay = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  backgroundColor: "rgba(0,0,0,0.5)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000,
+};
+
+const modalContent = {
+  backgroundColor: "#fff",
+  padding: "25px",
+  borderRadius: "8px",
+  width: "350px",
+  position: "relative",
+  boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+};
+
+const closeButton = {
+  position: "absolute",
+  top: "10px",
+  right: "10px",
+  background: "transparent",
+  border: "none",
+  fontSize: "18px",
+  cursor: "pointer",
+};
+
+  const buttonStyle = {
+    backgroundColor: '#007bff',
+    color: 'white',
+    padding: '12px',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '16px',
+    cursor: 'pointer',
+    transition: 'background 0.3s',
+  };
+
+  const inputStyle = {
+    padding: '10px 14px',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    fontSize: '15px',
+  };
+
+
+const handleVerifyOtp = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    const { data } = await api.post(
+      "api/auth/verify-otp",
+      {
+        email: formData.email,
+        otp,
+      }
     );
 
-    // Check if registration was successful
-    if (registerUser.fulfilled.match(resultAction)) {
-      Swal.fire({
-        icon: "success",
-        title: "Registration Successful!",
-        text: "Please sign in to continue",
-        confirmButtonColor: "#eab308",
-      }).then(() => {
-        navigate("/auth/signin");
+     Swal.fire({
+        icon: 'success',
+        title: 'Registration Successful!',
+        text:data.message || "Registration successful!",
+        showConfirmButton: true,
       });
-    }
-  };
+   
+    setShowOtp(false);
+    setOtp("");
+
+  } catch (error) {
+    console.error("OTP Verify Error:", error);
+
+    const errorMessage =
+      error.response?.data?.message || "OTP verification failed";
+
+    alert(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <div className="auth-form">
@@ -331,6 +432,42 @@ const SignUpForm = () => {
           </p>
         </div>
       </form>
+
+      {showOtp && (
+  <div style={modalOverlay}>
+    <div style={modalContent}>
+      <h2 style={{ marginBottom: "10px" }}>Verify OTP</h2>
+
+      <p style={{ fontSize: "14px", marginBottom: "15px" }}>
+        OTP has been sent to <b>{formData.email}</b>
+      </p>
+
+      <form onSubmit={handleVerifyOtp}>
+        <input
+          type="text"
+          placeholder="Enter 6-digit OTP"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          style={inputStyle}
+          maxLength={6}
+          required
+        />
+
+        <button type="submit" style={buttonStyle}>
+          {loading ? "Verifying..." : "Verify OTP"}
+        </button>
+      </form>
+
+      <button
+        onClick={() => setShowOtp(false)}
+        style={closeButton}
+      >
+        ✖
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
