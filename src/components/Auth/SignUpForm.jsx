@@ -12,7 +12,8 @@ const SignUpForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+
   // Redux selectors
   const isLoading = useSelector(selectIsLoading);
   const error = useSelector(selectError);
@@ -68,17 +69,19 @@ const [formData, setFormData] = useState(null);
 
   const onSubmit = async (data) => {
   try {
+
+    setLoading(true)
     dispatch(clearError());
 
-    setFormData(data); // store form data temporarily
 
-    const response = await api.post("api/auth/register", formData);
+    setFormData(data); 
 
-    const result = await response.json();
+    const response = await api.post("api/auth/register", data);
 
-    if (!response.ok) {
-      throw new Error(result.message);
-    }
+    // const result = await response.json();
+    // if (!response.ok) {
+    //   throw new Error(result.message);
+    // }
 
     Swal.fire({
       icon: "info",
@@ -93,10 +96,13 @@ const [formData, setFormData] = useState(null);
       title: "Registration Failed",
       text: error.message,
     });
+  } finally
+  {
+    setLoading(false)
   }
 };
 
-const [loading, setLoading] = useState(false);
+
 
 const modalOverlay = {
   position: "fixed",
@@ -106,10 +112,12 @@ const modalOverlay = {
   height: "100%",
   backgroundColor: "rgba(0,0,0,0.5)",
   display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
+  justifyContent: "flex-start",   // move to left
+  alignItems: "center",           // keep vertical center
+  paddingLeft: "40px",            // space from left
   zIndex: 1000,
 };
+
 
 const modalContent = {
   backgroundColor: "#fff",
@@ -130,16 +138,21 @@ const closeButton = {
   cursor: "pointer",
 };
 
-  const buttonStyle = {
-    backgroundColor: '#007bff',
-    color: 'white',
-    padding: '12px',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    transition: 'background 0.3s',
-  };
+const buttonStyle = {
+  backgroundColor: '#eab308',
+  color: 'white',
+  padding: '12px',
+  border: 'none',
+  borderRadius: '6px',
+  fontSize: '16px',
+  cursor: 'pointer',
+  transition: 'background 0.3s',
+  marginTop: '20px',
+  display: 'block',
+  marginLeft: 'auto',
+  marginRight: 'auto',
+};
+
 
   const inputStyle = {
     padding: '10px 14px',
@@ -409,7 +422,7 @@ const handleVerifyOtp = async (e) => {
 
         {/* Submit Button */}
         <button type="submit" className="auth-submit-btn" disabled={isLoading}>
-          {isLoading ? (
+          {loading ? (
             <>
               <Loader2 size={18} className="spinner-icon" />
               Creating Account...
@@ -439,7 +452,7 @@ const handleVerifyOtp = async (e) => {
       <h2 style={{ marginBottom: "10px" }}>Verify OTP</h2>
 
       <p style={{ fontSize: "14px", marginBottom: "15px" }}>
-        OTP has been sent to <b>{formData.email}</b>
+        OTP has been sent to <b>{formData?.email}</b>
       </p>
 
       <form onSubmit={handleVerifyOtp}>
