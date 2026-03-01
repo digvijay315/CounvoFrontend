@@ -1,5 +1,6 @@
 export const APP_CONFIG = {
   API_URL: process.env.REACT_APP_BACKEND_URL,
+  // API_URL: "http://localhost:5000/",
   SOCKET_URL: process.env.REACT_APP_SOCKET_URL,
   AGORA_APP_ID: process.env.REACT_APP_AGORA_APP_ID,
   RAZORPAY_KEY_ID: process.env.REACT_APP_RAZORPAY_KEY_ID,
