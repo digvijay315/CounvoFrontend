@@ -130,7 +130,10 @@ const AdminPanel = () => {
   const fetchusers = async () => {
     try {
       const resp = await api.get("api/user");
-      setUsers(resp.data);
+      let lawyers = resp?.data?.filter?.((item) => item.role === "lawyer");
+      let users = resp?.data?.filter?.((item) => item.role === "customer");
+      setUsers(users);
+      setLawyers(lawyers);
     } catch (error) {
       console.log(error);
     }
@@ -592,7 +595,7 @@ const AdminPanel = () => {
                       name: "Total Users",
                       value: chartData.reduce(
                         (sum, item) => sum + item.users,
-                        0
+                        0,
                       ),
                       fill: "#8884d8",
                     },
@@ -600,7 +603,7 @@ const AdminPanel = () => {
                       name: "Total Lawyers",
                       value: chartData.reduce(
                         (sum, item) => sum + item.lawyers,
-                        0
+                        0,
                       ),
                       fill: "#82ca9d",
                     },
@@ -735,7 +738,7 @@ const AdminPanel = () => {
                   .slice(0, 5)
                   .map((lawyer, index) => (
                     <tr key={index}>
-                      <td>{lawyer.firstName}</td>
+                      <td>{lawyer?.fullName}</td>
                       <td>{formatLastLogin(lawyer.lastLogin)}</td>
                       <td>
                         {new Date(lawyer.createdAt).toLocaleString("en-IN", {
