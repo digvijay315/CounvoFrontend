@@ -24,7 +24,6 @@ const MessageInput = ({
   lawyerPayId,
 }) => {
   const paymentApiRef = useRef(null);
-  console.log(lawyerPayId, paymentApiRef.current);
   return (
     <Paper
       elevation={0}
