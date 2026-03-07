@@ -154,18 +154,18 @@ export const SocketProvider = ({ children }) => {
 
   const [isGranted, setIsGranted] = useState(false);
   const handleNotificationIfMimimized = (title, body) => {
-    if (isBrowserMinimized()) {
-      if (!isGranted) {
-        verifyPermission().then((permission) => {
-          if (permission === "granted") {
-            createNotification(title, body);
-            setIsGranted(true);
-          }
-        });
-      } else {
-        createNotification(title, body);
-      }
-    }
+    // if (isBrowserMinimized()) {
+    //   if (!isGranted) {
+    //     verifyPermission().then((permission) => {
+    //       if (permission === "granted") {
+    //         createNotification(title, body);
+    //         setIsGranted(true);
+    //       }
+    //     });
+    //   } else {
+    createNotification(title, body);
+    //   }
+    // }
   };
   // Initialize socket connection
   useEffect(() => {
@@ -218,14 +218,14 @@ export const SocketProvider = ({ children }) => {
 
     // Message handler
     const handleReceiveMessage = (data) => {
-      debugger;
       // Notify all registered message handlers (e.g. ChatPage when user is on messages)
       messageHandlersRef.current.forEach((handler) => {
         handler(data);
       });
       // Browser notification when: 1) browser minimised, or 2) user is NOT on Chat page (no handler registered)
-      const shouldNotify =
-        data && (isBrowserMinimized() || messageHandlersRef.current.size === 0);
+      console.log("Message", data)
+      const shouldNotify = Boolean(data)
+      // data && (isBrowserMinimized() || messageHandlersRef.current.size === 0);
       // Red dot only when user is NOT on /dashboard/messages (ChatPage sets userOnMessagesPageRef on mount)
       if (shouldNotify && !userOnMessagesPageRef.current) {
         setHasUnreadMessages(true);
@@ -238,17 +238,17 @@ export const SocketProvider = ({ children }) => {
           if (!isGranted) {
             verifyPermission().then((permission) => {
               if (permission === "granted") {
-                createNotification("New message", body);
+                createNotification(data?.fromName || "New message", body);
                 setIsGranted(true);
               }
             });
           } else {
-            createNotification("New message", body);
+            createNotification(data?.fromName || "New message", body);
           }
         } else {
           verifyPermission().then((permission) => {
             if (permission === "granted") {
-              createNotification("New message", body);
+              createNotification(data?.fromName || "New message", body);
             }
           });
         }
@@ -520,6 +520,7 @@ export const SocketProvider = ({ children }) => {
         fileName,
         fileType,
         fromUserType,
+        fromName: user?.fullName || "",
         timestamp,
       });
 
@@ -832,7 +833,7 @@ export const SocketProvider = ({ children }) => {
    */
   const on = useCallback(
     (event, handler) => {
-      if (!socket) return () => {};
+      if (!socket) return () => { };
       socket.on(event, handler);
       return () => socket.off(event, handler);
     },
