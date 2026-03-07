@@ -15,7 +15,7 @@ function Allchat() {
             setallchat(resp.data)
             
         } catch (error) {
-            console.log(error);
+
             
         }
     }

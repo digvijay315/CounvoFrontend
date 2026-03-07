@@ -15,7 +15,7 @@ const AdminReport = () => {
   const get_case_type = async (specialization) => {
     try {
       const resp = await api.get('api/admin/case-type')
-      console.log(resp);
+
       const caseTypeData = resp.data.map(item => ({
         name: item.type_of_case,
         value: item.total_number
@@ -24,7 +24,7 @@ const AdminReport = () => {
       setcasttypedata(caseTypeData)
 
     } catch (error) {
-      console.log(error);
+
 
     }
   }
@@ -40,7 +40,7 @@ const AdminReport = () => {
   const get_session_time = async () => {
     try {
       const resp = await api.get('api/admin/session-time')
-      console.log(resp);
+
 
 
       setsession_time(resp.data.data.averages.avgSessionTime)
@@ -48,7 +48,7 @@ const AdminReport = () => {
       setaverage_switch(resp.data.data.averages.avgSwitchesPerUser)
 
     } catch (error) {
-      console.log(error);
+
 
     }
   }
@@ -101,7 +101,7 @@ const AdminReport = () => {
     const fetchUserData = async () => {
       try {
         const resp = await api.get("/api/admin/user-chat-summary");
-        console.log(resp);
+
 
         setUserSummary(resp.data.userChatSummary); // array of users
       } catch (error) {
@@ -134,7 +134,7 @@ const AdminReport = () => {
       setget_first_chat_time_data(resp.data.averageTimeMinutes)
 
     } catch (error) {
-      console.log(error);
+
 
     }
   }
@@ -193,7 +193,7 @@ const AdminReport = () => {
       setrepeat_usages(resp.data)
 
     } catch (error) {
-      console.log(error);
+
 
     }
   }

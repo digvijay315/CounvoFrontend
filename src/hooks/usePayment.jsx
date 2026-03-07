@@ -96,7 +96,7 @@ const usePayment = () => {
             );
 
             toast.success("Payment successful and verified!");
-            console.log("Payment confirmed:", confirmResult);
+
 
             // Call custom success callback if provided
             if (onSuccess && typeof onSuccess === "function") {

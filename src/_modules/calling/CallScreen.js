@@ -199,7 +199,7 @@ const CallScreen = React.forwardRef(
     // Handle remote user published
     const handleUserPublished = async (user, mediaType) => {
       await clientRef.current.subscribe(user, mediaType);
-      console.log("Subscribe success:", user.uid, mediaType);
+
 
       if (mediaType === "video") {
         setRemoteUsers((prevUsers) => {
@@ -263,7 +263,7 @@ const CallScreen = React.forwardRef(
 
     // Handle remote user unpublished
     const handleUserUnpublished = (user, mediaType) => {
-      console.log("User unpublished:", user.uid, mediaType);
+
       if (mediaType === "video") {
         setRemoteUsers((prevUsers) =>
           prevUsers.map((u) =>
@@ -275,7 +275,7 @@ const CallScreen = React.forwardRef(
 
     // Handle remote user left
     const handleUserLeft = (user) => {
-      console.log("User left:", user.uid);
+
       setRemoteUsers((prevUsers) =>
         prevUsers.filter((u) => u.uid !== user.uid)
       );

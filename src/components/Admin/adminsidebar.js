@@ -20,7 +20,7 @@ const Adminsidebar = () => {
       setPendingLawyers(resp.data.filter((item)=>(item.status!=="verified")))
       
     } catch (error) {
-      console.log(error);
+
       
     }
   }

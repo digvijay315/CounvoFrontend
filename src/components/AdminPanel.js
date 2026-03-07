@@ -123,7 +123,7 @@ const AdminPanel = () => {
       setLawyers(resp.data.filter((item) => item.status === "verified"));
       setPendingLawyers(resp.data.filter((item) => item.status !== "verified"));
     } catch (error) {
-      console.log(error);
+
     }
   };
 
@@ -135,7 +135,7 @@ const AdminPanel = () => {
       setUsers(users);
       setLawyers(lawyers);
     } catch (error) {
-      console.log(error);
+
     }
   };
 
@@ -219,7 +219,7 @@ const AdminPanel = () => {
           });
         }
       } catch (error) {
-        console.log(error);
+
         Swal.fire({
           icon: "error",
           title: "Error",
@@ -242,7 +242,7 @@ const AdminPanel = () => {
         setlawyerprofile(resp.data);
       }
     } catch (error) {
-      console.log(error);
+
     }
   };
 

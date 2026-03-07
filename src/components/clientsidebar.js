@@ -23,7 +23,7 @@ function Clientsidebar() {
      window.addEventListener('resize', handleResize);
 
      const handleReceive = ({ from, message }) => {
-       console.log('📨 New message from lawyer:', message);
+
        setHasNewMessages(true);
      };
 

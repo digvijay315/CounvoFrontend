@@ -223,7 +223,7 @@ export const SocketProvider = ({ children }) => {
         handler(data);
       });
       // Browser notification when: 1) browser minimised, or 2) user is NOT on Chat page (no handler registered)
-      console.log("Message", data)
+
       const shouldNotify = Boolean(data)
       // data && (isBrowserMinimized() || messageHandlersRef.current.size === 0);
       // Red dot only when user is NOT on /dashboard/messages (ChatPage sets userOnMessagesPageRef on mount)

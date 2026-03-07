@@ -236,12 +236,12 @@ const ManageApprovals = () => {
     handleMenuClose();
     if (!selectedRow) return;
     // Navigate to details page or open modal
-    console.log("View details:", selectedRow);
+
     const resp = await api.get(
       `/api/v2/admin/lawyerkyc/submissions/${selectedRow._id}`
     );
     if (resp.data.success) {
-      console.log("KYC details:", resp.data.kyc);
+
       setKycDetails(resp.data.kyc);
       setKycDetailsDialogOpen(true);
     } else {

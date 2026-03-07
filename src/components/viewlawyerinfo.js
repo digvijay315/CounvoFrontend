@@ -14,7 +14,7 @@ import {
 const LawyerStepper = ({ selectedLawyer }) => {
     const [activeStep, setActiveStep] = React.useState(0);
 
-console.log(selectedLawyer);
+
 
 
 const steps = [

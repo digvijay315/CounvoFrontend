@@ -230,7 +230,7 @@ const completelawyerprofile=async()=>
    
     
   } catch (error) {
-    console.log(error);
+
     
   }finally
   {
@@ -319,7 +319,7 @@ const handleDeleteEducationedit = (index) => {
   }));
 };
 
-console.log(editlawyerprofile);
+
 
         
         const completeeditlawyerprofile=async()=>
@@ -344,7 +344,7 @@ console.log(editlawyerprofile);
             
               
             } catch (error) {
-              console.log(error);
+
               
             }finally
             {

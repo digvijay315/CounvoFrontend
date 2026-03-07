@@ -23,7 +23,7 @@ function Clients() {
             const resp=await api.get('api/lawyer/getalllawyerprofile')
             setLawyers(resp.data.filter((item)=>(item.status==="verified")))
             } catch (error) {
-            console.log(error);
+
             
             }
         }
@@ -36,12 +36,12 @@ function Clients() {
   {
     try {
       const resp=await api.get('api/user')
-      console.log(resp);
+
       
       setusers(resp.data)
       
     } catch (error) {
-      console.log(error);
+
       
     }
   }
@@ -74,7 +74,7 @@ function Clients() {
             }
           }
         } catch (error) {
-          console.log(error);
+
           Swal.fire(
             'Error!',
             'Something went wrong while deleting.',
@@ -106,7 +106,7 @@ function Clients() {
            
             }
           } catch (error) {
-            console.log(error);
+
           }
         };
 
