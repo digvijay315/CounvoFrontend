@@ -22,6 +22,7 @@ import {
 } from "../../redux/slices/authSlice";
 import "./authForms.css";
 import { getRouteBasedOnUserType } from "../../utils";
+import api from "../../api";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ const SignInForm = () => {
         navigate(getRouteBasedOnUserType(userRole));
       });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, userRole]);
 
   // Handle errors
   useEffect(() => {
@@ -87,8 +88,74 @@ const SignInForm = () => {
       login({
         email: data.email,
         password: data.password,
-      })
+      }),
     );
+  };
+
+  // ================== forgot password code=========================
+
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleSendOtp = async () => {
+    setIsSendingOtp(true);
+    try {
+      const response = await api.post("/api/v2/auth/reset-password", {
+        email: email,
+      });
+      if (response.status === 200) {
+        Swal.fire("Success", "OTP sent to your email", "success");
+        setStep(2);
+      }
+    } catch (err) {
+      Swal.fire("Error", "Failed to send OTP", "error");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    setIsResetting(true);
+    if (!otp || !newPassword || !confirmPassword) {
+      return Swal.fire("Error", "All fields are required", "error");
+    }
+
+    if (newPassword !== confirmPassword) {
+      return Swal.fire("Error", "Passwords do not match", "error");
+    }
+
+    try {
+      const response = await api.post(
+        "/api/v2/auth/verify-otp-reset-password",
+        {
+          email: email,
+          otp: otp,
+          newPassword: newPassword,
+        },
+      );
+
+      if (response.status === 200) {
+        Swal.fire("Success", "Password reset successful", "success");
+      }
+
+      // Reset everything
+      setShowForgotModal(false);
+      setStep(1);
+      setEmail("");
+      setOtp("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      Swal.fire("Error", "Reset failed", "error");
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   return (
@@ -180,9 +247,13 @@ const SignInForm = () => {
             <input type="checkbox" {...register("rememberMe")} />
             <span>Remember me</span>
           </label>
-          <a href="/forgot-password" className="form-link-small">
+          <button
+            type="button"
+            onClick={() => setShowForgotModal(true)}
+            className="form-link-small cursor-pointer"
+          >
             Forgot password?
-          </a>
+          </button>
         </div>
 
         {/* Submit Button */}
@@ -210,6 +281,75 @@ const SignInForm = () => {
           </p>
         </div>
       </form>
+
+      {showForgotModal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h3>Reset Password</h3>
+
+            {/* STEP 1: EMAIL */}
+            {step === 1 && (
+              <>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <button onClick={handleSendOtp} disabled={isSendingOtp}>
+                  {isSendingOtp ? (
+                    <>
+                      <Loader2 size={16} className="spinner-icon" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send OTP"
+                  )}
+                </button>
+              </>
+            )}
+
+            {/* STEP 2: OTP */}
+            {step === 2 && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+
+                <input
+                  type="password"
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+
+                <input
+                  type="password"
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+
+                <button onClick={handleResetPassword} disabled={isResetting}>
+                  {isResetting ? (
+                    <>
+                      <Loader2 size={16} className="spinner-icon" />
+                      Resetting...
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </button>
+              </>
+            )}
+
+            <button onClick={() => setShowForgotModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

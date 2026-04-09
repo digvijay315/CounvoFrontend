@@ -65,6 +65,7 @@ const [otpLoading, setOtpLoading] = useState(false);
 const [formData, setFormData] = useState(null);
 
 
+console.log(formData);
 
 
   const onSubmit = async (data) => {
@@ -94,7 +95,7 @@ const [formData, setFormData] = useState(null);
     Swal.fire({
       icon: "error",
       title: "Registration Failed",
-      text: error.message,
+      text: error.response.data.message || "Registration failed",
     });
   } finally
   {
@@ -103,16 +104,28 @@ const [formData, setFormData] = useState(null);
 };
 
 
+const [isMobile, setIsMobile] = useState(false);
+
+useEffect(() => {
+  const checkScreen = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+
+  checkScreen(); // 👈 run once on mount
+
+  window.addEventListener("resize", checkScreen);
+  return () => window.removeEventListener("resize", checkScreen);
+}, []);
 
 const modalOverlay = {
   position: "fixed",
   top: 0,
-  left: 0,
+  left: isMobile ? 0 : -200,
   width: "100%",
   height: "100%",
   backgroundColor: "rgba(0,0,0,0.5)",
   display: "flex",
-  justifyContent: "flex-start",   // move to left
+  justifyContent: "center",   // move to left
   alignItems: "center",           // keep vertical center
   paddingLeft: "40px",            // space from left
   zIndex: 1000,
@@ -197,6 +210,7 @@ const handleVerifyOtp = async (e) => {
   }
 };
 
+console.log(userType);
 
 
   return (
@@ -237,6 +251,7 @@ const handleVerifyOtp = async (e) => {
           </div>
           <input
             type="hidden"
+            value={userType}
             {...register("userType", { required: "Please select user type" })}
           />
           {errors.userType && (
