@@ -158,6 +158,34 @@ const SignInForm = () => {
     }
   };
 
+
+  const closeButton = {
+  position: "absolute",
+  top: "10px",
+  right: "10px",
+  background: "transparent",
+  border: "none",
+  fontSize: "18px",
+  cursor: "pointer",
+};
+
+const buttonStyle = {
+  backgroundColor: '#eab308',
+  color: 'white',
+  padding: '12px',
+  border: 'none',
+  borderRadius: '6px',
+  fontSize: '16px',
+  cursor: 'pointer',
+  transition: 'background 0.3s',
+  marginTop: '20px',
+  display: 'block',
+  marginLeft: 'auto',
+  marginRight: 'auto',
+};
+
+
+
   return (
     <div className="auth-form">
       <h2 className="form-title">Welcome Back</h2>
@@ -296,7 +324,7 @@ const SignInForm = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-                <button onClick={handleSendOtp} disabled={isSendingOtp}>
+                <button onClick={handleSendOtp} disabled={isSendingOtp} style={buttonStyle}>
                   {isSendingOtp ? (
                     <>
                       <Loader2 size={16} className="spinner-icon" />
@@ -333,7 +361,7 @@ const SignInForm = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
 
-                <button onClick={handleResetPassword} disabled={isResetting}>
+                <button onClick={handleResetPassword} disabled={isResetting} style={buttonStyle}>
                   {isResetting ? (
                     <>
                       <Loader2 size={16} className="spinner-icon" />
@@ -346,7 +374,7 @@ const SignInForm = () => {
               </>
             )}
 
-            <button onClick={() => setShowForgotModal(false)}>Close</button>
+            <button onClick={() => setShowForgotModal(false)} style={closeButton}>Close</button>
           </div>
         </div>
       )}
