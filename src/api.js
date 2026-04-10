@@ -7,7 +7,6 @@ import { clearUser } from "./redux/slices/authSlice";
 
 const api = axios.create({
   baseURL: APP_CONFIG.API_URL,
-  // baseURL: "https://api.counvo.in/",
 });
 
 api.interceptors.request.use(async (config) => {
