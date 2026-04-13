@@ -4,17 +4,24 @@ import storage from "redux-persist/lib/storage"; // defaults to localStorage for
 import { combineReducers } from "redux";
 import authReducer from "./slices/authSlice";
 
-// Persist configuration
+// Persist configuration for auth slice
+const authPersistConfig = {
+  key: "auth",
+  storage,
+  blacklist: ["isLoading", "error"],
+};
+
+// Combine reducers with nested persistence
+const rootReducer = combineReducers({
+  auth: persistReducer(authPersistConfig, authReducer),
+});
+
+// Root persist config (now minimal as logic moved to nested reducers)
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"], // Only persist auth slice
+  whitelist: [], // Slices handle their own persistence
 };
-
-// Combine reducers
-const rootReducer = combineReducers({
-  auth: authReducer,
-});
 
 // Create persisted reducer
 const persistedReducer = persistReducer(persistConfig, rootReducer);

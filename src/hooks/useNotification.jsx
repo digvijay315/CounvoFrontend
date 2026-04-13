@@ -51,25 +51,51 @@ const useNotification = () => {
 
   /**
    * Show a notification. Safe to call; no-op if unsupported or permission not granted.
-   * Wrapped in try/catch so it never throws (e.g. on mobile when API exists but fails).
+   * On mobile/iOS, this requires using the Service Worker registration.
    */
-  const createNotification = (title, bodyText, iconUrl) => {
+  const createNotification = async (title, bodyText, iconUrl) => {
     if (!title) return;
     if (!isSupported()) return;
-    if (Notification.permission !== "granted") return;
+
+    // Use a helper to check permission status (it might have changed since last check)
+    if (Notification.permission !== "granted") {
+      const permission = await verifyPermission();
+      if (permission !== "granted") return;
+    }
+
     try {
       const defaultIcon =
         typeof window !== "undefined"
-          ? `${window.location.origin}/favicon/apple-touch-icon.png`
+          ? `${window.location.origin}/logo192.png` // Use a reliable static asset
           : "";
+      
       const options = {
         body: bodyText || "",
         icon: iconUrl || defaultIcon,
         tag: "counvo-notification",
         requireInteraction: false,
+        vibrate: [100, 50, 100], // Haptic feedback on mobile
+        data: {
+          url: window.location.origin + "/dashboard/messages"
+        }
       };
+
+      // 1. Try Service Worker first - this is the ONLY way it works on mobile background/iOS
+      if ("serviceWorker" in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration && registration.showNotification) {
+            await registration.showNotification(title, options);
+            return;
+          }
+        } catch (swError) {
+          console.warn("ServiceWorker notification failed, falling back to window.Notification", swError);
+        }
+      }
+
+      // 2. Fallback to standard Notification API (works on most desktop browsers)
       const n = new Notification(title, options);
-      // Auto-close after 5s so they don't stack indefinitely
+      // Auto-close after 5s
       if (n.close) {
         setTimeout(() => {
           try {
@@ -78,7 +104,7 @@ const useNotification = () => {
         }, 5000);
       }
     } catch (error) {
-      console.warn("createNotification failed:", error);
+      console.warn("createNotification final fallback failed:", error);
     }
   };
 

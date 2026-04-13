@@ -334,6 +334,7 @@ const buttonStyle = {
                     "Send OTP"
                   )}
                 </button>
+          <button onClick={() => setShowForgotModal(false)}>Close</button>
               </>
             )}
 
@@ -371,10 +372,11 @@ const buttonStyle = {
                     "Reset Password"
                   )}
                 </button>
+                <button onClick={() => setShowForgotModal(false)}>Close</button>
               </>
             )}
 
-            <button onClick={() => setShowForgotModal(false)} style={closeButton}>Close</button>
+            
           </div>
         </div>
       )}
