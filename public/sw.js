@@ -14,5 +14,5 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   // ✅ open chat page when notification is clicked
-  event.waitUntil(clients.openWindow('/'));
+  // event.waitUntil(clients.openWindow('/'));
 });
